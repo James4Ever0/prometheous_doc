@@ -1,0 +1,15 @@
+{
+    "summary": "The code imports libraries, defines a script template for comparing file trees with and without ignore rules, parses command-line arguments, renders the script, writes to a temporary file, and runs the bash script, creating JSON files and calling display_tree_structure.py.",
+    "details": [
+        {
+            "comment": "This code imports necessary libraries, defines a script template for comparing file trees with and without ignore rules, parses command-line arguments, renders the script template, and writes the resulting script to a temporary file.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py\":0-38",
+            "content": "from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nimport os\nimport subprocess\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile -J > \"{{tempdir}}/all_tree.json\"\nfd | tree --fromfile -J > \"{{tempdir}}/selected_tree.json\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties\n# count file size\n# render tree json\nscript_template = Template(script_template_str)\nRELATIVE_TEMP_DIR_SCRIPT_PATH = \"script.sh\"\ndef parse_args():\n    parser = ArgumentParser()\n    parser.add_argument(\"-d\", \"--diffpath\", help=\"Path to visualize ignored files\")\n    args = parser.parse_args()\n    return args.diffpath\n@beartype\ndef render_script_template(diffpath: str, tempdir: str) -> str:\n    return script_template.render(diffpath=diffpath, tempdir=tempdir)\nwith TemporaryDirectory() as tempdir:\n    diffpath = parse_args()\n    script_str = render_script_template(diffpath, tempdir)\n    with open(os.path.join(tempdir, RELATIVE_TEMP_DIR_SCRIPT_PATH), \"w\") as f:"
+        },
+        {
+            "comment": "Writing script to file, running bash script in tempdir, creating full and selected JSON files, then calling display_tree_structure.py with arguments.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py\":39-55",
+            "content": "        f.write(script_str)\n    subprocess.run([\"bash\", os.path.join(tempdir, RELATIVE_TEMP_DIR_SCRIPT_PATH)])\n    full = f\"{tempdir}/all_tree.json\"\n    selected = f\"{tempdir}/selected_tree.json\"\n    basepath = os.path.abspath(diffpath)\n    subprocess.run(\n        [\n            \"python3\",\n            \"display_tree_structure.py\",\n            \"--full\",\n            full,\n            \"--selected\",\n            selected,\n            \"--basepath\",\n            basepath,\n        ]\n    )"
+        }
+    ]
+}

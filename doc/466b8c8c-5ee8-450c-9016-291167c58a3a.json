@@ -1,0 +1,10 @@
+{
+    "summary": "This code simulates a progress bar with intermittent \"hello world\" printing, adjustable sleep time using SLEEP variable. The issue is setting flush=True as the default in print statements.",
+    "details": [
+        {
+            "comment": "This code simulates a progress bar with intermittent \"hello world\" printing, adjustable sleep time using SLEEP variable. The issue is setting flush=True as the default in print statements.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/stdout_redirect_progress/test_no_patch.py\":0-17",
+            "content": "import time\n# for _ in range(200):\n#     print(\">>>> PROCESSING PROGRESS: 30%\")\nprint(\"Hello, world\")\nSLEEP = 0.1\n# SLEEP = 0.01\n# SLEEP = 1\n# time.sleep(SLEEP)\ntotal = 100\nfor i in range(total):\n    print(\n        f\">>>> PROCESSING PROGRESS: {i+1}/{total}\"\n    )  # problem is here. how to set flush=True this as default?\n    print(\"hello world\")\n    time.sleep(SLEEP)"
+        }
+    ]
+}

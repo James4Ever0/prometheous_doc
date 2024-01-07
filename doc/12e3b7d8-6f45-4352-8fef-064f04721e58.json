@@ -1,0 +1,10 @@
+{
+    "summary": "Searching for files using fzf in the current directory.",
+    "details": [
+        {
+            "comment": "Searching for files using fzf in the current directory.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/search_filepath_by_name/search_filepath.sh\":0-5",
+            "content": "# plan to do this on webpage.\n# will webpage handle this well? not going to crash?\ncd ../\nfd -u | fzf"
+        }
+    ]
+}

@@ -1,0 +1,67 @@
+{
+    "300": {
+        "file_id": 24,
+        "content": "                error = False\n            if error:\n                error_map[os.path.join(basedir, item[\"name\"])].append(label)\n            else:\n                yield linecount\n            subtree.label = f\"[{label}] \" + item[\"name\"]\ndef read_file_and_get_line_count(filepath: str):\n    filepath = os.path.abspath(filepath)\n    if not os.path.exists(filepath):\n        return -1\n    if filepath in cached_paths:\n        return -3\n    try:\n        with open(filepath, \"r\") as f:\n            lines = f.readlines()\n            return len(lines)\n    except:\n        return -2\nselected_keys = []\ndef get_selected_keys(tree_data, basemap):\n    iterate_all_keys(tree_data[0].get(\"contents\", []), basemap)\n    return selected_keys\ntree = Tree(\".\")\n# tree = Tree(\"agi_computer_control\", style=GREY, guide_style=GREY)\nroot = tree_data[0]  # Assuming the first item in the JSON is the root directory\nmymap = {\"./\": tree}\nexisting_keys.append(\"./\")\ntotal_size = sum(add_tree_contents(tree, root.get(\"contents\", []), basemap=mymap))\nnonexist_keys = [k for k in mymap.keys() if k not in existing_keys]",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/tree_utils.py:189-226"
+    },
+    "301": {
+        "file_id": 24,
+        "content": "Code is reading a file path and counting its lines. It checks if the file exists, if it's already in the cache, and then attempts to open and read the file. If any error occurs, it appends a label to an error map. The code also creates a tree structure and gets selected keys from the tree data using a helper function iterate_all_keys(). It calculates the total size of the contents of the directory and collects nonexist keys.",
+        "type": "comment"
+    },
+    "302": {
+        "file_id": 24,
+        "content": "for key in nonexist_keys:\n    it = mymap.get(key, None)\n    if it is not None:\n        parent, child = dirsplit(key)\n        parent_it = mymap.get(parent + \"/\", None)\n        if parent_it is not None:\n            parent_it.children.remove(it)\n        del mymap[key]\ntotal_lines = sum(iterate_all_keys(selected_json[0].get(\"contents\", []), mymap))\n# Print the tree\nsize_map[\"./\"] = total_size\nif total_lines != 0:\n    selected_dirs.append(\"./\")\n    line_map[\"./\"] = total_lines\ntree.label = Text.assemble(\n    (\n        (\n            f\"[{total_lines} L] \"\n            if total_lines != 0\n            else f\"[{size_to_readable_string(total_size)}] \"\n        )\n        + tree.label,\n        \"magenta\",\n    )\n)\ndef estimate_time_from_lines(line_count: int):\n    seconds = (line_count / 10) * 100\n    return humanize.naturaltime(datetime.timedelta(seconds=seconds)).split(\" ago\")[0]\nfor k, v in mymap.items():\n    if k.endswith(\"/\"):\n        _, name = dirsplit(k)\n        if k in cached_verified:\n            continue\n        elif k in selected_dirs:",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/tree_utils.py:228-268"
+    },
+    "303": {
+        "file_id": 24,
+        "content": "Iterating through nonexist_keys to update the mymap dictionary with parent-child relationships, counting total size and lines for the current directory, updating tree labels accordingly.",
+        "type": "comment"
+    },
+    "304": {
+        "file_id": 24,
+        "content": "            v.label = f\"[{line_map[k]} L] \" + name\n            # v.label = f\"[{estimate_time_from_lines(line_map[k])}] \"+ name\n        else:\n            v.label = f\"[{size_to_readable_string(size_map[k])}] \" + name\nconsole = Console()\nconsole.print(tree)\n# total_size = sum(size_map.values())\nselected_size = sum(size_map[k] for k in selected_keys)\n# make mapping between displayed tree and actual tree\nprint(\n    dict(\n        total=size_to_readable_string(total_size),\n        selected=size_to_readable_string(selected_size),\n    )\n)\n# total_lines = sum(line_map.values())\nprint(dict(selected_lines=humanize.intword(total_lines) + \" lines\"))\nprocessing_time = estimate_time_from_lines(total_lines)\nprint(dict(processing_time=processing_time))\ntotal_size_by_suffix = defaultdict(int)\nfilecount_by_suffix = defaultdict(int)\nfor k, v in size_map.items():\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    total_size_by_suffix[suffix] += v\n    filecount_by_suffix[suffix] += 1",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/tree_utils.py:269-300"
+    },
+    "305": {
+        "file_id": 24,
+        "content": "Code calculates and displays the total and selected sizes in readable format, the number of lines, and processing time estimate. It also creates defaultdicts to count file sizes and counts by suffix.",
+        "type": "comment"
+    },
+    "306": {
+        "file_id": 24,
+        "content": "lines_by_suffix = defaultdict(int)\nselected_filecount_by_suffix = defaultdict(int)\nfor k in selected_keys:\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    selected_filecount_by_suffix[suffix] += 1\n    v = line_map[k]\n    lines_by_suffix[suffix] += v\nprint(\n    dict(\n        total={k: size_to_readable_string(v) for k, v in total_size_by_suffix.items()},\n        # total=set(os.path.split(it)[1].split(\".\")[-1] for it in size_map.keys()),\n        selected={\n            k: humanize.intword(v) + \" lines\" for k, v in lines_by_suffix.items()\n        },\n    )\n)\nprint(dict(total=filecount_by_suffix, selected=selected_filecount_by_suffix))\nprint(\"error:\", {k: len(v) for k, v in error_map.items()})\n# print(mymap)",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/tree_utils.py:301-321"
+    },
+    "307": {
+        "file_id": 24,
+        "content": "Calculating and printing total file size, selected lines by suffix, and error count.",
+        "type": "comment"
+    },
+    "308": {
+        "file_id": 25,
+        "content": "/search_filepath_by_name/search_filepath.sh",
+        "type": "filepath"
+    },
+    "309": {
+        "file_id": 25,
+        "content": "Searching for files using fzf in the current directory.",
+        "type": "summary"
+    },
+    "310": {
+        "file_id": 25,
+        "content": "# plan to do this on webpage.\n# will webpage handle this well? not going to crash?\ncd ../\nfd -u | fzf",
+        "type": "code",
+        "location": "/search_filepath_by_name/search_filepath.sh:1-6"
+    },
+    "311": {
+        "file_id": 25,
+        "content": "Searching for files using fzf in the current directory.",
+        "type": "comment"
+    }
+}

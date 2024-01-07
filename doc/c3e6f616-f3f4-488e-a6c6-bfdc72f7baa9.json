@@ -1,0 +1,10 @@
+{
+    "summary": "This code defines a function to split a dictionary into chunks of specified size using itertools and a generator function. The generator yields dictionaries, each containing at most `chunk_size` items.",
+    "details": [
+        {
+            "comment": "This code defines a function to split a dictionary into chunks of specified size using itertools and a generator function. The generator yields dictionaries, each containing at most `chunk_size` items.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/slice_utils.py\":0-30",
+            "content": "from itertools import islice\nfrom beartype import beartype\n@beartype\ndef split_dict_into_chunks(dictionary:dict, chunk_size:int):\n    \"\"\"\n    Split a dictionary into chunks of specified size using itertools and a generator function.\n    Args:\n    - dictionary: The input dictionary to be split.\n    - chunk_size: The size of each chunk.\n    Returns:\n    - A generator that yields dictionaries, each containing at most `chunk_size` items.\n    \"\"\"\n    it = iter(dictionary.items())\n    while True:\n        chunk = dict(islice(it, chunk_size))\n        if not chunk:\n            break\n        yield chunk\ndef test():\n    # Example usage\n    input_dict = {str(i): i for i in range(1000)}  # Example input dictionary\n    chunked_dicts_generator = split_dict_into_chunks(input_dict, 100)  # Use the generator function to split the dictionary\n    # Iterate through the generator to get the chunks\n    for chunk in chunked_dicts_generator:\n        print(str(chunk)[:10]+\"...}\")\nif __name__ == \"__main__\":\n    test()"
+        }
+    ]
+}

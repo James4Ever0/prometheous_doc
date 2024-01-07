@@ -1,0 +1,10 @@
+{
+    "summary": "This code selects paths under a directory for documentation purposes, works interactively with estimation utilities, caches results, and excludes processed files.",
+    "details": [
+        {
+            "comment": "This code selects paths under a directory for documentation purposes, works interactively with estimation utilities, caches results, and excludes processed files.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/path_select_utils.py\":0-2",
+            "content": "# select paths under a directory, for documentation purposes\n# shall be interactive, and work with estimation utils.\n# shall be cached. shall exclude processed files"
+        }
+    ]
+}

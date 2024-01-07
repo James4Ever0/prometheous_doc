@@ -1,0 +1,15 @@
+{
+    "summary": "The `comment_summarizer` function takes a list of comments and a word limit, using the LLM model to generate summaries for pairs of comments recursively, combining them until only one comment or all comments are used. The goal is to produce a summary of multiple comments while staying within the specified word limit.",
+    "details": [
+        {
+            "comment": "This code defines a function called `comment_summarizer` that takes in a list of comments and a word limit. It uses the LLM model to generate summaries for pairs of comments, then recursively combines them until there is only one comment left or all comments are used. The purpose is to produce a summary of multiple comments while keeping it within the specified word limit.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/codepiece_summarizer.py\":0-34",
+            "content": "from beartype import beartype\nfrom llm import LLM\n@beartype\ndef comment_summarizer(comments: list[str], word_limit: int = 30) -> str:\n    summary_prompt = \"\"\"You are a professional summarizer. You will be given a pair of comments and produce a summary.\n\"\"\"\n    summary_model = LLM(summary_prompt)\n    def combine_comments(comment1: str, comment2: str):\n        summary_query = f\"\"\"Comment A:\n{comment1}\nComment B:\n{comment2}\nSummary in {word_limit} words:\n\"\"\"\n        ret = summary_model.run(summary_query)\n        return ret\n    def recursive_combine(comments_list: list[str]):\n        if len(comments_list) == 0:\n            raise Exception(\"No comments to combine\")\n        elif len(comments_list) == 1:\n            return comments_list[0]\n        elif len(comments_list) % 2 == 0:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])\n                for i in range(0, len(comments_list), 2)\n            ]\n        else:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])"
+        },
+        {
+            "comment": "Loop through every other element in 'comments_list' and combine them into a new list. Call recursive function on the combined list to further process. Return summary of combined comments.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/codepiece_summarizer.py\":35-42",
+            "content": "                for i in range(0, len(comments_list) - 1, 2)\n            ]\n            combined += [comments_list[-1]]\n        return recursive_combine(combined)\n    summary = recursive_combine(comments)\n    del summary_model\n    return summary"
+        }
+    ]
+}

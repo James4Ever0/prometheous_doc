@@ -1,0 +1,10 @@
+{
+    "summary": "This code is overriding the built-in print function to default flush=True. It demonstrates progress bar printing and sleep functionality with a custom print function.",
+    "details": [
+        {
+            "comment": "This code is overriding the built-in print function to default flush=True. It demonstrates progress bar printing and sleep functionality with a custom print function.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/stdout_redirect_progress/test.py\":0-31",
+            "content": "import builtins\nimport copy\nmyprint = copy.copy(builtins.print)\ndef custom_print(*args, **kwargs):\n    if \"flush\" not in kwargs:\n        kwargs[\"flush\"] = True\n    myprint(*args, **kwargs)\n# Override the built-in print function with the custom function\nbuiltins.print = custom_print\n# Now, when you use print, it will default to flush=True\nimport time\n# for _ in range(200):\n#     print(\">>>> PROCESSING PROGRESS: 30%\")\nprint(\"Hello, world\")\nSLEEP = 0.2\n# time.sleep(SLEEP)\nfor i in range(10000):\n    print(\n        f\">>>> PROCESSING PROGRESS: {i}%\"\n    )  # problem is here. how to set flush=True this as default?\n    print(\"hello world\")\n    time.sleep(SLEEP)"
+        }
+    ]
+}

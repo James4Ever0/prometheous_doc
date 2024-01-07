@@ -1,0 +1,10 @@
+{
+    "summary": "This code defines a function called \"greet\" that takes a name as input and prints out a greeting message. The function is defined 15 times, each time with the same implementation, and called once with the argument \"World\".",
+    "details": [
+        {
+            "comment": "This code defines a function called \"greet\" that takes a name as input and prints out a greeting message. The function is defined 15 times, each time with the same implementation, and called once with the argument \"World\".",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/code_view_demo.py\":1-62",
+            "content": "def greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")"
+        }
+    ]
+}

@@ -1,0 +1,140 @@
+{
+    "url": {
+        "full": "https://github.com/james4ever0/prometheous",
+        "partial": "james4ever0/prometheous"
+    },
+    "file_mapping": {
+        "0": {
+            "filepath": "/document_agi_computer_control/build_website.py",
+            "entry_id": 0,
+            "language_id": "python"
+        },
+        "1": {
+            "filepath": "/document_agi_computer_control/cache_db_context.py",
+            "entry_id": 8,
+            "language_id": "python"
+        },
+        "2": {
+            "filepath": "/document_agi_computer_control/code_view_demo.py",
+            "entry_id": 36,
+            "language_id": "python"
+        },
+        "3": {
+            "filepath": "/document_agi_computer_control/codepiece_summarizer.py",
+            "entry_id": 40,
+            "language_id": "python"
+        },
+        "4": {
+            "filepath": "/document_agi_computer_control/custom_doc_writer.py",
+            "entry_id": 46,
+            "language_id": "python"
+        },
+        "5": {
+            "filepath": "/document_agi_computer_control/estimate_utils.py",
+            "entry_id": 80,
+            "language_id": "python"
+        },
+        "6": {
+            "filepath": "/document_agi_computer_control/example.py",
+            "entry_id": 84,
+            "language_id": "python"
+        },
+        "7": {
+            "filepath": "/document_agi_computer_control/identify_utils.py",
+            "entry_id": 88,
+            "language_id": "python"
+        },
+        "8": {
+            "filepath": "/document_agi_computer_control/llm.py",
+            "entry_id": 92,
+            "language_id": "python"
+        },
+        "9": {
+            "filepath": "/document_agi_computer_control/path_select_utils.py",
+            "entry_id": 100,
+            "language_id": "python"
+        },
+        "10": {
+            "filepath": "/document_agi_computer_control/recursive_document_writer.py",
+            "entry_id": 104,
+            "language_id": "python"
+        },
+        "11": {
+            "filepath": "/document_agi_computer_control/slice_utils.py",
+            "entry_id": 126,
+            "language_id": "python"
+        },
+        "12": {
+            "filepath": "/document_agi_computer_control/stdout_redirect_progress/main.py",
+            "entry_id": 130,
+            "language_id": "python"
+        },
+        "13": {
+            "filepath": "/document_agi_computer_control/stdout_redirect_progress/main_once.py",
+            "entry_id": 142,
+            "language_id": "python"
+        },
+        "14": {
+            "filepath": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py",
+            "entry_id": 156,
+            "language_id": "python"
+        },
+        "15": {
+            "filepath": "/document_agi_computer_control/stdout_redirect_progress/test.py",
+            "entry_id": 172,
+            "language_id": "python"
+        },
+        "16": {
+            "filepath": "/document_agi_computer_control/stdout_redirect_progress/test_no_patch.py",
+            "entry_id": 176,
+            "language_id": "python"
+        },
+        "17": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
+            "entry_id": 180,
+            "language_id": "python"
+        },
+        "18": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
+            "entry_id": 184,
+            "language_id": "python"
+        },
+        "19": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
+            "entry_id": 206,
+            "language_id": "python"
+        },
+        "20": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
+            "entry_id": 212,
+            "language_id": "python"
+        },
+        "21": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py",
+            "entry_id": 224,
+            "language_id": "python"
+        },
+        "22": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py",
+            "entry_id": 270,
+            "language_id": "python"
+        },
+        "23": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py",
+            "entry_id": 276,
+            "language_id": "python"
+        },
+        "24": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/tree_utils.py",
+            "entry_id": 286,
+            "language_id": "python"
+        },
+        "25": {
+            "filepath": "/search_filepath_by_name/search_filepath.sh",
+            "entry_id": 308,
+            "language_id": "shell"
+        }
+    },
+    "project_name": "prometheous",
+    "split_count": 4
+}

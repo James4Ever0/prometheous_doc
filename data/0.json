@@ -1,0 +1,543 @@
+{
+    "0": {
+        "file_id": 0,
+        "content": "/document_agi_computer_control/build_website.py",
+        "type": "filepath"
+    },
+    "1": {
+        "file_id": 0,
+        "content": "The code defines a function `parse_arguments()` using the `argparse` module, expecting three arguments with an assertion on the `code_dir_path` being absolute. It then parses these arguments, loads a template file, generates HTML documents from the template at specified output paths, and writes these generated HTML documents to the output paths. Additionally, JSON data is loaded, summaries are extracted, and a dictionary of titles is created.",
+        "type": "summary"
+    },
+    "2": {
+        "file_id": 0,
+        "content": "import argparse\nimport json\nimport os\nfrom beartype import beartype\nfrom jinja2 import Template\n# it is better structured like:\n# db: shared, unified mapping between filename, document json name (uuid) and document summary\n# search results again in selected documents, from entry level\n# search results in selected folder (you may click different part of the filepath to jump)\n# search results in detail of each document file (if clicked in)\n# or, just build a unified search index out of the entire repo.\ndef parse_arguments():\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\n        \"-f\",\n        \"--file\",\n        help=\"directory of code to process\",\n    )\n    parser.add_argument(\n        \"-d\",\n        \"--document\",\n        help=\"directory of document json to read\",\n    )\n    parser.add_argument(\"-o\", \"--output\", help=\"document output path\", default=\"\")\n    args = parser.parse_args()\n    code_dir_path = args.file\n    json_path = args.document\n    output_path = args.output\n    assert os.path.isabs(code_dir_path)",
+        "type": "code",
+        "location": "/document_agi_computer_control/build_website.py:1-37"
+    },
+    "3": {
+        "file_id": 0,
+        "content": "This code defines a function `parse_arguments()` that parses command-line arguments using the `argparse` module. It expects three arguments: `-f/--file`, `-d/--document`, and `-o/--output`. The function asserts that the provided `code_dir_path` is an absolute path.",
+        "type": "comment"
+    },
+    "4": {
+        "file_id": 0,
+        "content": "    assert os.path.isabs(json_path)\n    assert os.path.isdir(code_dir_path)\n    assert os.path.isdir(json_path)\n    return output_path, code_dir_path, json_path\n@beartype\ndef generate_html_document(template: Template, data: dict):\n    html = template.render(**data)\n    return html\n@beartype\ndef load_template(template_path: str):\n    with open(template_path, \"r\") as f:\n        content = f.read()\n    template = Template(content)\n    return template\n@beartype\ndef generate_and_write_document(template: Template, data: dict, html_output_path: str):\n    content = generate_html_document(template, data)\n    with open(html_output_path, \"w+\") as f:\n        f.write(content)\nif __name__ == \"__main__\":\n    output_path, code_dir_path, json_path = parse_arguments()\n    template_path = \"website_template.html.j2\"\n    template = load_template(template_path)\n    datalist = []\n    html_output_path = os.path.join(output_path, \"index.html\")\n    for fpath in os.listdir(json_path):\n        json_abspath = os.path.join(json_path, fpath)\n        with open(json_abspath, \"r\") as f:",
+        "type": "code",
+        "location": "/document_agi_computer_control/build_website.py:38-78"
+    },
+    "5": {
+        "file_id": 0,
+        "content": "This code is parsing arguments, loading a template file, and generating HTML documents from the template using provided data. The HTML documents are then written to specified output paths.",
+        "type": "comment"
+    },
+    "6": {
+        "file_id": 0,
+        "content": "            data = json.load(\n                f\n            )  # {\"summary\": summary, \"details\": [{\"comment\": comment, \"location\": location, \"content\": content}, ...]}\n            summary = data[\"summary\"]\n            datalist.append(dict(title=summary))\n    datadict = {index: content for index, content in enumerate(datalist)}\n    template_data = dict(datadict=datadict)\n    generate_and_write_document(template, template_data, html_output_path)",
+        "type": "code",
+        "location": "/document_agi_computer_control/build_website.py:79-86"
+    },
+    "7": {
+        "file_id": 0,
+        "content": "Loading JSON data, extracting summary and creating a dictionary of titles.",
+        "type": "comment"
+    },
+    "8": {
+        "file_id": 1,
+        "content": "/document_agi_computer_control/cache_db_context.py",
+        "type": "filepath"
+    },
+    "9": {
+        "file_id": 1,
+        "content": "The code manages cache using TinyDB for data management and contains classes for file retrieval, database operations, and upsert constructions. It verifies file hashes, fixes missing filenames, ensures correct target existence, reads/writes file contents, handles test files, creates directories, and performs tests with a `test_and_assert` function.",
+        "type": "summary"
+    },
+    "10": {
+        "file_id": 1,
+        "content": "import hashlib\nimport os\nfrom contextlib import contextmanager\nfrom typing import Any, Callable, Iterable, Optional, Tuple\nimport pydantic\nimport tinydb\nfrom beartype import beartype\nimport tempfile\nUTF8 = \"utf-8\"\n@beartype\ndef read_file_bytes(filename: str):\n    with open(filename, \"rb\") as f:\n        content = f.read()\n    return content\n@beartype\ndef hash_file(filename: str):\n    content = read_file_bytes(filename)\n    hash_obj = hashlib.md5(content)\n    ret = hash_obj.hexdigest()\n    return ret\n@beartype\nclass CacheManager:\n    class subkey:\n        path = \"path\"\n        hash = \"hash\"\n    class key:\n        source = \"source\"\n        target = \"target\"\n    def __init__(self, db_path: str):\n        self.init_db(db_path)\n        self.init_query()\n    def init_db(self, db_path: str):\n        self.db_path = db_path\n        self.db = tinydb.TinyDB(db_path)\n    def init_query(self):\n        self.query = tinydb.Query()\n        self.source_path_query, self.source_hash_query = self.construct_query_by_key(\n            self.key.source",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:1-50"
+    },
+    "11": {
+        "file_id": 1,
+        "content": "This code defines a `CacheManager` class for handling cache data using the TinyDB library. It includes functions to read file contents and calculate MD5 hashes, which are used in the cache management operations. The class initializes a TinyDB database at a specified path and provides methods to construct queries based on different keys.",
+        "type": "comment"
+    },
+    "12": {
+        "file_id": 1,
+        "content": "        )\n        self.target_path_query, self.target_hash_query = self.construct_query_by_key(\n            self.key.target\n        )\n    def source_hash_eq(self, other: str):\n        return self.source_hash_query == other\n    def source_path_eq(self, other: str):\n        return self.source_path_query == other\n    def target_hash_eq(self, other: str):\n        return self.target_hash_query == other\n    def target_path_eq(self, other: str):\n        return self.target_path_query == other\n    def construct_query_by_key_and_subkey(self, key: str, subkey: str):\n        key_query = getattr(self.query, key)\n        subkey_query = getattr(key_query, subkey)\n        return subkey_query\n    def construct_query_by_key(self, key: str):\n        path_query = self.construct_query_by_key_and_subkey(key, self.subkey.path)\n        hash_query = self.construct_query_by_key_and_subkey(key, self.subkey.hash)\n        return path_query, hash_query\n    def get_record_by_computing_source_hash(self, source_path: str):\n        source_hash = hash_file(source_path)",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:51-79"
+    },
+    "13": {
+        "file_id": 1,
+        "content": "This code defines a class with methods for comparing the path and hash values of stored files. The class has properties for source and target paths and hashes. It also includes a method to construct queries based on a key and subkey, and methods to compare different properties. Lastly, it has a method to get a record by computing the source hash.",
+        "type": "comment"
+    },
+    "14": {
+        "file_id": 1,
+        "content": "        record = self.db.get(\n            self.source_hash_eq(source_hash)\n        )  # not necessarily directly pointing to the filepath\n        return record, source_hash\n    @classmethod\n    def get_record_file_path_and_hash(cls, record: dict, key: str) -> tuple[str, str]:\n        filepath = record[key][cls.subkey.path]\n        filehash = record[key][cls.subkey.hash]\n        return filepath, filehash\n    @classmethod\n    def get_record_source_path_and_hash(cls, record: dict):\n        return cls.get_record_file_path_and_hash(record, cls.key.source)\n    @classmethod\n    def get_record_target_path_and_hash(cls, record: dict):\n        return cls.get_record_file_path_and_hash(record, cls.key.target)\n    @classmethod\n    def verify_record_file_hash(cls, record: dict, key: str):\n        filepath, filehash = cls.get_record_file_path_and_hash(record, key)\n        verified = verify_filehash(filepath, filehash)\n        return verified\n    @classmethod\n    def verify_record_source_hash(cls, record: dict):\n        verified = cls.verify_record_file_hash(record, cls.key.source)",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:80-107"
+    },
+    "15": {
+        "file_id": 1,
+        "content": "This code defines a class with various methods for retrieving file paths and hashes from a record stored in the database. It provides functions to get source and target file paths along with their corresponding hashes, as well as verify the file hash.",
+        "type": "comment"
+    },
+    "16": {
+        "file_id": 1,
+        "content": "        return verified\n    @classmethod\n    def verify_record_target_hash(cls, record: dict):\n        verified = cls.verify_record_file_hash(record, cls.key.target)\n        return verified\n    @classmethod\n    def construct_upsert_data(\n        cls, source_path: str, source_hash: str, target_path: str, target_hash: str\n    ):\n        data = {\n            cls.key.source: {\n                cls.subkey.path: source_path,\n                cls.subkey.hash: source_hash,\n            },\n            cls.key.target: {\n                cls.subkey.path: target_path,\n                cls.subkey.hash: target_hash,\n            },\n        }\n        return data\n    def upsert_data(\n        self, source_path: str, source_hash: str, target_path: str, target_hash: str\n    ):\n        data = self.construct_upsert_data(\n            source_path, source_hash, target_path, target_hash\n        )\n        self.db.upsert(\n            data,\n            cond=self.source_path_eq(source_path),\n        )\n@contextmanager\ndef CacheContextManager(db_path: str):",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:108-144"
+    },
+    "17": {
+        "file_id": 1,
+        "content": "This code handles record verification, data construction for upsert operations, and provides a context manager for interacting with a database. It verifies file hashes, constructs data for insert or update operations, and manages a cache database context.",
+        "type": "comment"
+    },
+    "18": {
+        "file_id": 1,
+        "content": "    manager = CacheManager(db_path)\n    try:\n        yield manager\n    finally:\n        del manager\n@beartype\ndef verify_filehash(filepath: str, filehash: str):\n    if os.path.exists(filepath):\n        current_hash = hash_file(filepath)\n        if current_hash == filehash:\n            return True\n    return False\nclass TargetGeneratorParameter(pydantic.BaseModel):\n    target_dir_path: str\n    source_path: str\n@beartype\ndef generate_and_hash_target(\n    param: TargetGeneratorParameter,\n    target_path_generator: Callable[[TargetGeneratorParameter], str],\n    target_file_geneator: Callable[[str, str], Any],\n):\n    target_path = target_path_generator(param)\n    _ = target_file_geneator(param.source_path, target_path)\n    target_hash = hash_file(target_path)\n    return target_path, target_hash\n@beartype\ndef verify_record_target(record: dict, manager: CacheManager):\n    record_target_path, record_target_hash = manager.get_record_target_path_and_hash(\n        record\n    )\n    target_verified = verify_filehash(record_target_path, record_target_hash)",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:145-183"
+    },
+    "19": {
+        "file_id": 1,
+        "content": "This code manages cache data using a CacheManager, verifies file hashes, generates target files and their hashes, and checks if records match the expected target path and hash.",
+        "type": "comment"
+    },
+    "20": {
+        "file_id": 1,
+        "content": "    return target_verified, record_target_path, record_target_hash\n@beartype\ndef fix_record_if_source_filename_link_is_missing(\n    source_path: str,\n    source_hash: str,\n    record_target_path: str,\n    record_target_hash: str,\n    manager: CacheManager,\n):\n    pointed_record = manager.db.get(\n        manager.source_path_eq(source_path)\n        and manager.target_path_eq(record_target_path)\n    )\n    if pointed_record is None:\n        # insert record\n        manager.upsert_data(\n            source_path, source_hash, record_target_path, record_target_hash\n        )\n@beartype\ndef check_if_target_exists_with_source_in_record(\n    record: dict, source_path: str, source_hash: str, manager: CacheManager\n):\n    has_record = False\n    target_verified, record_target_path, record_target_hash = verify_record_target(\n        record, manager\n    )\n    if target_verified:\n        # we should check if we have source filename pointing to this target.\n        fix_record_if_source_filename_link_is_missing(\n            source_path, source_hash, record_target_path, record_target_hash, manager",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:184-217"
+    },
+    "21": {
+        "file_id": 1,
+        "content": "This code is defining two functions: `fix_record_if_source_filename_link_is_missing` and `check_if_target_exists_with_source_in_record`.\nThe first function checks if a record with the given source file path exists in the database. If it does not exist, it inserts the record into the database. The second function verifies if the target exists in the record along with its hash and path. If the target exists, it checks if there is a source file pointing to this target.\nBoth functions use the `CacheManager` class for interacting with the database.",
+        "type": "comment"
+    },
+    "22": {
+        "file_id": 1,
+        "content": "        )\n        has_record = True\n    else:\n        manager.db.remove(manager.target_path_eq(record_target_path))\n    return has_record, record_target_path\n@beartype\ndef check_if_source_exists_in_record(\n    source_path: str, manager: CacheManager\n) -> Tuple[bool, str, Optional[str]]:\n    has_record = False\n    record_target_path = None\n    record, source_hash = manager.get_record_by_computing_source_hash(source_path)\n    if record:\n        has_record, record_target_path = check_if_target_exists_with_source_in_record(\n            record, source_path, source_hash, manager\n        )\n    return has_record, source_hash, record_target_path\nclass SourceIteratorAndTargetGeneratorParam(pydantic.BaseModel):\n    source_dir_path: str\n    target_dir_path: str\n    db_path: str\n@beartype\ndef iterate_source_dir_and_generate_to_target_dir(\n    param: SourceIteratorAndTargetGeneratorParam,\n    source_walker: Callable[[str], Iterable[tuple[Any, str]]],\n    target_path_generator: Callable[[TargetGeneratorParameter], str],\n    target_file_geneator: Callable[[str, str], Any],",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:218-250"
+    },
+    "23": {
+        "file_id": 1,
+        "content": "This code appears to be performing the following tasks:\n1. It checks if a source file exists in a record (217-249): The function `check_if_source_exists_in_record` takes a `source_path` and `manager` object as arguments. It retrieves the record from the manager based on the source path, computes the source hash, and then checks if the target exists with the given source in the record.\n2. It iterates over a source directory and generates files to a target directory (254-307): The `iterate_source_dir_and_generate_to_target_dir` function takes a `param` object, a `source_walker` function, and a `target_path_generator` function as arguments. It iterates over the source directory using the `source_walker` function, generating target paths for each file or folder encountered, and then generates the files in the target directory using the `target_file_geneator` function.\n\nOverall, this code seems to be part of a larger system that manages records related to sources and targets, and performs operations on source directories while generating corresponding target directories.",
+        "type": "comment"
+    },
+    "24": {
+        "file_id": 1,
+        "content": "    join_source_dir: bool = True,\n) -> list[str]:\n    @beartype\n    def process_source_and_return_target_path(\n        manager: CacheManager,\n        source_path: str,\n        source_hash: str,\n    ):\n        target_path, target_hash = generate_and_hash_target(\n            TargetGeneratorParameter(\n                target_dir_path=param.target_dir_path, source_path=source_path\n            ),\n            target_path_generator,\n            target_file_geneator,\n        )\n        manager.upsert_data(source_path, source_hash, target_path, target_hash)\n        return target_path\n    @beartype\n    def get_target_path_by_checking_manager_or_processing(\n        manager: CacheManager, source_path: str\n    ) -> str:\n        (\n            has_record,\n            source_hash,\n            record_target_path,\n        ) = check_if_source_exists_in_record(source_path, manager)\n        if not has_record or not isinstance(record_target_path, str):\n            target_path = process_source_and_return_target_path(\n                manager,",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:251-280"
+    },
+    "25": {
+        "file_id": 1,
+        "content": "This code defines two functions for handling source and target paths. The `process_source_and_return_target_path` function generates a new target path and hash based on the given source path, and then stores this information in the manager. The `get_target_path_by_checking_manager_or_processing` function checks if the source path already exists in the manager's records; if not, it calls `process_source_and_return_target_path` to generate a new target path and store it in the manager. It returns the target path.",
+        "type": "comment"
+    },
+    "26": {
+        "file_id": 1,
+        "content": "                source_path,\n                source_hash,\n            )\n        else:\n            target_path = record_target_path\n        return target_path\n    @beartype\n    def process_file_and_append_to_cache_paths(\n        manager: CacheManager, fpath: str, processed_cache_paths: list[str]\n    ):\n        source_path = (\n            os.path.join(param.source_dir_path, fpath) if join_source_dir else fpath\n        )\n        target_path = get_target_path_by_checking_manager_or_processing(\n            manager, source_path\n        )\n        processed_cache_paths.append(target_path)\n    @beartype\n    def get_processed_cache_paths():\n        processed_cache_paths: list[str] = []\n        with CacheContextManager(param.db_path) as manager:\n            # to make this accountable, we need to convert it into list.\n            items = list(source_walker(param.source_dir_path))\n            items_count = len(items)\n            print(f\"\\n>>>> PROCESSING PROGRESS: 0/{items_count}\")\n            for i, (_, fpath) in enumerate(items):",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:281-308"
+    },
+    "27": {
+        "file_id": 1,
+        "content": "This code is a part of the cache management process in a computer control system. It retrieves file paths, checks if they already exist in the cache, and adds them to the cache if necessary. The `process_file_and_append_to_cache_paths` function determines the source and target paths for each file, and appends the target path to the list of processed cache paths. The `get_processed_cache_paths` function initializes an empty list of processed cache paths, creates a CacheContextManager object, walks through the source directory, processing each item, and appending the processed cache paths to the list. The progress is displayed as items are being processed.",
+        "type": "comment"
+    },
+    "28": {
+        "file_id": 1,
+        "content": "                print(\"processing:\", fpath)\n                process_file_and_append_to_cache_paths(\n                    manager, fpath, processed_cache_paths\n                )\n                print(f\"\\n>>>> PROCESSING PROGRESS: {i+1}/{items_count}\")\n        return processed_cache_paths\n    return get_processed_cache_paths()\n@beartype\ndef make_and_return_dir_path(base_dir: str, subdir: str):\n    dirpath = os.path.join(base_dir, subdir)\n    os.mkdir(dirpath)\n    return dirpath\n@beartype\ndef make_source_and_target_dirs(base_dir: str):\n    @beartype\n    def make_and_return_dir_path_under_base_dir(subdir: str):\n        return make_and_return_dir_path(base_dir, subdir)\n    source_dir = make_and_return_dir_path_under_base_dir(\"source\")\n    target_dir = make_and_return_dir_path_under_base_dir(\"target\")\n    return source_dir, target_dir\n@beartype\ndef read_file(fpath: str):\n    with open(fpath, \"r\", encoding=UTF8) as f:\n        return f.read()\n@beartype\ndef write_file(fpath: str, content: str):\n    with open(fpath, \"w+\", encoding=UTF8) as f:",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:309-345"
+    },
+    "29": {
+        "file_id": 1,
+        "content": "Processing the file and returning processed cache paths.\nCreating a new directory under base_dir with subdir name 'source'.\nCreating a new directory under base_dir with subdir name 'target'.\nReading contents of a file specified by fpath.\nWriting content to a file specified by fpath.",
+        "type": "comment"
+    },
+    "30": {
+        "file_id": 1,
+        "content": "        f.write(content)\ndef test_main():\n    test_file_basename = \"test_file.txt\"\n    test_db_basename = \"cache.db\"\n    test_source_content = \"test\"\n    @beartype\n    def test_target_file_generator(source_path: str, target_path: str):\n        content = read_file(source_path)\n        write_file(target_path, content)\n    @beartype\n    def join_dir_path_with_test_file_basename(dir_path: str):\n        ret = os.path.join(dir_path, test_file_basename)\n        return ret\n    @beartype\n    def test_target_path_generator(param: TargetGeneratorParameter):\n        ret = join_dir_path_with_test_file_basename(param.target_dir_path)\n        return ret\n    @beartype\n    def prepare_test_param(temp_dir: str):\n        source_dir, target_dir = make_source_and_target_dirs(temp_dir)\n        db_path = os.path.join(temp_dir, test_db_basename)\n        param = SourceIteratorAndTargetGeneratorParam(\n            source_dir_path=source_dir, target_dir_path=target_dir, db_path=db_path\n        )\n        return param\n    @beartype\n    def generate_test_source_walker(source_dir: str):",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:346-379"
+    },
+    "31": {
+        "file_id": 1,
+        "content": "This code defines functions for creating and managing test files and directories. It joins a directory path with the test file basename, generates target paths, prepares test parameters by making source and target directories, and initializes a test source walker function.",
+        "type": "comment"
+    },
+    "32": {
+        "file_id": 1,
+        "content": "        @beartype\n        def test_source_walker(dirpath: str):\n            return [(dirpath, it) for it in os.listdir(source_dir)]\n        return test_source_walker\n    @beartype\n    def write_test_content_to_file(file_path: str):\n        write_file(file_path, test_source_content)\n    @beartype\n    def assert_file_content_as_test_content(file_path):\n        test_target_content = read_file(file_path)\n        assert test_target_content == test_source_content\n    @contextmanager\n    @beartype\n    def prepare_test_file_context(source_dir: str, target_dir: str):\n        test_source_path = join_dir_path_with_test_file_basename(source_dir)\n        test_target_path = join_dir_path_with_test_file_basename(target_dir)\n        write_test_content_to_file(test_source_path)\n        try:\n            yield\n        finally:\n            assert_file_content_as_test_content(test_target_path)\n    def test_and_assert(param: SourceIteratorAndTargetGeneratorParam):\n        with prepare_test_file_context(param.source_dir_path, param.target_dir_path):",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:380-407"
+    },
+    "33": {
+        "file_id": 1,
+        "content": "This code defines a function `test_source_walker` that returns a list of tuples containing the directory path and each item in the directory. It also has three functions decorated with `@beartype` for writing test content to a file, asserting the file content as test content, and creating a context manager for preparing test files with source and target directories. The main function `test_and_assert` uses the context manager to perform tests.",
+        "type": "comment"
+    },
+    "34": {
+        "file_id": 1,
+        "content": "            test_source_walker = generate_test_source_walker(param.source_dir_path)\n            iterate_source_dir_and_generate_to_target_dir(\n                param,\n                test_source_walker,\n                test_target_path_generator,\n                test_target_file_generator,\n            )\n    def test_in_temporary_directory():\n        with tempfile.TemporaryDirectory() as temp_dir:\n            param = prepare_test_param(temp_dir)\n            test_and_assert(param)\n    test_in_temporary_directory()\n    print(\"test passed\")\nif __name__ == \"__main__\":\n    test_main()",
+        "type": "code",
+        "location": "/document_agi_computer_control/cache_db_context.py:408-426"
+    },
+    "35": {
+        "file_id": 1,
+        "content": "This code generates test source walker, iterates over source directory, and then generates to target directory. It also performs a test in a temporary directory and asserts the result. Finally, it prints \"test passed\" if the test passes.",
+        "type": "comment"
+    },
+    "36": {
+        "file_id": 2,
+        "content": "/document_agi_computer_control/code_view_demo.py",
+        "type": "filepath"
+    },
+    "37": {
+        "file_id": 2,
+        "content": "This code defines a function called \"greet\" that takes a name as input and prints out a greeting message. The function is defined 15 times, each time with the same implementation, and called once with the argument \"World\".",
+        "type": "summary"
+    },
+    "38": {
+        "file_id": 2,
+        "content": "def greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")\ndef greet(name):\n    print(\"Hello, \" + name)\ngreet(\"World\")",
+        "type": "code",
+        "location": "/document_agi_computer_control/code_view_demo.py:2-63"
+    },
+    "39": {
+        "file_id": 2,
+        "content": "This code defines a function called \"greet\" that takes a name as input and prints out a greeting message. The function is defined 15 times, each time with the same implementation, and called once with the argument \"World\".",
+        "type": "comment"
+    },
+    "40": {
+        "file_id": 3,
+        "content": "/document_agi_computer_control/codepiece_summarizer.py",
+        "type": "filepath"
+    },
+    "41": {
+        "file_id": 3,
+        "content": "The `comment_summarizer` function takes a list of comments and a word limit, using the LLM model to generate summaries for pairs of comments recursively, combining them until only one comment or all comments are used. The goal is to produce a summary of multiple comments while staying within the specified word limit.",
+        "type": "summary"
+    },
+    "42": {
+        "file_id": 3,
+        "content": "from beartype import beartype\nfrom llm import LLM\n@beartype\ndef comment_summarizer(comments: list[str], word_limit: int = 30) -> str:\n    summary_prompt = \"\"\"You are a professional summarizer. You will be given a pair of comments and produce a summary.\n\"\"\"\n    summary_model = LLM(summary_prompt)\n    def combine_comments(comment1: str, comment2: str):\n        summary_query = f\"\"\"Comment A:\n{comment1}\nComment B:\n{comment2}\nSummary in {word_limit} words:\n\"\"\"\n        ret = summary_model.run(summary_query)\n        return ret\n    def recursive_combine(comments_list: list[str]):\n        if len(comments_list) == 0:\n            raise Exception(\"No comments to combine\")\n        elif len(comments_list) == 1:\n            return comments_list[0]\n        elif len(comments_list) % 2 == 0:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])\n                for i in range(0, len(comments_list), 2)\n            ]\n        else:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])",
+        "type": "code",
+        "location": "/document_agi_computer_control/codepiece_summarizer.py:1-35"
+    },
+    "43": {
+        "file_id": 3,
+        "content": "This code defines a function called `comment_summarizer` that takes in a list of comments and a word limit. It uses the LLM model to generate summaries for pairs of comments, then recursively combines them until there is only one comment left or all comments are used. The purpose is to produce a summary of multiple comments while keeping it within the specified word limit.",
+        "type": "comment"
+    },
+    "44": {
+        "file_id": 3,
+        "content": "                for i in range(0, len(comments_list) - 1, 2)\n            ]\n            combined += [comments_list[-1]]\n        return recursive_combine(combined)\n    summary = recursive_combine(comments)\n    del summary_model\n    return summary",
+        "type": "code",
+        "location": "/document_agi_computer_control/codepiece_summarizer.py:36-43"
+    },
+    "45": {
+        "file_id": 3,
+        "content": "Loop through every other element in 'comments_list' and combine them into a new list. Call recursive function on the combined list to further process. Return summary of combined comments.",
+        "type": "comment"
+    },
+    "46": {
+        "file_id": 4,
+        "content": "/document_agi_computer_control/custom_doc_writer.py",
+        "type": "filepath"
+    },
+    "47": {
+        "file_id": 4,
+        "content": "The code includes a custom document writer class for managing line and character limits, functions for file processing, command-line argument parsing, and LLM utilization with helper functions. It defines a `split_and_process_lines()` function to process content using a given `process_queue`.",
+        "type": "summary"
+    },
+    "48": {
+        "file_id": 4,
+        "content": "# will implement the doc writer myself.\n# first thing: visualize the progress.\n# TODO: specify location like: module -> filename -> block name (class/method) -> lineno\n# usually the line is not so long. but if it does, we cut it.\nfrom typing import Callable\nimport random\nimport argparse, os\nimport json\nfrom beartype import beartype\nfrom beartype.door import is_bearable\nfrom beartype.vale import Is\nfrom typing import Annotated, Optional  # <--------------- if Python ≥ 3.9.0\nfrom llm import LLM, llm_context  # type:ignore\nimport copy\nfrom codepiece_summarizer import comment_summarizer  # type:ignore\nfrom typing import TypedDict\nUTF8 = \"utf-8\"\nDEFAULT_LINE_LIMIT = 50\nDEFAULT_GRACE_PERIOD_CHAR_LIMIT = 100  # TODO: grace period support in line spliting\nclass CustomDocumentWriterParams(TypedDict):\n    location_prefix: Optional[str]\nCUSTOM_DOC_WRITER_PARAMS = CustomDocumentWriterParams(location_prefix=None)\nDEFAULT_CHAR_LIMIT = 1000\nNonEmptyString = Annotated[str, Is[lambda str_obj: len(str_obj.strip()) > 0]]\nclass DocumentProcessingException(Exception):",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:1-37"
+    },
+    "49": {
+        "file_id": 4,
+        "content": "This code defines a custom document writer class with parameters for specifying the output location and character limit. It also handles line splitting if necessary, and provides grace period support in line splitting. The code uses various imports such as llm, beartype, argparse, and os modules.",
+        "type": "comment"
+    },
+    "50": {
+        "file_id": 4,
+        "content": "    ...  # placeholder\nclass UnableToCutByLineLimit(Exception):\n    ...\nclass ZeroCutIndex(Exception):\n    def __init__(self):\n        super().__init__(\"Unable to cut with zero cut index.\")\n@beartype\ndef commentProcessMethodFactory(\n    model: LLM, prompt_generator: Callable[[str, str, str], str]\n):\n    @beartype\n    def commentProcessMethod(\n        content: NonEmptyString,\n        location: NonEmptyString,\n        previous_comment: str = \"\",\n    ) -> tuple[bool, str]:\n        success = False\n        prompt = prompt_generator(content, location, previous_comment)\n        result = model.run(prompt)\n        success = True\n        return success, result\n    return commentProcessMethod\nclass DocProcessingItem(TypedDict):\n    comment: str\n    location: str\n    content: str\n@beartype\nclass DocProcessQueue:\n    def __init__(\n        self,\n        process_method: Callable[[str, str, str], tuple[bool, str]],\n        filepath: str,\n        char_limit: int = DEFAULT_CHAR_LIMIT,\n        line_limit: int = DEFAULT_LINE_LIMIT,\n        grace_period_char_limit: int = DEFAULT_GRACE_PERIOD_CHAR_LIMIT,",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:38-83"
+    },
+    "51": {
+        "file_id": 4,
+        "content": "This code defines a class called `DocProcessQueue` for processing documents. It takes a method that processes text comments with location and content information, along with optional parameters such as character and line limits, and grace period character limit. The class initializes an instance of the provided method and allows adding new documents to the queue for processing.",
+        "type": "comment"
+    },
+    "52": {
+        "file_id": 4,
+        "content": "        sample_size: Optional[int] = None,\n        use_previous_comment: bool = True,\n    ):\n        self.init_limits_and_counters(char_limit, line_limit, grace_period_char_limit)\n        self.init_storage()\n        self.init_sample(sample_size)\n        self.process_method = process_method\n        self.filepath = filepath\n        self.use_previous_comment = use_previous_comment\n    def init_sample(self, sample_size: Optional[int]):\n        self.sample_size = sample_size  # type: ignore\n        self.random_sample = self.sample_size is not None\n    def init_storage(self):\n        self.queue = []\n        self.locations = []\n        self.result_all: list[DocProcessingItem] = []\n        self.previous_comment = \"\"\n    def init_limits_and_counters(\n        self, char_limit: int, line_limit: int, grace_period_char_limit: int\n    ):\n        self.char_limit = char_limit\n        self.line_limit = line_limit\n        self.grace_period_char_limit = grace_period_char_limit\n        self.char_count = 0\n        self.line_count = 0",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:84-112"
+    },
+    "53": {
+        "file_id": 4,
+        "content": "This code initializes the class attributes and sets up the necessary data structures for processing documents. It accepts parameters like sample size, file path, and usage of previous comments. It also initializes counters and limits for character and line counts within a document.",
+        "type": "comment"
+    },
+    "54": {
+        "file_id": 4,
+        "content": "        # self.grace_period = False\n    def char_limit_exceeded(self):\n        return self.char_count > self.char_limit\n    def line_limit_exceeded(self):\n        return self.line_count > self.line_limit\n    def strip_storage_by_cut_index(self, cut_index: int):\n        self.queue = self.queue[cut_index:]\n        self.locations = self.locations[cut_index:]\n    def prepare_content_and_location(\n        self, cut_index: int, cut_content: Optional[str] = None\n    ):\n        from_lineno, to_lineno = self.locations[0], self.locations[cut_index - 1]\n        lines = self.queue[:cut_index]\n        if cut_content is not None:\n            lines[-1] = cut_content\n        content = \"\\n\".join(lines)\n        location = f'\"{self.filepath}\":{from_lineno}-{to_lineno}'\n        return content, location\n    def get_cut_and_remained_params_by_char_limit(self):\n        char_count = 0\n        remained_content = None\n        cut_content = None\n        remained_location = None\n        cut_index = None\n        for index, line in enumerate(self.queue):",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:113-143"
+    },
+    "55": {
+        "file_id": 4,
+        "content": "This code is responsible for handling line and character limit exceeding issues in a document writer. It includes functions to check if the limits are exceeded, remove content from the document based on cut index, prepare the remaining content and location, and retrieve the cut and remained parameters by character limit.",
+        "type": "comment"
+    },
+    "56": {
+        "file_id": 4,
+        "content": "            char_count += len(line)\n            if char_count > self.char_limit:\n                if char_count < self.char_limit + self.grace_period_char_limit:\n                    cut_content = line\n                    remained_content = \"\"\n                    remained_location = self.locations[index]\n                    cut_index = index + 1\n                else:\n                    reverse_cut_point = char_count - self.char_limit\n                    cut_point = len(line) - reverse_cut_point\n                    cut_content = line[:cut_point]\n                    remained_content = line[cut_point:]\n                    remained_location = self.locations[index]\n                    cut_index = index + 1\n                break\n        return cut_index, cut_content, remained_content, remained_location\n    def process_by_char_limit(self):\n        (\n            cut_index,\n            cut_content,\n            remained_content,\n            remained_location,\n        ) = self.get_cut_and_remained_params_by_char_limit()",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:144-167"
+    },
+    "57": {
+        "file_id": 4,
+        "content": "This code checks if the character count in a line exceeds the given limit. If it does, it determines whether to cut or split the line and returns the cut index, content, remaining content, and location.",
+        "type": "comment"
+    },
+    "58": {
+        "file_id": 4,
+        "content": "        content, location = self.prepare_content_and_location(\n            cut_index, cut_content  # type:ignore\n        )\n        self.strip_storage_by_cut_index(cut_index)  # type:ignore\n        if remained_content:\n            self.queue.insert(0, remained_content)\n            self.locations.insert(0, remained_location)\n        return content, location\n    def update_counters(self):\n        self.char_count = len(\"\".join(self.queue))\n        self.line_count = len(self.queue)\n    def get_cut_params_by_line_limit(self, final: bool):\n        if self.line_count > self.line_limit:\n            cut_index = self.line_limit\n        elif final:\n            cut_index = self.line_count\n        else:\n            raise UnableToCutByLineLimit(\n                f\"Current line count {self.line_count} below limit {self.line_limit}\"\n            )\n        if cut_index == 0:\n            raise ZeroCutIndex()\n        cut_content = None\n        return cut_index, cut_content\n    def process_by_line_limit(self, final=False):\n        cut_index, cut_content = self.get_cut_params_by_line_limit(final)",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:168-197"
+    },
+    "59": {
+        "file_id": 4,
+        "content": "Code is responsible for handling document writer operations, including preparing content and location, stripping storage by cut index, updating counters, getting cut parameters by line limit, and processing documents by line limit.",
+        "type": "comment"
+    },
+    "60": {
+        "file_id": 4,
+        "content": "        content, location = self.prepare_content_and_location(cut_index, cut_content)\n        self.strip_storage_by_cut_index(cut_index)\n        return content, location\n    def process_by_limit(self, final=False):\n        processed = True\n        content = \"\"\n        location = \"\"\n        if self.char_limit_exceeded():\n            content, location = self.process_by_char_limit() # here we use grace period\n        elif self.line_limit_exceeded() or final:\n            content, location = self.process_by_line_limit(final=final)\n        else:\n            processed = False\n        if processed:\n            self.update_counters()\n        return processed, content, location\n    def iterate_all_content_and_location_pairs(self):\n        while True:\n            try:\n                processed, content, location = self.process_by_limit(final=True)\n                if processed:\n                    yield content, location\n                else:\n                    break\n            except ZeroCutIndex:\n                break\n    def process_content_and_location_pair(self, content: str, location: str):",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:198-228"
+    },
+    "61": {
+        "file_id": 4,
+        "content": "This code prepares content and location, strips storage by cut index, returns content and location, processes content and location based on limits, iterates over all content and location pairs, and processes a given content and location pair.",
+        "type": "comment"
+    },
+    "62": {
+        "file_id": 4,
+        "content": "        success, result = self.process_method(\n            content,\n            location,\n            **(\n                {}\n                if not self.use_previous_comment\n                else dict(previous_comment=self.previous_comment)\n            ),  # type:ignore\n        )\n        if not success:\n            raise DocumentProcessingException(\"Failed to process code at:\", location)\n        self.previous_comment = result\n        ret = DocProcessingItem(\n            comment=result, location=location, content=content  # type:ignore\n        )\n        return ret\n    def collect_all_content_and_location_pairs(self):\n        ret = []\n        for content, location in self.iterate_all_content_and_location_pairs():\n            if is_bearable(content, NonEmptyString):\n                it = (content, location)\n                ret.append(it)\n        return ret\n    def sample_content_and_location_pairs(self):\n        pairs = self.collect_all_content_and_location_pairs()\n        pair_count = len(pairs)\n        if self.random_sample:",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:229-257"
+    },
+    "63": {
+        "file_id": 4,
+        "content": "The code defines a class with methods for processing code, collecting all content and location pairs, and sampling content and location pairs. The processed result is returned as a DocProcessingItem object.",
+        "type": "comment"
+    },
+    "64": {
+        "file_id": 4,
+        "content": "            self.sample_size: int\n            if pair_count > self.sample_size:\n                pairs = random.sample(pairs, k=self.sample_size)\n        return pairs\n    def process_and_collect_all(self):\n        for content, location in self.sample_content_and_location_pairs():\n            it = self.process_content_and_location_pair(content, location)\n            self.result_all.append(it)\n        return copy.copy(self.result_all)\n    def update_counter_after_push(self, content: str):\n        self.char_count += len(content)\n        self.line_count += 1\n    def push(self, content: str, lineno: int):\n        if is_bearable(content, NonEmptyString):\n            self.queue.append(content)\n            self.locations.append(lineno)\n            self.update_counter_after_push(content)  # type:ignore\n@beartype\ndef split_by_line(content: str, newline=\"\\n\"):\n    return content.split(newline)\n@beartype\ndef process_content_and_get_result(process_queue: DocProcessQueue, content: str):\n    @beartype\n    def iterate_and_push_line_to_process_queue(lines: list[str]):",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:258-288"
+    },
+    "65": {
+        "file_id": 4,
+        "content": "Function \"sample_content_and_location_pairs\" takes a list of pairs and returns a random sample of pairs based on the sample size.\n\n\"process_and_collect_all\" iterates through each content and location pair, processes them using another method, and appends the results to the result_all list. It then returns a copy of result_all.\n\n\"update_counter_after_push\" increments character count by the length of the input content and line count by 1.\n\n\"push\" adds the input content and lineno to the queue and locations lists, and calls update_counter_after_push method.\n\n\"split_by_line\" splits a string into a list of lines based on the specified newline character.\n\n\"process_content_and_get_result\" processes each line in the content using a separate method \"iterate_and_push_line_to_process_queue\", and returns the results.",
+        "type": "comment"
+    },
+    "66": {
+        "file_id": 4,
+        "content": "        for lineno, line in enumerate(lines):\n            process_queue.push(line, lineno)\n    def split_and_process_lines():\n        lines = split_by_line(content)\n        iterate_and_push_line_to_process_queue(lines)\n        return process_queue.process_and_collect_all()\n    return split_and_process_lines()\n@beartype\ndef assert_exists_as_absolute_directory(basepath: str):\n    assert os.path.isabs(basepath)\n    assert os.path.isdir(basepath)\n@beartype\ndef join_and_assert_exists_as_absolute_directory(basepath: str, name: str):\n    joined_path = os.path.join(basepath, name)\n    assert_exists_as_absolute_directory(joined_path)\n    return joined_path\ndef parse_arguments():\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\n        \"-d\",\n        \"--document_dir\",\n        help=f\"document directory, contains 'src' as source code directory, 'doc' as comment json directory\",\n    )\n    parser.add_argument(\n        \"-u\",\n        \"--repository_url\",\n        help=f\"url of source code repository\",\n    )\n    args = parser.parse_args()",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:289-326"
+    },
+    "67": {
+        "file_id": 4,
+        "content": "The code defines a function `split_and_process_lines()` that splits the given `content` into lines and processes them using a `process_queue`. It returns the processed lines. The `assert_exists_as_absolute_directory(basepath: str)` asserts that `basepath` is an absolute directory path, while `join_and_assert_exists_as_absolute_directory(basepath: str, name: str)` joins `basepath` and `name` to create a new absolute directory path, asserts its existence, and returns it. The code also parses command-line arguments using `argparse.ArgumentParser()`.",
+        "type": "comment"
+    },
+    "68": {
+        "file_id": 4,
+        "content": "    document_dir = args.document_dir\n    repository_url = args.repository_url\n    assert_exists_as_absolute_directory(document_dir)\n    join_and_assert_exists_as_absolute_directory(document_dir, \"src\")\n    join_and_assert_exists_as_absolute_directory(document_dir, \"doc\")\n    return document_dir, repository_url\n@beartype\ndef summary_code_comment_return_value(ret: list[DocProcessingItem]):\n    comment_list = [elem[\"comment\"] for elem in ret]\n    summary = comment_summarizer(comment_list)\n    return summary\nclass DocProcessingResult(TypedDict):\n    summary: str\n    details: list[DocProcessingItem]\n@beartype\ndef process_content_and_return_result(\n    model: LLM,\n    prompt_generator: Callable[[str, str, str], str],\n    code_file_path: str,\n    content: str,\n    char_limit: int = DEFAULT_CHAR_LIMIT,\n    line_limit: int = DEFAULT_LINE_LIMIT,\n    sample_size: Optional[int] = None,\n    use_previous_comment: bool = True,\n) -> DocProcessingResult:\n    commentProcessMethod = commentProcessMethodFactory(model, prompt_generator)",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:328-360"
+    },
+    "69": {
+        "file_id": 4,
+        "content": "This code defines a function that processes content and returns a DocProcessingResult object. It also includes a helper function, summary_code_comment_return_value, that summarizes a list of comments. The DocProcessingItem class is used to store details for each processing item.",
+        "type": "comment"
+    },
+    "70": {
+        "file_id": 4,
+        "content": "    process_queue = DocProcessQueue(\n        commentProcessMethod,\n        code_file_path,\n        char_limit=char_limit,\n        line_limit=line_limit,\n        sample_size=sample_size,\n        use_previous_comment=use_previous_comment,\n    )\n    result_all = process_content_and_get_result(process_queue, content)\n    summary = summary_code_comment_return_value(result_all)\n    data = DocProcessingResult(summary=summary, details=result_all)\n    del process_queue\n    return data\n@beartype\ndef read_file(file_path: str, encoding=UTF8):\n    with open(file_path, \"r\", encoding=encoding) as f:\n        content = f.read()\n    return content\n@beartype\ndef serialize_dict_and_write_to_file(data_dict: dict, file_path: str, encoding=UTF8):\n    with open(file_path, \"w+\", encoding=encoding) as f:\n        f.write(json.dumps(data_dict, indent=4))\n@beartype\ndef process_code_and_write_result(\n    model: LLM,\n    prompt_generator: Callable[[str, str, str], str],\n    code_file_path: str,\n    output_path: str,\n    char_limit: int = DEFAULT_CHAR_LIMIT,",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:361-395"
+    },
+    "71": {
+        "file_id": 4,
+        "content": "This code defines a function that processes documents using a custom document writer. It uses a DocProcessQueue to process the content and returns a summary and details of the processing result. The code also includes helper functions for reading files, serializing dictionaries, and writing results.",
+        "type": "comment"
+    },
+    "72": {
+        "file_id": 4,
+        "content": "    line_limit: int = DEFAULT_LINE_LIMIT,\n    sample_size: Optional[int] = None,\n    use_previous_comment=True,\n) -> DocProcessingResult:\n    content = read_file(code_file_path)\n    data = process_content_and_return_result(\n        model,\n        prompt_generator,\n        code_file_path,\n        content,\n        char_limit=char_limit,\n        line_limit=line_limit,\n        sample_size=sample_size,\n        use_previous_comment=use_previous_comment,\n    )\n    serialize_dict_and_write_to_file(data, output_path)  # type:ignore\n    return data\n@beartype\ndef filter_empty_elements(mlist: list):\n    return [elem for elem in mlist if elem]\n# TODO: check if is relative path only\n@beartype\ndef generate_location_component(location: str):\n    location_prefix = CUSTOM_DOC_WRITER_PARAMS.get(\"location_prefix\", None)\n    if isinstance(location_prefix, str):\n        lp = '\"' + location_prefix + \"/src/\"\n        assert location.startswith(lp)\n        location = '\"' + location[len(lp) :]\n    return f\"\"\"Storage location: {location}\"\"\"\n@beartype",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:396-431"
+    },
+    "73": {
+        "file_id": 4,
+        "content": "Code is a custom document writer function that reads input code file, processes the content using a provided model and prompt generator, and writes the output to an specified file path. It also includes helper functions for filtering empty elements in a list and generating location components for storage locations.",
+        "type": "comment"
+    },
+    "74": {
+        "file_id": 4,
+        "content": "def generate_previous_comment_component(previous_comment: str):\n    return (\n        f\"\"\"Previous code comment:\n{previous_comment}\"\"\"\n        if previous_comment\n        else \"\"\n    )\n@beartype\ndef generate_code_component(programming_language: str, code: str):\n    return f\"\"\"Code:\n```{programming_language}\n{code}\n```\"\"\"\ndef generate_comment_coponent():\n    return \"\"\"Comment for code:\n\"\"\"\n@beartype\ndef generate_prompt_components(\n    code: str, location: str, programming_language: str, previous_comment: str\n):\n    location_component = generate_location_component(location)\n    previous_comment_component = generate_previous_comment_component(previous_comment)\n    code_component = generate_code_component(programming_language, code)\n    comment_component = generate_comment_coponent()\n    components = [\n        location_component,\n        previous_comment_component,\n        code_component,\n        comment_component,\n    ]\n    return components\n@beartype\ndef assemble_prompt_components(components: list[str]):\n    components = filter_empty_elements(components)",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:432-473"
+    },
+    "75": {
+        "file_id": 4,
+        "content": "This code defines functions for generating prompt components in a document. The 'generate_prompt_components' function takes code, location, programming language, and previous comment as inputs and returns a list of formatted components for a prompt including the location, previous comment, code, and a placeholder comment.",
+        "type": "comment"
+    },
+    "76": {
+        "file_id": 4,
+        "content": "    ret = \"\\n\".join(components)\n    return ret\n@beartype\ndef generate_prompt_generator(programming_language: str):\n    @beartype\n    def prompt_generator(code: str, location: str, previous_comment: str = \"\"):\n        components = generate_prompt_components(\n            code, location, programming_language, previous_comment\n        )\n        ret = assemble_prompt_components(components)\n        return ret\n    return prompt_generator\n@beartype\ndef generate_prompt_base(word_limit: int):\n    return f\"\"\"You are reading code from codebase in chunks. You would understand what the code is doing and return brief comments (under {word_limit} words).\"\"\"\n@beartype\ndef construct_llm_and_write_code_comment(\n    code_file_path: str,\n    output_path: str,\n    programming_language: str = \"\",\n    word_limit: int = 15,\n    use_previous_comment: bool = False,  # different from our blog summarizer.\n):\n    prompt_base = generate_prompt_base(word_limit)\n    prompt_generator = generate_prompt_generator(programming_language)\n    with llm_context(prompt_base) as model:",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:474-508"
+    },
+    "77": {
+        "file_id": 4,
+        "content": "This code defines functions that generate prompts for generating comments on code. The `generate_prompt_base` function creates a base prompt for the LLM, while `generate_prompt_generator` generates more specific prompts based on the programming language and code location. The `construct_llm_and_write_code_comment` function uses these prompts to generate comments using an LLM (Language Model) in the context of the provided prompt base.",
+        "type": "comment"
+    },
+    "78": {
+        "file_id": 4,
+        "content": "        ret = process_code_and_write_result(\n            model,\n            prompt_generator,\n            code_file_path,\n            output_path,\n            use_previous_comment=use_previous_comment,\n        )\n    return ret\ndef main():\n    document_dir, repository_url = parse_arguments()\n    # programming_language, code_file_path, output_path = parse_arguments()\n    programming_language = \"\"\n    code_file_path = os.path.join(document_dir, \"src\")\n    output_path = \"doc\"\n    construct_llm_and_write_code_comment(\n        code_file_path, output_path, programming_language=programming_language\n    )\nif __name__ == \"__main__\":\n    main()",
+        "type": "code",
+        "location": "/document_agi_computer_control/custom_doc_writer.py:509-531"
+    },
+    "79": {
+        "file_id": 4,
+        "content": "This code defines a function `main()` which parses arguments, sets the language and file paths, and calls another function `construct_llm_and_write_code_comment()`. The main function then runs as the entry point when the script is executed directly.",
+        "type": "comment"
+    },
+    "80": {
+        "file_id": 5,
+        "content": "/document_agi_computer_control/estimate_utils.py",
+        "type": "filepath"
+    },
+    "81": {
+        "file_id": 5,
+        "content": "Estimates time to process all files in a file list. Requires file list from a rule, potential .gitignore generation.",
+        "type": "summary"
+    },
+    "82": {
+        "file_id": 5,
+        "content": "# estimate the time for processing all files under a file list.abs\n# you may need to obtain a file list from some rule.\n# is there anything for easy .gitignore generation?",
+        "type": "code",
+        "location": "/document_agi_computer_control/estimate_utils.py:1-3"
+    },
+    "83": {
+        "file_id": 5,
+        "content": "Estimates time to process all files in a file list. Requires file list from a rule, potential .gitignore generation.",
+        "type": "comment"
+    },
+    "84": {
+        "file_id": 6,
+        "content": "/document_agi_computer_control/example.py",
+        "type": "filepath"
+    },
+    "85": {
+        "file_id": 6,
+        "content": "Generates a \"hello world\" document and prints it.",
+        "type": "summary"
+    },
+    "86": {
+        "file_id": 6,
+        "content": "# generate doc for me!\ndef hello_world():\n    print(\"hello world\")",
+        "type": "code",
+        "location": "/document_agi_computer_control/example.py:1-4"
+    },
+    "87": {
+        "file_id": 6,
+        "content": "Generates a \"hello world\" document and prints it.",
+        "type": "comment"
+    },
+    "88": {
+        "file_id": 7,
+        "content": "/document_agi_computer_control/identify_utils.py",
+        "type": "filepath"
+    },
+    "89": {
+        "file_id": 7,
+        "content": "This code imports a function from the identify module and uses it to determine the language of a given filename. If the filename contains \"text\", it will randomly select another candidate language from the identified tags if available.",
+        "type": "summary"
+    },
+    "90": {
+        "file_id": 7,
+        "content": "from identify import identify\nfrom beartype import beartype\nimport random  # this is magic\nTEXT = \"text\"\n@beartype\ndef get_language_id_from_filename(filename: str) -> str:\n    language_id = TEXT # default language\n    tags = identify.tags_from_filename(filename)\n    if TEXT in tags:\n        candidates = [it for it in tags if it != TEXT]\n        if candidates:\n            language_id = random.choice(candidates)\n    return language_id\ndef test():\n    names = [\"test.bash\", \"test.py\", \"test.js\"]\n    for name in names:\n        language_id = get_language_id_from_filename(name)\n        print(f\"{name} -> {language_id}\")\nif __name__ == \"__main__\":\n    test()",
+        "type": "code",
+        "location": "/document_agi_computer_control/identify_utils.py:1-27"
+    },
+    "91": {
+        "file_id": 7,
+        "content": "This code imports a function from the identify module and uses it to determine the language of a given filename. If the filename contains \"text\", it will randomly select another candidate language from the identified tags if available.",
+        "type": "comment"
+    },
+    "92": {
+        "file_id": 8,
+        "content": "/document_agi_computer_control/llm.py",
+        "type": "filepath"
+    },
+    "93": {
+        "file_id": 8,
+        "content": "The code initializes a language model chain with provided parameters and includes functions for running the chain, displaying initialization configuration, printing query and response information. It iterates through LLM model chunks, prints them, stores in a list, joins into a string, counts tokens, and handles LLM model instance within a context manager.",
+        "type": "summary"
+    },
+    "94": {
+        "file_id": 8,
+        "content": "# from langchain.prompts import Prompt\n# from langchain.chains import LLMChain\nfrom contextlib import contextmanager\nfrom langchain.llms import OpenAI\nimport tiktoken\ndef print_center(banner: str):\n    print(banner.center(50, \"=\"))\nclass LLM:\n    \"\"\"\n    A class for running a Language Model Chain.\n    \"\"\"\n    def __init__(self, prompt: str, temperature=0, gpt_4=False):\n        \"\"\"\n        Initializes the LLM class.\n        Args:\n            prompt (PromptTemplate): The prompt template to use.\n            temperature (int): The temperature to use for the model.\n            gpt_4 (bool): Whether to use GPT-4 or Text-Davinci-003.\n        Side Effects:\n            Sets the class attributes.\n        \"\"\"\n        self.prompt = prompt\n        self.prompt_size = self.number_of_tokens(prompt)\n        self.temperature = temperature\n        self.gpt_4 = gpt_4\n        self.model_name = \"gpt-4\" if self.gpt_4 else \"text-davinci-003\"\n        self.max_tokens = 4097 * 2 if self.gpt_4 else 4097\n        self.show_init_config()\n    def show_init_config(self):",
+        "type": "code",
+        "location": "/document_agi_computer_control/llm.py:1-35"
+    },
+    "95": {
+        "file_id": 8,
+        "content": "The code defines a class named \"LLM\" for running Language Model Chains. The class initializes with a prompt, temperature, and gpt_4 parameters. It sets class attributes such as the prompt size, model name (gpt-4 or text-davinci-003), and maximum tokens based on these inputs. It also displays initialization configuration.",
+        "type": "comment"
+    },
+    "96": {
+        "file_id": 8,
+        "content": "        print_center(\"init params\")\n        print(f\"Model: {self.model_name}\")\n        print(f\"Max Tokens: {self.max_tokens}\")\n        print(f\"Prompt Size: {self.prompt_size}\")\n        print(f\"Temperature: {self.temperature}\")\n        print_center(\"init config\")\n        print(self.prompt)\n    def run(self, query):\n        \"\"\"\n        Runs the Language Model Chain.\n        Args:\n            code (str): The code to use for the chain.\n            **kwargs (dict): Additional keyword arguments.\n        Returns:\n            str: The generated text.\n        \"\"\"\n        llm = OpenAI(\n            temperature=self.temperature,\n            max_tokens=-1,\n            model_name=self.model_name,\n            disallowed_special=(),  # to suppress error when special tokens within the input text (encode special tokens as normal text)\n        )\n        # chain = LLMChain(llm=llm, prompt=self.prompt)\n        chunk_list = []\n        print_center(\"query\")\n        print(query)\n        print_center(\"response\")\n        _input = \"\\n\".join([self.prompt, query])",
+        "type": "code",
+        "location": "/document_agi_computer_control/llm.py:36-64"
+    },
+    "97": {
+        "file_id": 8,
+        "content": "This code initializes a language model chain and provides the necessary parameters for running it. It also includes a function to run the chain with a given query, and prints relevant information such as query and response.",
+        "type": "comment"
+    },
+    "98": {
+        "file_id": 8,
+        "content": "        for chunk in llm.stream(input=_input):\n            print(chunk, end=\"\", flush=True)\n            chunk_list.append(chunk)\n        print()\n        result = \"\".join(chunk_list)\n        return result\n    def number_of_tokens(self, text):\n        \"\"\"\n        Counts the number of tokens in a given text.\n        Args:\n            text (str): The text to count tokens for.\n        Returns:\n            int: The number of tokens in the text.\n        \"\"\"\n        encoding = tiktoken.encoding_for_model(\"gpt-4\")\n        return len(encoding.encode(text, disallowed_special=()))\n@contextmanager\ndef llm_context(prompt: str, temperature=0, gpt_4=False):\n    model = LLM(prompt, temperature=temperature, gpt_4=gpt_4)\n    try:\n        yield model\n    finally:\n        del model",
+        "type": "code",
+        "location": "/document_agi_computer_control/llm.py:65-91"
+    },
+    "99": {
+        "file_id": 8,
+        "content": "Code iterates through chunks of text from the LLM model, prints each chunk, and stores them in a list. After all chunks are printed, it joins them into a single string and returns it. The code also defines two functions: \"number_of_tokens\" for counting tokens in a given text and \"llm_context\" as a context manager to handle the LLM model instance.",
+        "type": "comment"
+    }
+}

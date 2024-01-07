@@ -1,0 +1,10 @@
+{
+    "summary": "Estimates time to process all files in a file list. Requires file list from a rule, potential .gitignore generation.",
+    "details": [
+        {
+            "comment": "Estimates time to process all files in a file list. Requires file list from a rule, potential .gitignore generation.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/estimate_utils.py\":0-2",
+            "content": "# estimate the time for processing all files under a file list.abs\n# you may need to obtain a file list from some rule.\n# is there anything for easy .gitignore generation?"
+        }
+    ]
+}

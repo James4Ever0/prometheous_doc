@@ -1,0 +1,10 @@
+{
+    "summary": "Generates a \"hello world\" document and prints it.",
+    "details": [
+        {
+            "comment": "Generates a \"hello world\" document and prints it.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/example.py\":0-3",
+            "content": "# generate doc for me!\ndef hello_world():\n    print(\"hello world\")"
+        }
+    ]
+}

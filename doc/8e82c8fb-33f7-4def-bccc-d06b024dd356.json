@@ -1,0 +1,10 @@
+{
+    "summary": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+    "details": [
+        {
+            "comment": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py\":0-36",
+            "content": "import asyncio\nasync def read_lines(stream:asyncio.StreamReader):\n    while True:\n        line = await stream.readline()\n        # print(\"line\")\n        if not line:\n            break\n        else: \n            yield line\nasync def run_command(command:list[str]):\n    process = await asyncio.create_subprocess_exec(\n        *command,\n        stdout=asyncio.subprocess.PIPE,\n        # stderr=asyncio.subprocess.PIPE\n    )\n    f = [it for it in read_lines(process.stdout)]\n    # stderr_reader = asyncio.StreamReader()\n    # Read lines from stdout and stderr concurrently\n    # await asyncio.gather(\n    #     read_lines(stdout_reader),\n    #     read_lines(stderr_reader)\n    # )\n    # Wait for the process to complete\n    await process.wait()\nasync def main():\n    command = [\"ls\", \"-l\"]\n    # Run the command asynchronously\n    await run_command(command)\nif __name__ == \"__main__\":\n    # Run the event loop\n    asyncio.run(main())"
+        }
+    ]
+}
