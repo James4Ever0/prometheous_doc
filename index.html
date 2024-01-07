@@ -664,20 +664,22 @@
                 //     // searchInputEventListener
                 //     keyPressListener
                 // );
-                setInterval(()=>{
-                    if(hasInputEvent){
+                setInterval(() => {
+                    if (hasInputEvent) {
                         let currentTime = new Date().getTime();
-                        if ((currentTime - lastInputEventTime)> 1000) // 2 seconds ago.
-                       { hasInputEvent = false;
-                        if (!isSearchRunning){
-                            isSearchRunning=true;
-                            searchInputEventListener();
-                            isSearchRunning=false;
-                        }}
+                        if ((currentTime - lastInputEventTime) > 500) // .5 sec
+                        {
+                            hasInputEvent = false;
+                            if (!isSearchRunning) {
+                                isSearchRunning = true;
+                                searchInputEventListener();
+                                isSearchRunning = false;
+                            }
+                        }
                     }
                 }, 100)
 
-                searchInputElem.addEventListener('input',() => {
+                searchInputElem.addEventListener('input', () => {
                     hasInputEvent = true;
                     lastInputEventTime = new Date().getTime();
                 })
@@ -690,7 +692,7 @@
                     //     key: 'Enter'
                     // });
                     // searchInputElem.dispatchEvent(enterKeyEvent);
-                    hasInputEvent=true;
+                    hasInputEvent = true;
                 }
                 function displayFile(file_path) {
                     // TODO: handle file query string
