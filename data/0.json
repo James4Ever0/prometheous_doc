@@ -255,289 +255,288 @@
     },
     "47": {
         "file_id": 4,
-        "content": "The code includes a custom document writer class for managing line and character limits, functions for file processing, command-line argument parsing, and LLM utilization with helper functions. It defines a `split_and_process_lines()` function to process content using a given `process_queue`.",
+        "content": "This code develops a custom document writer class with progress visualization and queue-based processing of comments. It includes functions for content processing, counter updating, line splitting, and language model usage, likely part of a larger system used for summarization or analysis tasks. The main function handles argument parsing, setting default values, and executing the prompt generation process.",
         "type": "summary"
     },
     "48": {
         "file_id": 4,
-        "content": "# will implement the doc writer myself.\n# first thing: visualize the progress.\n# TODO: specify location like: module -> filename -> block name (class/method) -> lineno\n# usually the line is not so long. but if it does, we cut it.\nfrom typing import Callable\nimport random\nimport argparse, os\nimport json\nfrom beartype import beartype\nfrom beartype.door import is_bearable\nfrom beartype.vale import Is\nfrom typing import Annotated, Optional  # <--------------- if Python ≥ 3.9.0\nfrom llm import LLM, llm_context  # type:ignore\nimport copy\nfrom codepiece_summarizer import comment_summarizer  # type:ignore\nfrom typing import TypedDict\nUTF8 = \"utf-8\"\nDEFAULT_LINE_LIMIT = 50\nDEFAULT_GRACE_PERIOD_CHAR_LIMIT = 100  # TODO: grace period support in line spliting\nclass CustomDocumentWriterParams(TypedDict):\n    location_prefix: Optional[str]\nCUSTOM_DOC_WRITER_PARAMS = CustomDocumentWriterParams(location_prefix=None)\nDEFAULT_CHAR_LIMIT = 1000\nNonEmptyString = Annotated[str, Is[lambda str_obj: len(str_obj.strip()) > 0]]\nclass DocumentProcessingException(Exception):",
+        "content": "# will implement the doc writer myself.\n# first thing: visualize the progress.\n# TODO: specify location like: module -> filename -> block name (class/method) -> lineno\n# usually the line is not so long. but if it does, we cut it.\nfrom typing import Callable\nimport random\nimport argparse, os\nimport json\nfrom beartype import beartype\nfrom beartype.door import is_bearable\nfrom beartype.vale import Is\nfrom typing import Annotated, Optional  # <--------------- if Python ≥ 3.9.0\nfrom llm import LLM, llm_context  # type:ignore\nimport copy\nfrom codepiece_summarizer import comment_summarizer  # type:ignore\nfrom typing import TypedDict\nUTF8 = \"utf-8\"\nDEFAULT_LINE_LIMIT = 50\nDEFAULT_GRACE_PERIOD_CHAR_LIMIT = 100  # TODO: grace period support in line spliting\nclass CustomDocumentWriterParams(TypedDict):\n    location_prefix: Optional[str]\n    project_name: Optional[str]\nCUSTOM_DOC_WRITER_PARAMS = CustomDocumentWriterParams(\n    location_prefix=None, project_name=None\n)\nDEFAULT_CHAR_LIMIT = 1000\nNonEmptyString = Annotated[str, Is[lambda str_obj: len(str_obj.strip()) > 0]]",
         "type": "code",
         "location": "/document_agi_computer_control/custom_doc_writer.py:1-37"
     },
     "49": {
         "file_id": 4,
-        "content": "This code defines a custom document writer class with parameters for specifying the output location and character limit. It also handles line splitting if necessary, and provides grace period support in line splitting. The code uses various imports such as llm, beartype, argparse, and os modules.",
+        "content": "This code is a part of a custom document writer, which will implement the document writing functionality. It begins by visualizing progress and specifies the location using a prefix. The code also mentions that long lines may be cut if necessary. It imports various modules and classes for handling typing, file operations, and line management. It defines some constants like UTF8 encoding, default character limit, and grace period character limit. Finally, it provides a dictionary-like class CustomDocumentWriterParams for configuring the writer's parameters with optional location prefix and project name.",
         "type": "comment"
     },
     "50": {
         "file_id": 4,
-        "content": "    ...  # placeholder\nclass UnableToCutByLineLimit(Exception):\n    ...\nclass ZeroCutIndex(Exception):\n    def __init__(self):\n        super().__init__(\"Unable to cut with zero cut index.\")\n@beartype\ndef commentProcessMethodFactory(\n    model: LLM, prompt_generator: Callable[[str, str, str], str]\n):\n    @beartype\n    def commentProcessMethod(\n        content: NonEmptyString,\n        location: NonEmptyString,\n        previous_comment: str = \"\",\n    ) -> tuple[bool, str]:\n        success = False\n        prompt = prompt_generator(content, location, previous_comment)\n        result = model.run(prompt)\n        success = True\n        return success, result\n    return commentProcessMethod\nclass DocProcessingItem(TypedDict):\n    comment: str\n    location: str\n    content: str\n@beartype\nclass DocProcessQueue:\n    def __init__(\n        self,\n        process_method: Callable[[str, str, str], tuple[bool, str]],\n        filepath: str,\n        char_limit: int = DEFAULT_CHAR_LIMIT,\n        line_limit: int = DEFAULT_LINE_LIMIT,\n        grace_period_char_limit: int = DEFAULT_GRACE_PERIOD_CHAR_LIMIT,",
+        "content": "class DocumentProcessingException(Exception):\n    ...  # placeholder\nclass UnableToCutByLineLimit(Exception):\n    ...\nclass ZeroCutIndex(Exception):\n    def __init__(self):\n        super().__init__(\"Unable to cut with zero cut index.\")\n@beartype\ndef commentProcessMethodFactory(\n    model: LLM, prompt_generator: Callable[[str, str, str], str]\n):\n    @beartype\n    def commentProcessMethod(\n        content: NonEmptyString,\n        location: NonEmptyString,\n        previous_comment: str = \"\",\n    ) -> tuple[bool, str]:\n        success = False\n        prompt = prompt_generator(content, location, previous_comment)\n        result = model.run(prompt)\n        success = True\n        return success, result\n    return commentProcessMethod\nclass DocProcessingItem(TypedDict):\n    comment: str\n    location: str\n    content: str\n@beartype\nclass DocProcessQueue:\n    def __init__(\n        self,\n        process_method: Callable[[str, str, str], tuple[bool, str]],\n        filepath: str,\n        char_limit: int = DEFAULT_CHAR_LIMIT,\n        line_limit: int = DEFAULT_LINE_LIMIT,",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:38-83"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:40-85"
     },
     "51": {
         "file_id": 4,
-        "content": "This code defines a class called `DocProcessQueue` for processing documents. It takes a method that processes text comments with location and content information, along with optional parameters such as character and line limits, and grace period character limit. The class initializes an instance of the provided method and allows adding new documents to the queue for processing.",
+        "content": "This code defines a `DocProcessQueue` class for processing document comments in a queue-like manner. It utilizes a `process_method` that takes a comment, location, and previous comment as input to generate a response. The class also supports line and character limits, and throws exceptions like `UnableToCutByLineLimit` and `ZeroCutIndex`.",
         "type": "comment"
     },
     "52": {
         "file_id": 4,
-        "content": "        sample_size: Optional[int] = None,\n        use_previous_comment: bool = True,\n    ):\n        self.init_limits_and_counters(char_limit, line_limit, grace_period_char_limit)\n        self.init_storage()\n        self.init_sample(sample_size)\n        self.process_method = process_method\n        self.filepath = filepath\n        self.use_previous_comment = use_previous_comment\n    def init_sample(self, sample_size: Optional[int]):\n        self.sample_size = sample_size  # type: ignore\n        self.random_sample = self.sample_size is not None\n    def init_storage(self):\n        self.queue = []\n        self.locations = []\n        self.result_all: list[DocProcessingItem] = []\n        self.previous_comment = \"\"\n    def init_limits_and_counters(\n        self, char_limit: int, line_limit: int, grace_period_char_limit: int\n    ):\n        self.char_limit = char_limit\n        self.line_limit = line_limit\n        self.grace_period_char_limit = grace_period_char_limit\n        self.char_count = 0\n        self.line_count = 0",
+        "content": "        grace_period_char_limit: int = DEFAULT_GRACE_PERIOD_CHAR_LIMIT,\n        sample_size: Optional[int] = None,\n        use_previous_comment: bool = True,\n    ):\n        self.init_limits_and_counters(char_limit, line_limit, grace_period_char_limit)\n        self.init_storage()\n        self.init_sample(sample_size)\n        self.process_method = process_method\n        self.filepath = filepath\n        self.use_previous_comment = use_previous_comment\n    def init_sample(self, sample_size: Optional[int]):\n        self.sample_size = sample_size  # type: ignore\n        self.random_sample = self.sample_size is not None\n    def init_storage(self):\n        self.queue = []\n        self.locations = []\n        self.result_all: list[DocProcessingItem] = []\n        self.previous_comment = \"\"\n    def init_limits_and_counters(\n        self, char_limit: int, line_limit: int, grace_period_char_limit: int\n    ):\n        self.char_limit = char_limit\n        self.line_limit = line_limit\n        self.grace_period_char_limit = grace_period_char_limit",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:84-112"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:86-112"
     },
     "53": {
         "file_id": 4,
-        "content": "This code initializes the class attributes and sets up the necessary data structures for processing documents. It accepts parameters like sample size, file path, and usage of previous comments. It also initializes counters and limits for character and line counts within a document.",
+        "content": "This code initializes a custom document writer class with various parameters such as character limit, line limit, grace period character limit, optional sample size, and whether to use the previous comment. The class methods initialize internal data structures like queues, lists, and result all list. It also sets the file path for processing.",
         "type": "comment"
     },
     "54": {
         "file_id": 4,
-        "content": "        # self.grace_period = False\n    def char_limit_exceeded(self):\n        return self.char_count > self.char_limit\n    def line_limit_exceeded(self):\n        return self.line_count > self.line_limit\n    def strip_storage_by_cut_index(self, cut_index: int):\n        self.queue = self.queue[cut_index:]\n        self.locations = self.locations[cut_index:]\n    def prepare_content_and_location(\n        self, cut_index: int, cut_content: Optional[str] = None\n    ):\n        from_lineno, to_lineno = self.locations[0], self.locations[cut_index - 1]\n        lines = self.queue[:cut_index]\n        if cut_content is not None:\n            lines[-1] = cut_content\n        content = \"\\n\".join(lines)\n        location = f'\"{self.filepath}\":{from_lineno}-{to_lineno}'\n        return content, location\n    def get_cut_and_remained_params_by_char_limit(self):\n        char_count = 0\n        remained_content = None\n        cut_content = None\n        remained_location = None\n        cut_index = None\n        for index, line in enumerate(self.queue):",
+        "content": "        self.char_count = 0\n        self.line_count = 0\n        # self.grace_period = False\n    def char_limit_exceeded(self):\n        return self.char_count > self.char_limit\n    def line_limit_exceeded(self):\n        return self.line_count > self.line_limit\n    def strip_storage_by_cut_index(self, cut_index: int):\n        self.queue = self.queue[cut_index:]\n        self.locations = self.locations[cut_index:]\n    def prepare_content_and_location(\n        self, cut_index: int, cut_content: Optional[str] = None\n    ):\n        from_lineno, to_lineno = self.locations[0], self.locations[cut_index - 1]\n        lines = self.queue[:cut_index]\n        if cut_content is not None:\n            lines[-1] = cut_content\n        content = \"\\n\".join(lines)\n        location = f'\"{self.filepath}\":{from_lineno}-{to_lineno}'\n        return content, location\n    def get_cut_and_remained_params_by_char_limit(self):\n        char_count = 0\n        remained_content = None\n        cut_content = None\n        remained_location = None\n        cut_index = None",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:113-143"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:114-145"
     },
     "55": {
         "file_id": 4,
-        "content": "This code is responsible for handling line and character limit exceeding issues in a document writer. It includes functions to check if the limits are exceeded, remove content from the document based on cut index, prepare the remaining content and location, and retrieve the cut and remained parameters by character limit.",
+        "content": "This code defines a class with methods to check character and line limits, remove content exceeding those limits, prepare the remaining content and location for output. It also includes functions to get cut information based on character limit.",
         "type": "comment"
     },
     "56": {
         "file_id": 4,
-        "content": "            char_count += len(line)\n            if char_count > self.char_limit:\n                if char_count < self.char_limit + self.grace_period_char_limit:\n                    cut_content = line\n                    remained_content = \"\"\n                    remained_location = self.locations[index]\n                    cut_index = index + 1\n                else:\n                    reverse_cut_point = char_count - self.char_limit\n                    cut_point = len(line) - reverse_cut_point\n                    cut_content = line[:cut_point]\n                    remained_content = line[cut_point:]\n                    remained_location = self.locations[index]\n                    cut_index = index + 1\n                break\n        return cut_index, cut_content, remained_content, remained_location\n    def process_by_char_limit(self):\n        (\n            cut_index,\n            cut_content,\n            remained_content,\n            remained_location,\n        ) = self.get_cut_and_remained_params_by_char_limit()",
+        "content": "        for index, line in enumerate(self.queue):\n            char_count += len(line)\n            if char_count > self.char_limit:\n                if char_count < self.char_limit + self.grace_period_char_limit:\n                    cut_content = line\n                    remained_content = \"\"\n                    remained_location = self.locations[index]\n                    cut_index = index + 1\n                else:\n                    reverse_cut_point = char_count - self.char_limit\n                    cut_point = len(line) - reverse_cut_point\n                    cut_content = line[:cut_point]\n                    remained_content = line[cut_point:]\n                    remained_location = self.locations[index]\n                    cut_index = index + 1\n                break\n        return cut_index, cut_content, remained_content, remained_location\n    def process_by_char_limit(self):\n        (\n            cut_index,\n            cut_content,\n            remained_content,\n            remained_location,\n        ) = self.get_cut_and_remained_params_by_char_limit()",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:144-167"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:146-170"
     },
     "57": {
         "file_id": 4,
-        "content": "This code checks if the character count in a line exceeds the given limit. If it does, it determines whether to cut or split the line and returns the cut index, content, remaining content, and location.",
+        "content": "This function loops through the queue of lines, tracks character count, and determines when to split a line based on a specified char limit. It returns indices for cut and remained content, along with their respective locations.",
         "type": "comment"
     },
     "58": {
         "file_id": 4,
         "content": "        content, location = self.prepare_content_and_location(\n            cut_index, cut_content  # type:ignore\n        )\n        self.strip_storage_by_cut_index(cut_index)  # type:ignore\n        if remained_content:\n            self.queue.insert(0, remained_content)\n            self.locations.insert(0, remained_location)\n        return content, location\n    def update_counters(self):\n        self.char_count = len(\"\".join(self.queue))\n        self.line_count = len(self.queue)\n    def get_cut_params_by_line_limit(self, final: bool):\n        if self.line_count > self.line_limit:\n            cut_index = self.line_limit\n        elif final:\n            cut_index = self.line_count\n        else:\n            raise UnableToCutByLineLimit(\n                f\"Current line count {self.line_count} below limit {self.line_limit}\"\n            )\n        if cut_index == 0:\n            raise ZeroCutIndex()\n        cut_content = None\n        return cut_index, cut_content\n    def process_by_line_limit(self, final=False):\n        cut_index, cut_content = self.get_cut_params_by_line_limit(final)",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:168-197"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:171-200"
     },
     "59": {
         "file_id": 4,
-        "content": "Code is responsible for handling document writer operations, including preparing content and location, stripping storage by cut index, updating counters, getting cut parameters by line limit, and processing documents by line limit.",
+        "content": "This code contains a custom document writer class with methods for preparing content and location, stripping storage by cut index, updating counters based on queue content, getting cut parameters by line limit, and processing documents by line limit.",
         "type": "comment"
     },
     "60": {
         "file_id": 4,
-        "content": "        content, location = self.prepare_content_and_location(cut_index, cut_content)\n        self.strip_storage_by_cut_index(cut_index)\n        return content, location\n    def process_by_limit(self, final=False):\n        processed = True\n        content = \"\"\n        location = \"\"\n        if self.char_limit_exceeded():\n            content, location = self.process_by_char_limit() # here we use grace period\n        elif self.line_limit_exceeded() or final:\n            content, location = self.process_by_line_limit(final=final)\n        else:\n            processed = False\n        if processed:\n            self.update_counters()\n        return processed, content, location\n    def iterate_all_content_and_location_pairs(self):\n        while True:\n            try:\n                processed, content, location = self.process_by_limit(final=True)\n                if processed:\n                    yield content, location\n                else:\n                    break\n            except ZeroCutIndex:\n                break\n    def process_content_and_location_pair(self, content: str, location: str):",
+        "content": "        content, location = self.prepare_content_and_location(cut_index, cut_content)\n        self.strip_storage_by_cut_index(cut_index)\n        return content, location\n    def process_by_limit(self, final=False):\n        processed = True\n        content = \"\"\n        location = \"\"\n        if self.char_limit_exceeded():\n            content, location = self.process_by_char_limit()  # here we use grace period\n        elif self.line_limit_exceeded() or final:\n            content, location = self.process_by_line_limit(final=final)\n        else:\n            processed = False\n        if processed:\n            self.update_counters()\n        return processed, content, location\n    def iterate_all_content_and_location_pairs(self):\n        while True:\n            try:\n                processed, content, location = self.process_by_limit(final=True)\n                if processed:\n                    yield content, location\n                else:\n                    break\n            except ZeroCutIndex:\n                break",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:198-228"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:201-229"
     },
     "61": {
         "file_id": 4,
-        "content": "This code prepares content and location, strips storage by cut index, returns content and location, processes content and location based on limits, iterates over all content and location pairs, and processes a given content and location pair.",
+        "content": "The code implements a custom document writer that processes text based on character and line limits, yielding content and location pairs until either the limit is reached or no more cuts can be made. It also updates counters for each processed pair.",
         "type": "comment"
     },
     "62": {
         "file_id": 4,
-        "content": "        success, result = self.process_method(\n            content,\n            location,\n            **(\n                {}\n                if not self.use_previous_comment\n                else dict(previous_comment=self.previous_comment)\n            ),  # type:ignore\n        )\n        if not success:\n            raise DocumentProcessingException(\"Failed to process code at:\", location)\n        self.previous_comment = result\n        ret = DocProcessingItem(\n            comment=result, location=location, content=content  # type:ignore\n        )\n        return ret\n    def collect_all_content_and_location_pairs(self):\n        ret = []\n        for content, location in self.iterate_all_content_and_location_pairs():\n            if is_bearable(content, NonEmptyString):\n                it = (content, location)\n                ret.append(it)\n        return ret\n    def sample_content_and_location_pairs(self):\n        pairs = self.collect_all_content_and_location_pairs()\n        pair_count = len(pairs)\n        if self.random_sample:",
+        "content": "    def process_content_and_location_pair(self, content: str, location: str):\n        success, result = self.process_method(\n            content,\n            location,\n            **(\n                {}\n                if not self.use_previous_comment\n                else dict(previous_comment=self.previous_comment)\n            ),  # type:ignore\n        )\n        if not success:\n            raise DocumentProcessingException(\"Failed to process code at:\", location)\n        self.previous_comment = result\n        ret = DocProcessingItem(\n            comment=result, location=location, content=content  # type:ignore\n        )\n        return ret\n    def collect_all_content_and_location_pairs(self):\n        ret = []\n        for content, location in self.iterate_all_content_and_location_pairs():\n            if is_bearable(content, NonEmptyString):\n                it = (content, location)\n                ret.append(it)\n        return ret\n    def sample_content_and_location_pairs(self):\n        pairs = self.collect_all_content_and_location_pairs()",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:229-257"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:231-258"
     },
     "63": {
         "file_id": 4,
-        "content": "The code defines a class with methods for processing code, collecting all content and location pairs, and sampling content and location pairs. The processed result is returned as a DocProcessingItem object.",
+        "content": "This code defines a class with two methods: \"process_content_and_location_pair\" and \"collect_all_content_and_location_pairs\". The former processes content and location pairs, storing the result in \"self.previous_comment\", and raises an exception if it fails to process. The latter collects all content and location pairs, filtering out non-empty strings, and returns them as a list of tuples.",
         "type": "comment"
     },
     "64": {
         "file_id": 4,
-        "content": "            self.sample_size: int\n            if pair_count > self.sample_size:\n                pairs = random.sample(pairs, k=self.sample_size)\n        return pairs\n    def process_and_collect_all(self):\n        for content, location in self.sample_content_and_location_pairs():\n            it = self.process_content_and_location_pair(content, location)\n            self.result_all.append(it)\n        return copy.copy(self.result_all)\n    def update_counter_after_push(self, content: str):\n        self.char_count += len(content)\n        self.line_count += 1\n    def push(self, content: str, lineno: int):\n        if is_bearable(content, NonEmptyString):\n            self.queue.append(content)\n            self.locations.append(lineno)\n            self.update_counter_after_push(content)  # type:ignore\n@beartype\ndef split_by_line(content: str, newline=\"\\n\"):\n    return content.split(newline)\n@beartype\ndef process_content_and_get_result(process_queue: DocProcessQueue, content: str):\n    @beartype\n    def iterate_and_push_line_to_process_queue(lines: list[str]):",
+        "content": "        pair_count = len(pairs)\n        if self.random_sample:\n            self.sample_size: int\n            if pair_count > self.sample_size:\n                pairs = random.sample(pairs, k=self.sample_size)\n        return pairs\n    def process_and_collect_all(self):\n        for content, location in self.sample_content_and_location_pairs():\n            it = self.process_content_and_location_pair(content, location)\n            self.result_all.append(it)\n        return copy.copy(self.result_all)\n    def update_counter_after_push(self, content: str):\n        self.char_count += len(content)\n        self.line_count += 1\n    def push(self, content: str, lineno: int):\n        if is_bearable(content, NonEmptyString):\n            self.queue.append(content)\n            self.locations.append(lineno)\n            self.update_counter_after_push(content)  # type:ignore\n@beartype\ndef split_by_line(content: str, newline=\"\\n\"):\n    return content.split(newline)\n@beartype\ndef process_content_and_get_result(process_queue: DocProcessQueue, content: str):",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:258-288"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:259-289"
     },
     "65": {
         "file_id": 4,
-        "content": "Function \"sample_content_and_location_pairs\" takes a list of pairs and returns a random sample of pairs based on the sample size.\n\n\"process_and_collect_all\" iterates through each content and location pair, processes them using another method, and appends the results to the result_all list. It then returns a copy of result_all.\n\n\"update_counter_after_push\" increments character count by the length of the input content and line count by 1.\n\n\"push\" adds the input content and lineno to the queue and locations lists, and calls update_counter_after_push method.\n\n\"split_by_line\" splits a string into a list of lines based on the specified newline character.\n\n\"process_content_and_get_result\" processes each line in the content using a separate method \"iterate_and_push_line_to_process_queue\", and returns the results.",
+        "content": "This code includes functions to process and collect content samples, update counters after pushing new content into a queue, and split content by line. The \"process_and_collect_all\" function iterates through content and location pairs, processes each pair, and appends the results to a list. The \"update_counter_after_push\" function increments character and line count counters after pushing new content into a queue. The \"split_by_line\" function splits content by a specified newline character. The \"process_content_and_get_result\" function processes the content using a DocProcessQueue and returns the result.",
         "type": "comment"
     },
     "66": {
         "file_id": 4,
-        "content": "        for lineno, line in enumerate(lines):\n            process_queue.push(line, lineno)\n    def split_and_process_lines():\n        lines = split_by_line(content)\n        iterate_and_push_line_to_process_queue(lines)\n        return process_queue.process_and_collect_all()\n    return split_and_process_lines()\n@beartype\ndef assert_exists_as_absolute_directory(basepath: str):\n    assert os.path.isabs(basepath)\n    assert os.path.isdir(basepath)\n@beartype\ndef join_and_assert_exists_as_absolute_directory(basepath: str, name: str):\n    joined_path = os.path.join(basepath, name)\n    assert_exists_as_absolute_directory(joined_path)\n    return joined_path\ndef parse_arguments():\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\n        \"-d\",\n        \"--document_dir\",\n        help=f\"document directory, contains 'src' as source code directory, 'doc' as comment json directory\",\n    )\n    parser.add_argument(\n        \"-u\",\n        \"--repository_url\",\n        help=f\"url of source code repository\",\n    )\n    args = parser.parse_args()",
+        "content": "    @beartype\n    def iterate_and_push_line_to_process_queue(lines: list[str]):\n        for lineno, line in enumerate(lines):\n            process_queue.push(line, lineno)\n    def split_and_process_lines():\n        lines = split_by_line(content)\n        iterate_and_push_line_to_process_queue(lines)\n        return process_queue.process_and_collect_all()\n    return split_and_process_lines()\n@beartype\ndef assert_exists_as_absolute_directory(basepath: str):\n    assert os.path.isabs(basepath)\n    assert os.path.isdir(basepath)\n@beartype\ndef join_and_assert_exists_as_absolute_directory(basepath: str, name: str):\n    joined_path = os.path.join(basepath, name)\n    assert_exists_as_absolute_directory(joined_path)\n    return joined_path\ndef parse_arguments():\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\n        \"-d\",\n        \"--document_dir\",\n        help=f\"document directory, contains 'src' as source code directory, 'doc' as comment json directory\",\n    )\n    parser.add_argument(\n        \"-u\",\n        \"--repository_url\",",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:289-326"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:290-326"
     },
     "67": {
         "file_id": 4,
-        "content": "The code defines a function `split_and_process_lines()` that splits the given `content` into lines and processes them using a `process_queue`. It returns the processed lines. The `assert_exists_as_absolute_directory(basepath: str)` asserts that `basepath` is an absolute directory path, while `join_and_assert_exists_as_absolute_directory(basepath: str, name: str)` joins `basepath` and `name` to create a new absolute directory path, asserts its existence, and returns it. The code also parses command-line arguments using `argparse.ArgumentParser()`.",
+        "content": "This code defines a function `split_and_process_lines()` that splits the given content into lines, pushes each line along with its line number to a `process_queue`, and then processes all lines in the queue. The code also includes two helper functions: `assert_exists_as_absolute_directory()` to check if a path is an absolute directory, and `join_and_assert_exists_as_absolute_directory()` to join a basepath with a name and assert that the joined path exists as an absolute directory. The code also parses command-line arguments using `argparse`.",
         "type": "comment"
     },
     "68": {
         "file_id": 4,
-        "content": "    document_dir = args.document_dir\n    repository_url = args.repository_url\n    assert_exists_as_absolute_directory(document_dir)\n    join_and_assert_exists_as_absolute_directory(document_dir, \"src\")\n    join_and_assert_exists_as_absolute_directory(document_dir, \"doc\")\n    return document_dir, repository_url\n@beartype\ndef summary_code_comment_return_value(ret: list[DocProcessingItem]):\n    comment_list = [elem[\"comment\"] for elem in ret]\n    summary = comment_summarizer(comment_list)\n    return summary\nclass DocProcessingResult(TypedDict):\n    summary: str\n    details: list[DocProcessingItem]\n@beartype\ndef process_content_and_return_result(\n    model: LLM,\n    prompt_generator: Callable[[str, str, str], str],\n    code_file_path: str,\n    content: str,\n    char_limit: int = DEFAULT_CHAR_LIMIT,\n    line_limit: int = DEFAULT_LINE_LIMIT,\n    sample_size: Optional[int] = None,\n    use_previous_comment: bool = True,\n) -> DocProcessingResult:\n    commentProcessMethod = commentProcessMethodFactory(model, prompt_generator)",
+        "content": "        help=f\"url of source code repository\",\n    )\n    args = parser.parse_args()\n    document_dir = args.document_dir\n    repository_url = args.repository_url\n    assert_exists_as_absolute_directory(document_dir)\n    join_and_assert_exists_as_absolute_directory(document_dir, \"src\")\n    join_and_assert_exists_as_absolute_directory(document_dir, \"doc\")\n    return document_dir, repository_url\n@beartype\ndef summary_code_comment_return_value(ret: list[DocProcessingItem]):\n    comment_list = [elem[\"comment\"] for elem in ret]\n    summary = comment_summarizer(comment_list)\n    return summary\nclass DocProcessingResult(TypedDict):\n    summary: str\n    details: list[DocProcessingItem]\n@beartype\ndef process_content_and_return_result(\n    model: LLM,\n    prompt_generator: Callable[[str, str, str], str],\n    code_file_path: str,\n    content: str,\n    char_limit: int = DEFAULT_CHAR_LIMIT,\n    line_limit: int = DEFAULT_LINE_LIMIT,\n    sample_size: Optional[int] = None,\n    use_previous_comment: bool = True,\n) -> DocProcessingResult:",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:328-360"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:327-362"
     },
     "69": {
         "file_id": 4,
-        "content": "This code defines a function that processes content and returns a DocProcessingResult object. It also includes a helper function, summary_code_comment_return_value, that summarizes a list of comments. The DocProcessingItem class is used to store details for each processing item.",
+        "content": "This code defines a function `process_content_and_return_result` that processes content, such as code or documentation, using a large language model (LLM). The function takes parameters like the LLM model instance, a prompt generator function, code file path, and the actual content. It also includes optional parameters for character limit, line limit, sample size, and whether to use the previous comment in processing. The returned result is a dictionary with a summary and details of the processed content. The `summary_code_comment_return_value` function generates a summary from a list of comments extracted from the returned details. Both functions seem to be part of a larger system that processes code or documentation, likely for summarization or analysis purposes.",
         "type": "comment"
     },
     "70": {
         "file_id": 4,
-        "content": "    process_queue = DocProcessQueue(\n        commentProcessMethod,\n        code_file_path,\n        char_limit=char_limit,\n        line_limit=line_limit,\n        sample_size=sample_size,\n        use_previous_comment=use_previous_comment,\n    )\n    result_all = process_content_and_get_result(process_queue, content)\n    summary = summary_code_comment_return_value(result_all)\n    data = DocProcessingResult(summary=summary, details=result_all)\n    del process_queue\n    return data\n@beartype\ndef read_file(file_path: str, encoding=UTF8):\n    with open(file_path, \"r\", encoding=encoding) as f:\n        content = f.read()\n    return content\n@beartype\ndef serialize_dict_and_write_to_file(data_dict: dict, file_path: str, encoding=UTF8):\n    with open(file_path, \"w+\", encoding=encoding) as f:\n        f.write(json.dumps(data_dict, indent=4))\n@beartype\ndef process_code_and_write_result(\n    model: LLM,\n    prompt_generator: Callable[[str, str, str], str],\n    code_file_path: str,\n    output_path: str,\n    char_limit: int = DEFAULT_CHAR_LIMIT,",
+        "content": "    commentProcessMethod = commentProcessMethodFactory(model, prompt_generator)\n    process_queue = DocProcessQueue(\n        commentProcessMethod,\n        code_file_path,\n        char_limit=char_limit,\n        line_limit=line_limit,\n        sample_size=sample_size,\n        use_previous_comment=use_previous_comment,\n    )\n    result_all = process_content_and_get_result(process_queue, content)\n    summary = summary_code_comment_return_value(result_all)\n    data = DocProcessingResult(summary=summary, details=result_all)\n    del process_queue\n    return data\n@beartype\ndef read_file(file_path: str, encoding=UTF8):\n    with open(file_path, \"r\", encoding=encoding) as f:\n        content = f.read()\n    return content\n@beartype\ndef serialize_dict_and_write_to_file(data_dict: dict, file_path: str, encoding=UTF8):\n    with open(file_path, \"w+\", encoding=encoding) as f:\n        f.write(json.dumps(data_dict, indent=4))\n@beartype\ndef process_code_and_write_result(\n    model: LLM,\n    prompt_generator: Callable[[str, str, str], str],",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:361-395"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:363-395"
     },
     "71": {
         "file_id": 4,
-        "content": "This code defines a function that processes documents using a custom document writer. It uses a DocProcessQueue to process the content and returns a summary and details of the processing result. The code also includes helper functions for reading files, serializing dictionaries, and writing results.",
+        "content": "This code defines a function that processes code and writes the result to a file. It uses a custom document writer and involves reading files, generating prompts, and writing serialized dictionaries to files. The function takes in a language model (LLM) and a prompt generator as parameters for processing the code.",
         "type": "comment"
     },
     "72": {
         "file_id": 4,
-        "content": "    line_limit: int = DEFAULT_LINE_LIMIT,\n    sample_size: Optional[int] = None,\n    use_previous_comment=True,\n) -> DocProcessingResult:\n    content = read_file(code_file_path)\n    data = process_content_and_return_result(\n        model,\n        prompt_generator,\n        code_file_path,\n        content,\n        char_limit=char_limit,\n        line_limit=line_limit,\n        sample_size=sample_size,\n        use_previous_comment=use_previous_comment,\n    )\n    serialize_dict_and_write_to_file(data, output_path)  # type:ignore\n    return data\n@beartype\ndef filter_empty_elements(mlist: list):\n    return [elem for elem in mlist if elem]\n# TODO: check if is relative path only\n@beartype\ndef generate_location_component(location: str):\n    location_prefix = CUSTOM_DOC_WRITER_PARAMS.get(\"location_prefix\", None)\n    if isinstance(location_prefix, str):\n        lp = '\"' + location_prefix + \"/src/\"\n        assert location.startswith(lp)\n        location = '\"' + location[len(lp) :]\n    return f\"\"\"Storage location: {location}\"\"\"\n@beartype",
+        "content": "    code_file_path: str,\n    output_path: str,\n    char_limit: int = DEFAULT_CHAR_LIMIT,\n    line_limit: int = DEFAULT_LINE_LIMIT,\n    sample_size: Optional[int] = None,\n    use_previous_comment=True,\n) -> DocProcessingResult:\n    content = read_file(code_file_path)\n    data = process_content_and_return_result(\n        model,\n        prompt_generator,\n        code_file_path,\n        content,\n        char_limit=char_limit,\n        line_limit=line_limit,\n        sample_size=sample_size,\n        use_previous_comment=use_previous_comment,\n    )\n    serialize_dict_and_write_to_file(data, output_path)  # type:ignore\n    return data\n@beartype\ndef filter_empty_elements(mlist: list):\n    return [elem for elem in mlist if elem]\n# TODO: check if is relative path only\n@beartype\ndef generate_location_component(location: str):\n    location_prefix = CUSTOM_DOC_WRITER_PARAMS.get(\"location_prefix\", None)\n    if isinstance(location_prefix, str):\n        lp = '\"' + location_prefix + \"/src/\"\n        assert location.startswith(lp)\n        project_name = CUSTOM_DOC_WRITER_PARAMS[\"project_name\"]",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:396-431"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:396-430"
     },
     "73": {
         "file_id": 4,
-        "content": "Code is a custom document writer function that reads input code file, processes the content using a provided model and prompt generator, and writes the output to an specified file path. It also includes helper functions for filtering empty elements in a list and generating location components for storage locations.",
+        "content": "This code is part of a function that reads a file, processes its content using AI model and prompt generator, and then writes the processed data to an output file. The function takes parameters like input file path, output path, character limit, line limit, sample size (optional), and a flag to use previous comment. It uses beartype for type hints and includes helper functions for filtering empty elements and generating location components. The TODO comment suggests checking if the location is a relative path only.",
         "type": "comment"
     },
     "74": {
         "file_id": 4,
-        "content": "def generate_previous_comment_component(previous_comment: str):\n    return (\n        f\"\"\"Previous code comment:\n{previous_comment}\"\"\"\n        if previous_comment\n        else \"\"\n    )\n@beartype\ndef generate_code_component(programming_language: str, code: str):\n    return f\"\"\"Code:\n```{programming_language}\n{code}\n```\"\"\"\ndef generate_comment_coponent():\n    return \"\"\"Comment for code:\n\"\"\"\n@beartype\ndef generate_prompt_components(\n    code: str, location: str, programming_language: str, previous_comment: str\n):\n    location_component = generate_location_component(location)\n    previous_comment_component = generate_previous_comment_component(previous_comment)\n    code_component = generate_code_component(programming_language, code)\n    comment_component = generate_comment_coponent()\n    components = [\n        location_component,\n        previous_comment_component,\n        code_component,\n        comment_component,\n    ]\n    return components\n@beartype\ndef assemble_prompt_components(components: list[str]):\n    components = filter_empty_elements(components)",
+        "content": "        location = (\n            '\"' + (project_name + \"/\" if project_name else \"\") + location[len(lp) :]\n        )\n    return f\"\"\"Storage location: {location}\"\"\"\n@beartype\ndef generate_previous_comment_component(previous_comment: str):\n    return (\n        f\"\"\"Previous code comment:\n{previous_comment}\"\"\"\n        if previous_comment\n        else \"\"\n    )\n@beartype\ndef generate_code_component(programming_language: str, code: str):\n    return f\"\"\"Code:\n```{programming_language}\n{code}\n```\"\"\"\ndef generate_comment_coponent():\n    # return \"\"\"Comment for code:\n    # to reduce verbosity\n    return \"\"\"\nComment for code in 30 words (do not repeat or rephrase the content, be concise and relevant):\n\"\"\"\n@beartype\ndef generate_prompt_components(\n    code: str, location: str, programming_language: str, previous_comment: str\n):\n    location_component = generate_location_component(location)\n    previous_comment_component = generate_previous_comment_component(previous_comment)\n    code_component = generate_code_component(programming_language, code)",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:432-473"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:431-469"
     },
     "75": {
         "file_id": 4,
-        "content": "This code defines functions for generating prompt components in a document. The 'generate_prompt_components' function takes code, location, programming language, and previous comment as inputs and returns a list of formatted components for a prompt including the location, previous comment, code, and a placeholder comment.",
+        "content": "Code:\n```python\ndef generate_comment_component():\n    return \"\"\"\nComment for code in 30 words (do not repeat or rephrase the content, be concise and relevant):\"\"\"\n@beartype\ndef generate_prompt_components(\n    code: str, location: str, programming_language: str, previous_comment: str\n):\n    location_component = generate_location_component(location)\n    previous_comment_component = generate_previous_comment_component(previous_comment)\n    code_component = generate_code_component(programming_language, code)\n```",
         "type": "comment"
     },
     "76": {
         "file_id": 4,
-        "content": "    ret = \"\\n\".join(components)\n    return ret\n@beartype\ndef generate_prompt_generator(programming_language: str):\n    @beartype\n    def prompt_generator(code: str, location: str, previous_comment: str = \"\"):\n        components = generate_prompt_components(\n            code, location, programming_language, previous_comment\n        )\n        ret = assemble_prompt_components(components)\n        return ret\n    return prompt_generator\n@beartype\ndef generate_prompt_base(word_limit: int):\n    return f\"\"\"You are reading code from codebase in chunks. You would understand what the code is doing and return brief comments (under {word_limit} words).\"\"\"\n@beartype\ndef construct_llm_and_write_code_comment(\n    code_file_path: str,\n    output_path: str,\n    programming_language: str = \"\",\n    word_limit: int = 15,\n    use_previous_comment: bool = False,  # different from our blog summarizer.\n):\n    prompt_base = generate_prompt_base(word_limit)\n    prompt_generator = generate_prompt_generator(programming_language)\n    with llm_context(prompt_base) as model:",
+        "content": "    comment_component = generate_comment_coponent()\n    components = [\n        location_component,\n        previous_comment_component,\n        code_component,\n        comment_component,\n    ]\n    return components\n@beartype\ndef assemble_prompt_components(components: list[str]):\n    components = filter_empty_elements(components)\n    ret = \"\\n\".join(components)\n    return ret\n@beartype\ndef generate_prompt_generator(programming_language: str):\n    @beartype\n    def prompt_generator(code: str, location: str, previous_comment: str = \"\"):\n        components = generate_prompt_components(\n            code, location, programming_language, previous_comment\n        )\n        ret = assemble_prompt_components(components)\n        return ret\n    return prompt_generator\n@beartype\ndef generate_prompt_base(word_limit: int):\n    return f\"\"\"You are reading code from codebase in chunks. You would understand what the code is doing and return brief comments (under {word_limit} words).\"\"\"\n@beartype\ndef construct_llm_and_write_code_comment(",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:474-508"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:470-506"
     },
     "77": {
         "file_id": 4,
-        "content": "This code defines functions that generate prompts for generating comments on code. The `generate_prompt_base` function creates a base prompt for the LLM, while `generate_prompt_generator` generates more specific prompts based on the programming language and code location. The `construct_llm_and_write_code_comment` function uses these prompts to generate comments using an LLM (Language Model) in the context of the provided prompt base.",
+        "content": "This code generates prompts for LLMs to read and comprehend code snippets. It assembles prompt components such as location, previous comment, code, and generated comment using the given programming language and filters out empty elements. The function returns a final prompt for the LLM to understand the code with a word limit.",
         "type": "comment"
     },
     "78": {
         "file_id": 4,
-        "content": "        ret = process_code_and_write_result(\n            model,\n            prompt_generator,\n            code_file_path,\n            output_path,\n            use_previous_comment=use_previous_comment,\n        )\n    return ret\ndef main():\n    document_dir, repository_url = parse_arguments()\n    # programming_language, code_file_path, output_path = parse_arguments()\n    programming_language = \"\"\n    code_file_path = os.path.join(document_dir, \"src\")\n    output_path = \"doc\"\n    construct_llm_and_write_code_comment(\n        code_file_path, output_path, programming_language=programming_language\n    )\nif __name__ == \"__main__\":\n    main()",
+        "content": "    code_file_path: str,\n    output_path: str,\n    programming_language: str = \"\",\n    word_limit: int = 15,\n    use_previous_comment: bool = False,  # different from our blog summarizer.\n):\n    prompt_base = generate_prompt_base(word_limit)\n    prompt_generator = generate_prompt_generator(programming_language)\n    with llm_context(prompt_base) as model:\n        ret = process_code_and_write_result(\n            model,\n            prompt_generator,\n            code_file_path,\n            output_path,\n            use_previous_comment=use_previous_comment,\n        )\n    return ret\ndef main():\n    document_dir, repository_url = parse_arguments()\n    # programming_language, code_file_path, output_path = parse_arguments()\n    programming_language = \"\"\n    code_file_path = os.path.join(document_dir, \"src\")\n    output_path = \"doc\"\n    construct_llm_and_write_code_comment(\n        code_file_path, output_path, programming_language=programming_language\n    )\nif __name__ == \"__main__\":\n    main()",
         "type": "code",
-        "location": "/document_agi_computer_control/custom_doc_writer.py:509-531"
+        "location": "/document_agi_computer_control/custom_doc_writer.py:507-540"
     },
     "79": {
         "file_id": 4,
-        "content": "This code defines a function `main()` which parses arguments, sets the language and file paths, and calls another function `construct_llm_and_write_code_comment()`. The main function then runs as the entry point when the script is executed directly.",
+        "content": "This code is a function that takes a file path, output path, and optional parameters for programming language, word limit, and use of previous comment. It generates a prompt using the input values and a language model to process the code and write the result. The main function parses arguments, sets default values, calls the construct_llm_and_write_code_comment function, and handles execution if the module is run directly.",
         "type": "comment"
     },
     "80": {
         "file_id": 5,
-        "content": "/document_agi_computer_control/estimate_utils.py",
+        "content": "/document_agi_computer_control/ensure_fdignore_with_doc.py",
         "type": "filepath"
     },
     "81": {
         "file_id": 5,
-        "content": "Estimates time to process all files in a file list. Requires file list from a rule, potential .gitignore generation.",
+        "content": "Ensures the .fdignore file in the specified base directory contains \"docs\" entry.",
         "type": "summary"
     },
     "82": {
         "file_id": 5,
-        "content": "# estimate the time for processing all files under a file list.abs\n# you may need to obtain a file list from some rule.\n# is there anything for easy .gitignore generation?",
+        "content": "# TODO: ensure \"docs\" in the .fdignore\nimport argparse\nimport os\nparser = argparse.ArgumentParser(\n    description='Make sure .fdignore file under base directory contains \"docs\" entry'\n)\nparser.add_argument(\"-b\", \"--basedir\", help=\"base directory\", required=True, type=str)\nargs = parser.parse_args()\nbasedir = args.basedir\nassert os.path.isdir(basedir)\nassert os.path.isabs(basedir)\nassert os.path.exists(basedir)\nfdignore_path = os.path.join(basedir, \".fdignore\")\nlines = []\nif os.path.exists(fdignore_path):\n    with open(fdignore_path, \"r\") as f:\n        content = f.read()\n        lines = content.split(\"\\n\")\nif \"docs\" not in lines:\n    lines.append(\"docs\")\n    with open(fdignore_path, \"w+\") as f:\n        f.write(\"\\n\".join(lines))",
         "type": "code",
-        "location": "/document_agi_computer_control/estimate_utils.py:1-3"
+        "location": "/document_agi_computer_control/ensure_fdignore_with_doc.py:1-27"
     },
     "83": {
         "file_id": 5,
-        "content": "Estimates time to process all files in a file list. Requires file list from a rule, potential .gitignore generation.",
+        "content": "Ensures the .fdignore file in the specified base directory contains \"docs\" entry.",
         "type": "comment"
     },
     "84": {
         "file_id": 6,
-        "content": "/document_agi_computer_control/example.py",
+        "content": "/document_agi_computer_control/estimate_utils.py",
         "type": "filepath"
     },
     "85": {
         "file_id": 6,
-        "content": "Generates a \"hello world\" document and prints it.",
+        "content": "Estimates time to process all files in a file list. Requires file list from a rule, potential .gitignore generation.",
         "type": "summary"
     },
     "86": {
         "file_id": 6,
-        "content": "# generate doc for me!\ndef hello_world():\n    print(\"hello world\")",
+        "content": "# estimate the time for processing all files under a file list.abs\n# you may need to obtain a file list from some rule.\n# is there anything for easy .gitignore generation?",
         "type": "code",
-        "location": "/document_agi_computer_control/example.py:1-4"
+        "location": "/document_agi_computer_control/estimate_utils.py:1-3"
     },
     "87": {
         "file_id": 6,
-        "content": "Generates a \"hello world\" document and prints it.",
+        "content": "Estimates time to process all files in a file list. Requires file list from a rule, potential .gitignore generation.",
         "type": "comment"
     },
     "88": {
         "file_id": 7,
-        "content": "/document_agi_computer_control/identify_utils.py",
+        "content": "/document_agi_computer_control/example.py",
         "type": "filepath"
     },
     "89": {
         "file_id": 7,
-        "content": "This code imports a function from the identify module and uses it to determine the language of a given filename. If the filename contains \"text\", it will randomly select another candidate language from the identified tags if available.",
+        "content": "Generates a \"hello world\" document and prints it.",
         "type": "summary"
     },
     "90": {
         "file_id": 7,
-        "content": "from identify import identify\nfrom beartype import beartype\nimport random  # this is magic\nTEXT = \"text\"\n@beartype\ndef get_language_id_from_filename(filename: str) -> str:\n    language_id = TEXT # default language\n    tags = identify.tags_from_filename(filename)\n    if TEXT in tags:\n        candidates = [it for it in tags if it != TEXT]\n        if candidates:\n            language_id = random.choice(candidates)\n    return language_id\ndef test():\n    names = [\"test.bash\", \"test.py\", \"test.js\"]\n    for name in names:\n        language_id = get_language_id_from_filename(name)\n        print(f\"{name} -> {language_id}\")\nif __name__ == \"__main__\":\n    test()",
+        "content": "# generate doc for me!\ndef hello_world():\n    print(\"hello world\")",
         "type": "code",
-        "location": "/document_agi_computer_control/identify_utils.py:1-27"
+        "location": "/document_agi_computer_control/example.py:1-4"
     },
     "91": {
         "file_id": 7,
-        "content": "This code imports a function from the identify module and uses it to determine the language of a given filename. If the filename contains \"text\", it will randomly select another candidate language from the identified tags if available.",
+        "content": "Generates a \"hello world\" document and prints it.",
         "type": "comment"
     },
     "92": {
         "file_id": 8,
-        "content": "/document_agi_computer_control/llm.py",
+        "content": "/document_agi_computer_control/identify_utils.py",
         "type": "filepath"
     },
     "93": {
         "file_id": 8,
-        "content": "The code initializes a language model chain with provided parameters and includes functions for running the chain, displaying initialization configuration, printing query and response information. It iterates through LLM model chunks, prints them, stores in a list, joins into a string, counts tokens, and handles LLM model instance within a context manager.",
+        "content": "This code imports a function from the identify module and uses it to determine the language of a given filename. If the filename contains \"text\", it will randomly select another candidate language from the identified tags if available.",
         "type": "summary"
     },
     "94": {
         "file_id": 8,
-        "content": "# from langchain.prompts import Prompt\n# from langchain.chains import LLMChain\nfrom contextlib import contextmanager\nfrom langchain.llms import OpenAI\nimport tiktoken\ndef print_center(banner: str):\n    print(banner.center(50, \"=\"))\nclass LLM:\n    \"\"\"\n    A class for running a Language Model Chain.\n    \"\"\"\n    def __init__(self, prompt: str, temperature=0, gpt_4=False):\n        \"\"\"\n        Initializes the LLM class.\n        Args:\n            prompt (PromptTemplate): The prompt template to use.\n            temperature (int): The temperature to use for the model.\n            gpt_4 (bool): Whether to use GPT-4 or Text-Davinci-003.\n        Side Effects:\n            Sets the class attributes.\n        \"\"\"\n        self.prompt = prompt\n        self.prompt_size = self.number_of_tokens(prompt)\n        self.temperature = temperature\n        self.gpt_4 = gpt_4\n        self.model_name = \"gpt-4\" if self.gpt_4 else \"text-davinci-003\"\n        self.max_tokens = 4097 * 2 if self.gpt_4 else 4097\n        self.show_init_config()\n    def show_init_config(self):",
+        "content": "from identify import identify\nfrom beartype import beartype\nimport random  # this is magic\nTEXT = \"text\"\n@beartype\ndef get_language_id_from_filename(filename: str) -> str:\n    language_id = TEXT # default language\n    tags = identify.tags_from_filename(filename)\n    if TEXT in tags:\n        candidates = [it for it in tags if it != TEXT]\n        if candidates:\n            language_id = random.choice(candidates)\n    return language_id\ndef test():\n    names = [\"test.bash\", \"test.py\", \"test.js\"]\n    for name in names:\n        language_id = get_language_id_from_filename(name)\n        print(f\"{name} -> {language_id}\")\nif __name__ == \"__main__\":\n    test()",
         "type": "code",
-        "location": "/document_agi_computer_control/llm.py:1-35"
+        "location": "/document_agi_computer_control/identify_utils.py:1-27"
     },
     "95": {
         "file_id": 8,
-        "content": "The code defines a class named \"LLM\" for running Language Model Chains. The class initializes with a prompt, temperature, and gpt_4 parameters. It sets class attributes such as the prompt size, model name (gpt-4 or text-davinci-003), and maximum tokens based on these inputs. It also displays initialization configuration.",
+        "content": "This code imports a function from the identify module and uses it to determine the language of a given filename. If the filename contains \"text\", it will randomly select another candidate language from the identified tags if available.",
         "type": "comment"
     },
     "96": {
-        "file_id": 8,
-        "content": "        print_center(\"init params\")\n        print(f\"Model: {self.model_name}\")\n        print(f\"Max Tokens: {self.max_tokens}\")\n        print(f\"Prompt Size: {self.prompt_size}\")\n        print(f\"Temperature: {self.temperature}\")\n        print_center(\"init config\")\n        print(self.prompt)\n    def run(self, query):\n        \"\"\"\n        Runs the Language Model Chain.\n        Args:\n            code (str): The code to use for the chain.\n            **kwargs (dict): Additional keyword arguments.\n        Returns:\n            str: The generated text.\n        \"\"\"\n        llm = OpenAI(\n            temperature=self.temperature,\n            max_tokens=-1,\n            model_name=self.model_name,\n            disallowed_special=(),  # to suppress error when special tokens within the input text (encode special tokens as normal text)\n        )\n        # chain = LLMChain(llm=llm, prompt=self.prompt)\n        chunk_list = []\n        print_center(\"query\")\n        print(query)\n        print_center(\"response\")\n        _input = \"\\n\".join([self.prompt, query])",
-        "type": "code",
-        "location": "/document_agi_computer_control/llm.py:36-64"
+        "file_id": 9,
+        "content": "/document_agi_computer_control/llm.py",
+        "type": "filepath"
     },
     "97": {
-        "file_id": 8,
-        "content": "This code initializes a language model chain and provides the necessary parameters for running it. It also includes a function to run the chain with a given query, and prints relevant information such as query and response.",
-        "type": "comment"
+        "file_id": 9,
+        "content": "The code initializes an OpenAI language model, defines functions for executing chain and generating text, prints initialization parameters and query for debugging, and sets up LLM instance with optional temperature and GPT-4 parameters.",
+        "type": "summary"
     },
     "98": {
-        "file_id": 8,
-        "content": "        for chunk in llm.stream(input=_input):\n            print(chunk, end=\"\", flush=True)\n            chunk_list.append(chunk)\n        print()\n        result = \"\".join(chunk_list)\n        return result\n    def number_of_tokens(self, text):\n        \"\"\"\n        Counts the number of tokens in a given text.\n        Args:\n            text (str): The text to count tokens for.\n        Returns:\n            int: The number of tokens in the text.\n        \"\"\"\n        encoding = tiktoken.encoding_for_model(\"gpt-4\")\n        return len(encoding.encode(text, disallowed_special=()))\n@contextmanager\ndef llm_context(prompt: str, temperature=0, gpt_4=False):\n    model = LLM(prompt, temperature=temperature, gpt_4=gpt_4)\n    try:\n        yield model\n    finally:\n        del model",
+        "file_id": 9,
+        "content": "# from langchain.prompts import Prompt\n# from langchain.chains import LLMChain\nfrom contextlib import contextmanager\nfrom langchain.llms import OpenAI\nimport tiktoken\ndef print_center(banner: str):\n    print(banner.center(50, \"=\"))\nclass LLM:\n    \"\"\"\n    A class for running a Language Model Chain.\n    \"\"\"\n    def __init__(self, prompt: str, temperature=0, gpt_4=False):\n        \"\"\"\n        Initializes the LLM class.\n        Args:\n            prompt (PromptTemplate): The prompt template to use.\n            temperature (int): The temperature to use for the model.\n            gpt_4 (bool): Whether to use GPT-4 or Text-Davinci-003.\n        Side Effects:\n            Sets the class attributes.\n        \"\"\"\n        self.prompt = prompt\n        self.prompt_size = self.number_of_tokens(prompt)\n        self.temperature = temperature\n        self.gpt_4 = gpt_4\n        self.model_name = \"gpt-4\" if self.gpt_4 else \"text-davinci-003\"\n        self.max_tokens = 4097 * 2 if self.gpt_4 else 4097\n        self.show_init_config()\n    def show_init_config(self):",
         "type": "code",
-        "location": "/document_agi_computer_control/llm.py:65-91"
+        "location": "/document_agi_computer_control/llm.py:1-36"
     },
     "99": {
-        "file_id": 8,
-        "content": "Code iterates through chunks of text from the LLM model, prints each chunk, and stores them in a list. After all chunks are printed, it joins them into a single string and returns it. The code also defines two functions: \"number_of_tokens\" for counting tokens in a given text and \"llm_context\" as a context manager to handle the LLM model instance.",
+        "file_id": 9,
+        "content": "The code defines a class named \"LLM\" which initializes a Language Model Chain using the OpenAI API. It takes a prompt, temperature, and gpt_4 parameters. The maximum number of tokens is set depending on whether GPT-4 or Text-Davinci-003 is used. The show_init_config method displays the initialization configuration.",
         "type": "comment"
     }
 }

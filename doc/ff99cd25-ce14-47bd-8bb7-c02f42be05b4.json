@@ -1,0 +1,10 @@
+{
+    "summary": "Ensures the .fdignore file in the specified base directory contains \"docs\" entry.",
+    "details": [
+        {
+            "comment": "Ensures the .fdignore file in the specified base directory contains \"docs\" entry.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/ensure_fdignore_with_doc.py\":0-26",
+            "content": "# TODO: ensure \"docs\" in the .fdignore\nimport argparse\nimport os\nparser = argparse.ArgumentParser(\n    description='Make sure .fdignore file under base directory contains \"docs\" entry'\n)\nparser.add_argument(\"-b\", \"--basedir\", help=\"base directory\", required=True, type=str)\nargs = parser.parse_args()\nbasedir = args.basedir\nassert os.path.isdir(basedir)\nassert os.path.isabs(basedir)\nassert os.path.exists(basedir)\nfdignore_path = os.path.join(basedir, \".fdignore\")\nlines = []\nif os.path.exists(fdignore_path):\n    with open(fdignore_path, \"r\") as f:\n        content = f.read()\n        lines = content.split(\"\\n\")\nif \"docs\" not in lines:\n    lines.append(\"docs\")\n    with open(fdignore_path, \"w+\") as f:\n        f.write(\"\\n\".join(lines))"
+        }
+    ]
+}
