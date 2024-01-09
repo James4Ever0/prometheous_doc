@@ -1,5 +1,8 @@
 # demo logic to generate filesystem hierarchy in markdown
 
+# TODO: diff and line markers shifts based reprocessing: just process the changed part instead of the whole file again
+# TODO: calculate code duplication percent across directories, prefer files by timestamp or size
+
 # TODO: show the total stage progress like [Stage 1/4], [Stage 2/4]
 
 # TODO: generate sitemap
