@@ -53,7 +53,7 @@ def strip_quote(s: str):
     if s[0] == s[-1]:
         if s[0] in ['"', "'"]:
             return s[1:-1].strip()
-    return s.strip().strip('.')
+    return s.strip()
 
 
 # read metadata.json & data/*.json
@@ -112,7 +112,8 @@ Brief in 7 words (do not quote your brief, just write it out):
         if rec:
             return rec["brief"]
         else:
-            init_prompt = """You are a professional brief writer. You can turn long summaries into a single short, concise, conclusive and meaningful brief within 7 words. You will be given a filepath, a summary of the file and produce a concise brief that best describes the file."""
+            init_prompt = """You are a professional brief writer. You can turn long summaries into a single short brief within 7 words. You will be given a filepath, a summary of the file and produce a concise brief that best describes the file.
+"""
             with llm_context(init_prompt) as model:
                 mbrief = strip_quote(model.run(prompt).strip())
             mdoc = dict(path=filepath, hash=mhash, brief=mbrief)
@@ -130,7 +131,7 @@ def generate_tree_repesentation(
     briefs=[],
 ):
     childrens = list(childrens_mapping[directory_path])
-    childrens.sort()
+    childrens.sort(key=lambda x: x.lower())
     if directory_path == "/":
         name = project_name
     else:
@@ -165,10 +166,47 @@ def generate_tree_repesentation(
             child_link = f"index.html?q={urllib.parse.quote(child)}"
             briefs.append(
                 " " * (indent + 1) * 4
-                + f'- <a href="{child_link}" id="{child}"><code>{html_escape(child_name)}</code></a> <em>{strip_quote(file_briefs[child])}</em>'
+                + f'- <a class="file_link" href="{child_link}" id="{child}"><code>{html_escape(child_name)}</code></a> <em>{strip_quote(file_briefs[child])}</em>'
             )
 
     return briefs
+
+
+
+def comment_summarizer(summary_model, comments: list[str],directory_path:str) -> str:
+   
+    def combine_comments(comment1: str, comment2: str):
+        summary_query = f"""
+{comment1}
+
+{comment2}
+
+Brief for directory '{directory_path}' in 7 words (do not quote your brief, just write it out):
+"""
+        ret = summary_model.run(summary_query)
+        return ret
+
+    def recursive_combine(comments_list: list[str]):
+        if len(comments_list) == 0:
+            raise Exception("No comments to combine")
+        elif len(comments_list) == 1:
+            return comments_list[0]
+        elif len(comments_list) % 2 == 0:
+            combined = [
+                combine_comments(comments_list[i], comments_list[i + 1])
+                for i in range(0, len(comments_list), 2)
+            ]
+        else:
+            combined = [
+                combine_comments(comments_list[i], comments_list[i + 1])
+                for i in range(0, len(comments_list) - 1, 2)
+            ]
+            combined += [comments_list[-1]]
+        return recursive_combine(combined)
+
+    summary = recursive_combine(comments)
+    del summary_model
+    return summary
 
 
 def generate_directory_summary_brief(
@@ -203,7 +241,7 @@ def generate_directory_summary_brief(
                 cbrief = file_briefs[child]
             children_briefs[child] = cbrief
         candidates = list(children_briefs.items())
-        candidates.sort(key=lambda x: x[0])
+        candidates.sort(key=lambda x: x[0].lower())
         for k, v in candidates:
             if not k.endswith("/"):
                 mark = "file"
@@ -226,9 +264,13 @@ Brief for directory '{directory_path}' in 7 words (do not quote your brief, just
         if rec:
             mbrief = rec["brief"]
         else:
-            init_prompt = """You are a professional brief writer. You can turn a list of briefs into a single short, concise, conclusive and meaningful brief within 7 words. You will be given a list of briefs and relative paths of the directory children and produce a concise brief that best describes the directory."""
+            # TODO: use recursive summarization.
+            init_prompt = """You are a professional brief summarizer. You can produce a single short brief within 7 words. You will be given a pair of briefs and produce a concise brief that best describes the directory.
+"""
             with llm_context(init_prompt) as model:
-                mbrief = strip_quote(model.run(prompt).strip())
+                ret = comment_summarizer(model, subprompt_parts,directory_path)
+                mbrief = strip_quote(ret.strip())
+                # mbrief = strip_quote(model.run(prompt).strip())
             mdoc = dict(path=directory_path, hash=mhash, brief=mbrief)
             cache_tree.upsert(mdoc, cond=tinydb.Query().path == directory_path)
         directory_briefs[directory_path] = (mbrief, True)
@@ -277,7 +319,7 @@ briefs = generate_tree_repesentation(
 # briefs.insert(0,"# Project Structure:")
 briefs.insert(
     0,
-    f'## Project Structure<span hierarchy="0" class="partial-repository-url"> of: {metadata["url"]["partial"]}</span><div style="float: right;"><a href="tree.html?full=true"><i class="bi bi-arrow-down-right-circle"></i></a><a href="index.html"><i class="bi bi-search"></i></a></div>',
+    f'## Project structure<span hierarchy="0" class="partial-repository-url"> of: {metadata["url"]["partial"]}</span><div style="float: right;"><a title="Document index" style="margin:3.5px;" href="index.html"><i class="bi bi-search"></i></a><a title="Feeling lucky" style="margin:3.5px;" id="feeling-lucky" href="#"><i class="bi bi-dice-3"></i></a><a title="Expand tree" style="margin:3.5px;" href="tree.html?full=true" id="expand-tree"><i class="bi bi-caret-down-square"></i></a></div>',
 )
 print("=" * 40)
 print("\n".join(briefs))
@@ -300,7 +342,7 @@ css_path = os.path.join(
 )
 template = Template(open(template_path, "r").read())
 # Render the template with the data
-rendered_template = template.render(content=html_content)
+rendered_template = template.render(content=html_content, project_name=metadata["url"]["partial"])
 
 print("Template rendered.")
 

@@ -1,0 +1,15 @@
+{
+    "summary": "This code defines a function `split_dict_into_chunks` that takes a dictionary and chunk size as input, returning a generator yielding dictionaries containing at most specified chunk size. It uses an OrderedDict, itertools, and a generator to achieve this. The provided test function demonstrates how to use the split_dict_into_chunks function with an example dictionary and chunk size.",
+    "details": [
+        {
+            "comment": "This code defines a function `split_dict_into_chunks` that takes a dictionary and chunk size as input and returns a generator that yields dictionaries containing at most the specified chunk size. It uses an OrderedDict, itertools, and a generator to achieve this. The provided test function demonstrates how to use the split_dict_into_chunks function with an example dictionary and chunk size.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/slice_utils.py\":0-31",
+            "content": "from itertools import islice\nfrom typing import OrderedDict\nfrom beartype import beartype\n@beartype\ndef split_dict_into_chunks(dictionary:dict, chunk_size:int):\n    \"\"\"\n    Split a dictionary into chunks of specified size using itertools and a generator function.\n    Args:\n    - dictionary: The input dictionary to be split.\n    - chunk_size: The size of each chunk.\n    Returns:\n    - A generator that yields dictionaries, each containing at most `chunk_size` items.\n    \"\"\"\n    myord = OrderedDict()\n    dictkeys = list(dictionary.keys())\n    dictkeys.sort()\n    for k in dictkeys:\n        myord[k] = dictionary[k]\n    it = iter(myord.items())\n    while True:\n        chunk = dict(islice(it, chunk_size))\n        if not chunk:\n            break\n        yield chunk\ndef test():\n    # Example usage\n    input_dict = {str(i): i for i in range(1000)}  # Example input dictionary\n    chunked_dicts_generator = split_dict_into_chunks(input_dict, 100)  # Use the generator function to split the dictionary\n    # Iterate through the generator to get the chunks"
+        },
+        {
+            "comment": "The code uses a generator to iterate through chunked dictionaries and prints the first 10 characters of each dictionary, followed by \"...}\" until all chunks are processed. This function is executed only when the script is run directly, not imported as a module.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/slice_utils.py\":32-36",
+            "content": "    for chunk in chunked_dicts_generator:\n        print(str(chunk)[:10]+\"...}\")\nif __name__ == \"__main__\":\n    test()"
+        }
+    ]
+}

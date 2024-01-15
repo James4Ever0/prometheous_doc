@@ -223,18 +223,18 @@
     },
     "41": {
         "file_id": 3,
-        "content": "The `comment_summarizer` function takes a list of comments and a word limit, using the LLM model to generate summaries for pairs of comments recursively, combining them until only one comment or all comments are used. The goal is to produce a summary of multiple comments while staying within the specified word limit.",
+        "content": "This code defines a comment summarizer function that uses an LLM to generate summaries by combining and summarizing pairs of comments. The function includes a helper function for combining and recursively calling itself until there's only one or no comment left.",
         "type": "summary"
     },
     "42": {
         "file_id": 3,
-        "content": "from beartype import beartype\nfrom llm import LLM\n@beartype\ndef comment_summarizer(comments: list[str], word_limit: int = 30) -> str:\n    summary_prompt = \"\"\"You are a professional summarizer. You will be given a pair of comments and produce a summary.\n\"\"\"\n    summary_model = LLM(summary_prompt)\n    def combine_comments(comment1: str, comment2: str):\n        summary_query = f\"\"\"Comment A:\n{comment1}\nComment B:\n{comment2}\nSummary in {word_limit} words:\n\"\"\"\n        ret = summary_model.run(summary_query)\n        return ret\n    def recursive_combine(comments_list: list[str]):\n        if len(comments_list) == 0:\n            raise Exception(\"No comments to combine\")\n        elif len(comments_list) == 1:\n            return comments_list[0]\n        elif len(comments_list) % 2 == 0:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])\n                for i in range(0, len(comments_list), 2)\n            ]\n        else:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])",
+        "content": "from beartype import beartype\nfrom llm import LLM\n@beartype\ndef comment_summarizer(comments: list[str], word_limit: int = 30) -> str:\n    summary_prompt = \"\"\"You are a professional summarizer. You will be given a pair of comments and produce a concise summary.\n\"\"\"\n    summary_model = LLM(summary_prompt)\n    def combine_comments(comment1: str, comment2: str):\n        summary_query = f\"\"\"\n{comment1}\n{comment2}\nSummary in {word_limit} words (do not be verbose, just summarize):\n\"\"\"\n        ret = summary_model.run(summary_query)\n        return ret\n    def recursive_combine(comments_list: list[str]):\n        if len(comments_list) == 0:\n            raise Exception(\"No comments to combine\")\n        elif len(comments_list) == 1:\n            return comments_list[0]\n        elif len(comments_list) % 2 == 0:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])\n                for i in range(0, len(comments_list), 2)\n            ]\n        else:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])",
         "type": "code",
         "location": "/document_agi_computer_control/codepiece_summarizer.py:1-35"
     },
     "43": {
         "file_id": 3,
-        "content": "This code defines a function called `comment_summarizer` that takes in a list of comments and a word limit. It uses the LLM model to generate summaries for pairs of comments, then recursively combines them until there is only one comment left or all comments are used. The purpose is to produce a summary of multiple comments while keeping it within the specified word limit.",
+        "content": "This code defines a function `comment_summarizer` that takes a list of comments and returns a summary. It uses the LLM (Large Language Model) to generate summaries by combining and summarizing pairs of comments. The function also includes a helper function `combine_comments` to combine two comments and recursively call `recursive_combine` for a list of comments, unless there's only one or no comment remaining.",
         "type": "comment"
     },
     "44": {
@@ -245,7 +245,7 @@
     },
     "45": {
         "file_id": 3,
-        "content": "Loop through every other element in 'comments_list' and combine them into a new list. Call recursive function on the combined list to further process. Return summary of combined comments.",
+        "content": "This code segment is implementing a recursive function to combine pairs of comments from a list, starting from the last element. It returns the combined summary after deleting the temporary summary_model.",
         "type": "comment"
     },
     "46": {

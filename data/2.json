@@ -1,547 +1,545 @@
 {
     "200": {
         "file_id": 19,
-        "content": "        hash_object = hashlib.md5(enc.encode())\n        return hash_object.hexdigest()\nimport tinydb\ncache_tree = tinydb.TinyDB(os.path.join(source_dir, \"cache_tree.json\"))\ndef generate_file_summary_brief(filepath, summary):\n    # Generate a brief for the file based on its summary\n    stripped_summary = summary.strip()\n    if stripped_summary:\n        prompt = f\"\"\"\nFilepath: {filepath}\nSummary:\n{stripped_summary}\nBrief in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        mhash = hash_key(prompt)\n        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == filepath)\n        )\n        if rec:\n            return rec[\"brief\"]\n        else:\n            init_prompt = \"\"\"You are a professional brief writer. You can turn long summaries into a single short brief within 7 words. You will be given a filepath, a summary of the file and produce a concise brief that best describes the file.\"\"\"\n            with llm_context(init_prompt) as model:\n                mbrief = strip_quote(model.run(prompt).strip())",
+        "content": "    new_data = json.loads(open(os.path.join(source_dir, f\"data/{i}.json\"), \"r\").read())\n    data.update(new_data)\ndef strip_quote(s: str):\n    if s[0] == s[-1]:\n        if s[0] in ['\"', \"'\"]:\n            return s[1:-1].strip()\n    return s.strip().strip(\".\")\nfrom tinydb import TinyDB, Query\ncache_title = TinyDB(os.path.join(source_dir, \"cache_title.json\"))\ntitle_split_dir = os.path.join(source_dir, \"data/titles\")\nmetadata_title_path = os.path.join(source_dir, \"metadata_title.json\")\nimport shutil\nif not os.path.exists(title_split_dir):\n    os.makedirs(title_split_dir)\nelse:\n    shutil.rmtree(title_split_dir)\n    os.makedirs(title_split_dir)\nif not os.path.isdir(title_split_dir):\n    raise Exception(\n        f\"'{title_split_dir}' (where splited titles stored) must be a directory\"\n    )\n# structure:\n# [filepath] [summary] [code] [comment] ...\ntitle_data = {}\nfile_mapping_detail = {}\ndata_count = len(data.keys())\nimport hashlib\ndef hash_key(summary: str):\n    enc = summary.strip()\n    if enc:\n        # Generate a hash for the given summary",
         "type": "code",
-        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:71-101"
+        "location": "/document_agi_computer_control/title_generator/main.py:42-86"
     },
     "201": {
         "file_id": 19,
-        "content": "The code calculates a hash value for the file path and its summary, then checks if it exists in cache. If not found, it prompts a language model to generate a brief within 7 words based on the given information and stores it in cache for future use.",
+        "content": "This code loads data from a JSON file, updates existing data, provides a function to strip quotes, sets up a TinyDB database and directory paths, ensures the necessary directories exist, initializes an empty dictionary for title data, defines a function to hash a summary, and checks if the required directory exists.",
         "type": "comment"
     },
     "202": {
         "file_id": 19,
-        "content": "            mdoc = dict(path=filepath, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == filepath)\n            return mbrief\n    return \"\"\ndef generate_tree_repesentation(\n    directory_path: str,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs: dict[str, str],\n    indent=0,\n    briefs=[],\n):\n    childrens = list(childrens_mapping[directory_path])\n    childrens.sort()\n    if directory_path == \"/\":\n        name = project_name\n    else:\n        name = directory_path.strip(\"/\").split(\"/\")[-1]\n    mbrief, show = directory_briefs[directory_path]\n    mbrief = strip_quote(mbrief)\n    briefs.append(\n        \" \" * indent * 4\n        + f'- <span hierarchy=\"{indent}\" class=\"expanded\" onclick=\"toggleVisibility(this)\" ><strong class=\"directory\" id=\"{directory_path}\"><code>{name}</code></strong>'\n        + (\"\" if not show else f\" <em>{mbrief}</em>\")\n        + \"</span>\"\n        # \" \" * indent * 4 + f\"- **`{name}`**\" + (\"\" if not show else f\" <em>{mbrief}</em>\")",
+        "content": "        hash_object = hashlib.md5(enc.encode())\n        return hash_object.hexdigest()\ndef ask_llm_for_title(path: str, comment: str):\n    init_prompt = \"\"\"You are a professional title writer. You can write a concise, conclusive and meaningful title within 3 to 7 words. You will be given a piece of content, a path that refers to the content and produce a single title.\n\"\"\"\n    with llm_context(init_prompt) as model:\n        prompt = f\"\"\"Content:\n{comment}\nPath of the content: {path}\nTitle within 3 to 7 words (do not quote the title, just write it out):\n\"\"\"\n        ret = model.run(prompt).strip()\n        ret = strip_quote(ret)\n    return ret\ndef generate_title_and_update_to_result(\n    path: str, comment: str, result_dict: dict[str, str]\n):\n    comment_hash = hash_key(comment)\n    doc = cache_title.get((Query().hash == comment_hash) and (Query().path == path))\n    if doc:\n        mtitle = doc[\"title\"]\n    else:\n        mtitle = ask_llm_for_title(path, comment)\n        cache_title.upsert(\n            dict(path=path, hash=comment_hash, title=mtitle), cond=Query().path == path",
         "type": "code",
-        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:102-129"
+        "location": "/document_agi_computer_control/title_generator/main.py:87-117"
     },
     "203": {
         "file_id": 19,
-        "content": "This function takes a directory path, children mapping, file briefs, and directory briefs as inputs. It sorts the children by name and assigns a name based on the directory path. It retrieves the brief and show status from the directory briefs dictionary, strips quotes if necessary, and adds it to the briefs list with appropriate formatting.",
+        "content": "This code is responsible for generating titles based on a given piece of content and its path, using a Language Model (LLM). It hashes the input comment, checks if there's an existing title in cache for that path and comment hash, and if not, it asks the LLM to generate a title. The generated or cached title is returned by the function.",
         "type": "comment"
     },
     "204": {
         "file_id": 19,
-        "content": "    )\n    for child in childrens:\n        child_name = child.strip(\"/\").split(\"/\")[-1]\n        if child.endswith(\"/\"):\n            # mbrief, show= directory_briefs[child]\n            # briefs.append(\n            #     \" \" * (indent + 1) * 4\n            #     + f\"- **`{child_name}`**\"+(\"\" if not show else f\" *{mbrief}*\")\n            # )\n            generate_tree_repesentation(\n                child,\n                childrens_mapping,\n                file_briefs,\n                directory_briefs,\n                indent + 1,\n                briefs,\n            )\n        else:\n            child_link = f\"index.html?q={urllib.parse.quote(child)}\"\n            briefs.append(\n                \" \" * (indent + 1) * 4\n                + f'- <a href=\"{child_link}\" id=\"{child}\"><code>{child_name}</code></a> <em>{strip_quote(file_briefs[child])}</em>'\n            )\n    return briefs\ndef generate_directory_summary_brief(\n    directory_path,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs={},",
+        "content": "        )\n    result_dict[path] = mtitle\nfor k, v in file_mapping.items():\n    # end_id is exclusive.\n    if str(int(k) + 1) in file_mapping.keys():\n        end_id = int(file_mapping[str(int(k) + 1)][\"entry_id\"])\n    else:\n        end_id = data_count\n    file_mapping_detail[k] = {\n        \"filepath\": v[\"filepath\"],\n        \"span\": {\"start\": int(v[\"entry_id\"]), \"end\": end_id},\n    }\nfile_count = len(file_mapping.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{file_count}\")\nfor i in range(file_count):\n    try:\n        it = file_mapping_detail[str(i)]\n        start, end = it[\"span\"][\"start\"], it[\"span\"][\"end\"]\n        split_count = (end - start - 2) / 2\n        split_count = int(split_count)\n        # generate for file summary title first.\n        generate_title_and_update_to_result(\n            data[str(start)][\"content\"], data[str(start + 1)][\"content\"], title_data\n        )\n        if split_count == 1:  # only generate for file summary\n            continue\n        else:\n            # generate for splits\n            for j in range(split_count):",
         "type": "code",
-        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:130-162"
+        "location": "/document_agi_computer_control/title_generator/main.py:118-149"
     },
     "205": {
         "file_id": 19,
-        "content": "This code generates a list of briefs for each folder in the hierarchy. It checks if a child is a directory and recursively calls itself to generate briefs for that directory. If a child is a file, it adds a brief with a link to the file and its brief description. The generated briefs are then returned as a list.",
+        "content": "This code is iterating over a set of files, tracking the file path and span of each file's content. It calculates the number of splits needed based on the end id minus start id, excluding one. The code generates titles for the file summary and additional splits if there are more than one split required.",
         "type": "comment"
     },
     "206": {
         "file_id": 19,
-        "content": "):\n    # Generate a brief for the directory based on its direct children's briefs\n    childrens = list(childrens_mapping[directory_path])\n    if len(childrens) == 0:\n        raise Exception(f\"Directory '{directory_path}' has no children\")\n    if len(childrens) == 1:\n        if childrens[0].endswith(\"/\"):\n            generate_directory_summary_brief(\n                childrens[0], childrens_mapping, file_briefs, directory_briefs\n            )\n            mbrief = directory_briefs[childrens[0]][0]\n        else:\n            mbrief = file_briefs[childrens[0]]\n        directory_briefs[directory_path] = (mbrief, False)\n    else:\n        subprompt_parts = []\n        children_briefs = {}\n        for child in childrens:\n            if child.endswith(\"/\"):\n                generate_directory_summary_brief(\n                    child, childrens_mapping, file_briefs, directory_briefs\n                )\n                cbrief = directory_briefs[child][0]\n            else:\n                cbrief = file_briefs[child]\n            children_briefs[child] = cbrief",
+        "content": "                generate_title_and_update_to_result(\n                    data[str(start + 2 + j * 2)][\"location\"],\n                    data[str(start + 3 + j * 2)][\"content\"],\n                    title_data,\n                )\n    finally:\n        print(f\"\\n>>>> PROCESSING PROGRESS: {i+1}/{file_count}\")\n# split and store file summaries.\nprint(\"Spliting and storing titles...\")\ntitle_split_count = 0\nimport json\nfor i, chunk in enumerate(split_dict_into_chunks(title_data, 300)):\n    title_split_count += 1\n    with open(os.path.join(title_split_dir, f\"{i}.json\"), \"w+\") as f:\n        f.write(json.dumps(chunk, indent=4, ensure_ascii=False))\nprint(\"Storing title metadata...\")\nwith open(metadata_title_path, \"w+\") as f:\n    f.write(json.dumps(dict(split_count=title_split_count)))\nprint(\"Finished title generation.\")",
         "type": "code",
-        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:163-188"
+        "location": "/document_agi_computer_control/title_generator/main.py:150-171"
     },
     "207": {
         "file_id": 19,
-        "content": "This function generates a brief for a directory based on its direct children's briefs. If the directory has no children, it raises an exception. If it has one child, it adds the child's brief to the directory's briefs if the child is a folder (otherwise, it uses the file brief). If it has multiple children, it iterates through each child and adds their briefs to a dictionary of children's briefs.",
+        "content": "Code processes a data title, generates a new title, and updates the result. It then prints progress for each file being processed. The code splits and stores file summaries by creating chunks of 300 elements, writing them to JSON files with indices, storing the count of split titles in a metadata file, and finally printing that generation process is finished.",
         "type": "comment"
     },
     "208": {
-        "file_id": 19,
-        "content": "        candidates = list(children_briefs.items())\n        candidates.sort(key=lambda x: x[0])\n        for k, v in candidates:\n            if not k.endswith(\"/\"):\n                mark = \"file\"\n            else:\n                mark = \"directory\"\n            relpath = os.path.relpath(k, directory_path)\n            it = f\"Brief for {mark} '{relpath}': {v}\"\n            subprompt_parts.append(it)\n        subprompt = \"\\n\".join(subprompt_parts)\n        prompt = f\"\"\"\n{subprompt}\nBrief for directory '{directory_path}' in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        mhash = hash_key(prompt)\n        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == directory_path)\n        )\n        if rec:\n            mbrief = rec[\"brief\"]\n        else:\n            init_prompt = \"\"\"You are a professional brief writer. You can turn a list of briefs into a single short brief within 7 words. You will be given a list of briefs and relative paths of the directory children and produce a concise brief that best describes the directory.\"\"\"",
-        "type": "code",
-        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:189-213"
+        "file_id": 20,
+        "content": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/high_level.py",
+        "type": "filepath"
     },
     "209": {
-        "file_id": 19,
-        "content": "This code generates a prompt for a brief writer to summarize the directory and its contents in 7 words. It first collects briefs of each child directory or file, sorts them, appends them into subprompt_parts, joins them into a subprompt string, and constructs the final prompt including the subprompt. The code then retrieves previous brief from cache if available or prompts the user to write a new one.",
-        "type": "comment"
+        "file_id": 20,
+        "content": "The code initializes a TinyDB, creates functions for brief generation based on summaries, generates hashes for summaries, and updates file and directory briefs using the generated hashes. It then iterates through file summaries and directories, updating their briefs if necessary.",
+        "type": "summary"
     },
     "210": {
-        "file_id": 19,
-        "content": "            with llm_context(init_prompt) as model:\n                mbrief = strip_quote(model.run(prompt).strip())\n            mdoc = dict(path=directory_path, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == directory_path)\n        directory_briefs[directory_path] = (mbrief, True)\n    return directory_briefs\nfile_summaries = {\n    v[\"filepath\"]: data[str(v[\"entry_id\"] + 1)][\"content\"]\n    for v in file_mapping.values()\n}\n# print(file_summaries)\n# file_briefs = {k: generate_file_summary_brief(k, v) for k, v in file_summaries.items()}\nfile_briefs = {}\nitems_count = len(file_summaries.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{items_count}\")\ncounter = 0\nfor k, v in file_summaries.items():\n    file_briefs[k] = generate_file_summary_brief(k, v)\n    counter += 1\n    print(f\"\\n>>>> PROCESSING PROGRESS: {counter}/{items_count}\")\nchildrens_mapping = defaultdict(set)\nfor k in file_summaries.keys():\n    print(k)\n    split_k = k.split(\"/\")\n    print(split_k)  # [dir1, dir2, ... filename]",
+        "file_id": 20,
+        "content": "import os\nimport hashlib\nfrom tinydb import TinyDB, Query\n# Initialize TinyDB\ndb = TinyDB('briefs_db.json')\ndef generate_file_summary_brief(filepath, summary):\n    # Generate a brief for the file based on its summary\n    # ...\ndef generate_directory_summary_brief(directory_path, children_briefs):\n    # Generate a brief for the directory based on its direct children's briefs\n    # ...\ndef hash_summary(summary):\n    # Generate a hash for the given summary\n    hash_object = hashlib.md5(summary.encode())\n    return hash_object.hexdigest()\ndef update_file_briefing(filepath, summary):\n    # Check if a matching briefing exists for the hash of the summary\n    # If not, update the briefing for the file\n    # ...\ndef update_directory_briefing(directory_path, children_briefs):\n    # Concatenate and sort the briefs of direct children before hashing\n    # Check if a matching briefing exists for the hash of the concatenated children briefs\n    # If not, update the briefing for the directory\n    # ...\n# Iterate through file summaries and update briefs",
         "type": "code",
-        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:214-243"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/high_level.py:1-32"
     },
     "211": {
-        "file_id": 19,
-        "content": "This code fetches file summaries, generates file briefs, and populates a data structure for folder hierarchy representation. It uses LLM context to generate briefs, caches tree data, and prints processing progress.",
+        "file_id": 20,
+        "content": "This code initializes a TinyDB, defines functions to generate briefs for files and directories based on their summaries, generates hashes for summaries, updates file and directory briefings using the generated hashes. It then iterates through file summaries, updating briefs if necessary.",
         "type": "comment"
     },
     "212": {
-        "file_id": 19,
-        "content": "    # add \"/\" to the right and left of dir.\n    for i in range(len(split_k) - 1):\n        parent = \"/\".join(split_k[: i + 1]) + \"/\"\n        child = parent + split_k[i + 1]\n        if i != len(split_k) - 2:  # is directory:\n            child += \"/\"\n        print({\"i\": i, \"parent\": parent, \"child\": child, \"k\": k})\n        childrens_mapping[parent].add(child)\n# breakpoint()\ndirectory_briefs = generate_directory_summary_brief(\"/\", childrens_mapping, file_briefs)\n# now, let's generate the representation.\nbriefs = generate_tree_repesentation(\n    \"/\", childrens_mapping, file_briefs, directory_briefs\n)\n# briefs.insert(0,\"# Project Structure:\")\nbriefs.insert(\n    0,\n    f'## Project Structure<span hierarchy=\"0\" class=\"partial-repository-url\"> of: {metadata[\"url\"][\"partial\"]}</span><div style=\"float: right;\"><a href=\"index.html\"><i class=\"bi bi-search\"></i></a></div>',\n)\nprint(\"=\" * 40)\nprint(\"\\n\".join(briefs))\n### building\n# render README.md into index.html\nimport markdown\nfrom jinja2 import Template\n# Markdown content",
+        "file_id": 20,
+        "content": "for filepath, summary in file_summaries.items():\n    update_file_briefing(filepath, summary)\n# Iterate through directories and their direct children to update briefs\nfor directory_path, children_briefs in directory_children_briefs.items():\n    update_directory_briefing(directory_path, children_briefs)",
         "type": "code",
-        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:244-276"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/high_level.py:33-38"
     },
     "213": {
-        "file_id": 19,
-        "content": "The code generates a project structure representation by iterating through a folder hierarchy, creating parent and child directory paths, and storing them in a mapping. It then generates briefs for both files and directories using the mapping and generates a project structure representation with an optional title. Finally, it prints the entire output.",
+        "file_id": 20,
+        "content": "Iterates through file summaries and updates briefs, followed by directories and their direct children's briefs.",
         "type": "comment"
     },
     "214": {
-        "file_id": 19,
-        "content": "markdown_content = \"\\n\".join(briefs)\n# Convert Markdown to HTML\nhtml_content = markdown.markdown(markdown_content)\ntemplate_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), \"tree.html.j2\")\ncss_path = os.path.join(\n    os.path.abspath(os.path.dirname(__file__)), \"github-markdown.css\"\n)\ntemplate = Template(open(template_path, \"r\").read())\n# Render the template with the data\nrendered_template = template.render(content=html_content)\nprint(\"Template rendered.\")\ntree_fname = \"tree.html\"\n# Write the template content to a file\nwith open(os.path.join(source_dir, tree_fname), \"w+\", encoding=\"utf-8\") as file:\n    file.write(rendered_template)\nimport shutil\nshutil.copy(css_path, source_dir)\nprint(\n    f\"Markdown converted to HTML and written to {os.path.join(source_dir, tree_fname)}\"\n)",
-        "type": "code",
-        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:277-302"
-    },
-    "215": {
-        "file_id": 19,
-        "content": "This code converts markdown content to HTML, renders a template with the data, writes the rendered template to a file, and copies a CSS file alongside it.",
-        "type": "comment"
-    },
-    "216": {
-        "file_id": 20,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
+        "file_id": 21,
+        "content": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py",
         "type": "filepath"
     },
-    "217": {
-        "file_id": 20,
-        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+    "215": {
+        "file_id": 21,
+        "content": "This Python script generates a filesystem hierarchy in markdown format from JSON data, using AI-generated summaries for directories and file_mapping for files. It also offers optional enhancements to generate tree.json and tree.html, with Jinja2 templates for rendering an organized visualization of project structure in HTML.",
         "type": "summary"
     },
-    "218": {
-        "file_id": 20,
-        "content": "import asyncio\nasync def read_lines(stream:asyncio.StreamReader):\n    while True:\n        line = await stream.readline()\n        # print(\"line\")\n        if not line:\n            break\n        else: \n            yield line\nasync def run_command(command:list[str]):\n    process = await asyncio.create_subprocess_exec(\n        *command,\n        stdout=asyncio.subprocess.PIPE,\n        # stderr=asyncio.subprocess.PIPE\n    )\n    f = [it for it in read_lines(process.stdout)]\n    # stderr_reader = asyncio.StreamReader()\n    # Read lines from stdout and stderr concurrently\n    # await asyncio.gather(\n    #     read_lines(stdout_reader),\n    #     read_lines(stderr_reader)\n    # )\n    # Wait for the process to complete\n    await process.wait()\nasync def main():\n    command = [\"ls\", \"-l\"]\n    # Run the command asynchronously\n    await run_command(command)\nif __name__ == \"__main__\":\n    # Run the event loop\n    asyncio.run(main())",
+    "216": {
+        "file_id": 21,
+        "content": "# demo logic to generate filesystem hierarchy in markdown\n# TODO: diff and line markers shifts based reprocessing: just process the changed part instead of the whole file again\n# TODO: calculate code duplication percent across directories, prefer files by timestamp or size\n# TODO: show the total stage progress like [Stage 1/4], [Stage 2/4]\n# TODO: generate sitemap\n# TODO: modify all titles in all pages to contain full project name and project description (more informative titles)\n# TODO: print progress info during directory brief generation process\n# TODO: provide a brief view to file chunks.\n# TODO: provide an AST view (language specific) to file chunks.\n# TODO: make our prompt into json to formalize the input structure, and parse the output as json\n# language specific shall be built on language agnostic\nimport os\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"-s\", \"--source_dir\", type=str, required=True)\nargs = parser.parse_args()\n# the only parameter.\nsource_dir = args.source_dir",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py:1-37"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:1-25"
+    },
+    "217": {
+        "file_id": 21,
+        "content": "This code defines a Python script that generates a filesystem hierarchy in markdown format. It accepts the source directory as an argument and includes several TODOs for future enhancements such as diff handling, code duplication calculation, progress display, file chunks view, AST view, and language-specific features.",
+        "type": "comment"
+    },
+    "218": {
+        "file_id": 21,
+        "content": "assert os.path.exists(source_dir)\nassert os.path.isdir(source_dir)\nassert os.path.isabs(source_dir)\nfrom collections import defaultdict\nimport json\nimport urllib.parse\nimport sys\nsys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), \"../\"))\nfrom llm import llm_context\nmetadata = json.loads(open(os.path.join(source_dir, \"metadata.json\"), \"r\").read())\nfile_mapping = metadata[\"file_mapping\"]\nsplit_count = metadata[\"split_count\"]\nproject_name = metadata[\"project_name\"]\ndata = {}\nfor i in range(split_count):\n    new_data = json.loads(open(os.path.join(source_dir, f\"data/{i}.json\"), \"r\").read())\n    data.update(new_data)\ndef strip_quote(s: str):\n    if s[0] == s[-1]:\n        if s[0] in ['\"', \"'\"]:\n            return s[1:-1].strip()\n    return s.strip().strip('.')\n# read metadata.json & data/*.json\n# create and read some cache_tree.json, which you may want to include in .gitignore\n# produce tree.json\n# copy tree.html\nimport html.entities\nhtml5_escapes = html.entities.html5\nhtml_escape_mapping = {}\nfor k,v in html5_escapes.items():",
+        "type": "code",
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:27-67"
     },
     "219": {
-        "file_id": 20,
-        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+        "file_id": 21,
+        "content": "The code reads metadata and data from JSON files, creates a cache_tree.json file, produces tree.json, and copies the content of tree.html. It also includes functions for stripping quotes and mapping HTML5 escapes.",
         "type": "comment"
     },
     "220": {
         "file_id": 21,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
-        "type": "filepath"
+        "content": "    if k.endswith(\";\"):  html_escape_mapping[v] = \"&\"+k\ndef html_escape(s: str):\n    ret = \"\"\n    for elem in s:\n        if elem in html_escape_mapping.keys():\n            ret += html_escape_mapping[elem]\n        else:\n            ret += elem\n    return ret\nimport hashlib\ndef hash_key(summary: str):\n    enc = summary.strip()\n    if enc:\n        # Generate a hash for the given summary\n        hash_object = hashlib.md5(enc.encode())\n        return hash_object.hexdigest()\nimport tinydb\ncache_tree = tinydb.TinyDB(os.path.join(source_dir, \"cache_tree.json\"))\ndef generate_file_summary_brief(filepath, summary):\n    # Generate a brief for the file based on its summary\n    stripped_summary = summary.strip()\n    if stripped_summary:\n        prompt = f\"\"\"\nFilepath: {filepath}\nSummary:\n{stripped_summary}\nBrief in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        mhash = hash_key(prompt)\n        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == filepath)\n        )\n        if rec:",
+        "type": "code",
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:68-112"
     },
     "221": {
         "file_id": 21,
-        "content": "The script uses the \"rich\" library to display tree structures and handles command line arguments, file/directory operations. The function recursively traverses a dictionary, managing directories and updating counts. It labels tree structures with size, line count, estimates time from lines, reads file names, and yields line counts for non-error files. The code iterates through the dictionary, calculating sizes and processing time, and prints total and selected file counts, line counts by suffix, and error count.",
-        "type": "summary"
+        "content": "This code snippet generates a brief for a file based on its summary. It checks if the summary is not empty and creates a hash of the prompt using the filepath and stripped summary. The code then retrieves a record from the cache tree using the generated hash and file path, updating it with a new brief if it exists.",
+        "type": "comment"
     },
     "222": {
         "file_id": 21,
-        "content": "from rich.text import Text\nfrom rich.console import Console\nimport datetime\n# color from:\nfrom rich.color import ANSI_COLOR_NAMES\nfrom collections import defaultdict\nconsole = Console()\nfrom rich.tree import Tree\nfrom rich import print\nimport json\nimport os\nimport humanize\nerror_map = defaultdict(list)\ncached_verified = []\ndef patch_missing_files(path, basemap, color, processor=lambda x: x):\n    subpath, filename = dirsplit(path)\n    # breakpoint()\n    if basemap.get(path) is None:\n        subtree = patch_missing_files(subpath + \"/\", basemap, color)\n        subsubtree = subtree.add(processor(filename), style=color, guide_style=color)\n        # print(filename)\n        basemap[path] = subsubtree\n        return subsubtree\n    else:\n        return basemap.get(path)\ndef size_to_readable_string(size: int):\n    return humanize.naturalsize(size)\nGREY = \"bright_black\"\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"--full\", help=\"full tree\", type=str, required=True)\nparser.add_argument(\"--selected\", help=\"selected tree\", type=str, required=True)",
+        "content": "            return rec[\"brief\"]\n        else:\n            init_prompt = \"\"\"You are a professional brief writer. You can turn long summaries into a single short, concise, conclusive and meaningful brief within 7 words. You will be given a filepath, a summary of the file and produce a concise brief that best describes the file.\"\"\"\n            with llm_context(init_prompt) as model:\n                mbrief = strip_quote(model.run(prompt).strip())\n            mdoc = dict(path=filepath, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == filepath)\n            return mbrief\n    return \"\"\ndef generate_tree_repesentation(\n    directory_path: str,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs: dict[str, str],\n    indent=0,\n    briefs=[],\n):\n    childrens = list(childrens_mapping[directory_path])\n    childrens.sort()\n    if directory_path == \"/\":\n        name = project_name\n    else:\n        name = directory_path.strip(\"/\").split(\"/\")[-1]",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:1-44"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:113-137"
     },
     "223": {
         "file_id": 21,
-        "content": "This code is a Python script that uses the \"rich\" library for creating and displaying a tree structure. It allows you to patch missing files, convert file sizes to readable strings, and handle command line arguments using \"argparse\". The script takes two input parameters: \"--full\" for the full tree and \"--selected\" for the selected tree.",
+        "content": "This code snippet generates a tree representation of a file or directory structure. It first checks if a brief is available for the file, and if not, it uses an AI model to generate one. Then, it builds the tree representation using the provided parameters and returns the generated briefs.",
         "type": "comment"
     },
     "224": {
         "file_id": 21,
-        "content": "parser.add_argument(\"--basepath\", help=\"path to the base\", type=str, required=True)\nargs = parser.parse_args()\nfull_json = args.full\nselected_json = args.selected\nbasepath = args.basepath\nassert os.path.isabs(basepath)\nbasepath = os.path.abspath(basepath)\ntree_data = json.load(open(full_json))\nselected_json = json.load(open(selected_json))  # could be different.\n# cached_paths = [\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/recursive_document_writer.py\",\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/code_view_with_path_argument_and_anchor/code_view_demo.py\",\n# ]\ncached_paths = []\nfor p in cached_paths:\n    assert os.path.isabs(p)\ncached_paths = [os.path.abspath(p) for p in cached_paths]\nfor p in cached_paths:\n    assert os.path.commonprefix([p, basepath]) == basepath\nsize_map = {}\nselected_keys = []\nexisting_keys = []\n# Add the tree contents recursively\ndef add_tree_contents(parent, contents, basedir=\".\", basemap={}):\n    for item in contents:",
+        "content": "    mbrief, show = directory_briefs[directory_path]\n    mbrief = strip_quote(mbrief)\n    briefs.append(\n        \" \" * indent * 4\n        + f'- <span hierarchy=\"{indent}\" class=\"expanded\" onclick=\"toggleVisibility(this)\" ><strong class=\"directory\" id=\"{directory_path}\"><code>{html_escape(name)}</code></strong>'\n        + (\"\" if not show else f\" <em>{mbrief}</em>\")\n        + \"</span>\"\n        # \" \" * indent * 4 + f\"- **`{name}`**\" + (\"\" if not show else f\" <em>{mbrief}</em>\")\n    )\n    for child in childrens:\n        child_name = child.strip(\"/\").split(\"/\")[-1]\n        if child.endswith(\"/\"):\n            # mbrief, show= directory_briefs[child]\n            # briefs.append(\n            #     \" \" * (indent + 1) * 4\n            #     + f\"- **`{child_name}`**\"+(\"\" if not show else f\" *{mbrief}*\")\n            # )\n            generate_tree_repesentation(\n                child,\n                childrens_mapping,\n                file_briefs,\n                directory_briefs,\n                indent + 1,\n                briefs,",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:45-78"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:138-162"
     },
     "225": {
         "file_id": 21,
-        "content": "This code is parsing command-line arguments, loading JSON files, ensuring paths are absolute, and checking common prefixes. It then defines a function to recursively add tree contents and initializes variables for selected keys and existing keys.",
+        "content": "This function generates a hierarchical representation of file and directory structure. It uses recursion to handle nested directories, appends the names and brief descriptions to a 'briefs' list, and handles HTML formatting for display.",
         "type": "comment"
     },
     "226": {
         "file_id": 21,
-        "content": "        if item[\"type\"] == \"directory\":\n            # subtree = parent.add(f\"[bold]{item['name']}\")\n            # subtree = parent.add(\n            #     Text.assemble((item[\"name\"], \"bold\")),\n            #     style=GREY,\n            #     guide_style=GREY,\n            # )\n            subtree = patch_missing_files(\n                os.path.join(basedir, item[\"name\"] + \"/\"),\n                basemap,\n                GREY,\n                lambda x: Text.assemble((x, \"bold\")),\n            )\n            existing_keys.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n            # basemap[os.path.join(basedir, item[\"name\"] + \"/\")] = subtree\n            dirfs = 0\n            for fs in add_tree_contents(\n                subtree,\n                item.get(\"contents\", []),\n                os.path.join(basedir, item[\"name\"]),\n                basemap,\n            ):\n                dirfs += fs\n                yield fs\n            size_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirfs\n        else:  # file\n            # subtree = parent.add(item['name'])",
+        "content": "            )\n        else:\n            child_link = f\"index.html?q={urllib.parse.quote(child)}\"\n            briefs.append(\n                \" \" * (indent + 1) * 4\n                + f'- <a href=\"{child_link}\" id=\"{child}\"><code>{html_escape(child_name)}</code></a> <em>{strip_quote(file_briefs[child])}</em>'\n            )\n    return briefs\ndef generate_directory_summary_brief(\n    directory_path,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs={},\n):\n    # Generate a brief for the directory based on its direct children's briefs\n    childrens = list(childrens_mapping[directory_path])\n    if len(childrens) == 0:\n        raise Exception(f\"Directory '{directory_path}' has no children\")\n    if len(childrens) == 1:\n        if childrens[0].endswith(\"/\"):\n            generate_directory_summary_brief(\n                childrens[0], childrens_mapping, file_briefs, directory_briefs\n            )\n            mbrief = directory_briefs[childrens[0]][0]\n        else:\n            mbrief = file_briefs[childrens[0]]",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:79-105"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:163-191"
     },
     "227": {
         "file_id": 21,
-        "content": "If item type is directory:\n- Create a subtree for the directory name.\n- Add missing files to the subtree.\n- Append the directory path to existing keys.\n- Add the subtree to the base map.\n- Count and yield the number of files in the subtree.\n- Store the total file size in size_map.\nElse if item type is file:\n- Add the file name as a subtree.\n- Append the file path to existing keys.\n- Yield 1 (as there's only one file).",
+        "content": "This function generates a brief for a directory based on its direct children's briefs. If the directory has no children, it raises an exception. If it has only one child, it recursively calls itself to generate a brief for the child directory or file.",
         "type": "comment"
     },
     "228": {
         "file_id": 21,
-        "content": "            # if item['name'] == \"devcontainer.json\": breakpoint()\n            existing_keys.append(os.path.join(basedir, item[\"name\"]))\n            filesize = os.path.getsize(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            size_map[os.path.join(basedir, item[\"name\"])] = filesize\n            filesize_human = size_to_readable_string(filesize)\n            # subtree = patch_missing_files(os.path.join(basedir, item[\"name\"]),basemap, GREY, lambda x: f\"[{filesize_human}] \" + x)\n            subtree = parent.add(f\"x <{filesize_human}> \" + item[\"name\"], style=GREY)\n            basemap[os.path.join(basedir, item[\"name\"])] = subtree\n            yield filesize\ndef dirsplit(path):\n    if path.endswith(\"/\"):\n        path = path[:-1]\n    return os.path.split(path)\ndef set_path_to_white(path, basemap):\n    subtree = patch_missing_files(path, basemap, \"white\")\n    subtree.style = \"white\"\n    subtree.guide_style = \"white\"\n    return subtree\nselected_dirs = []\nline_map = {}",
+        "content": "        directory_briefs[directory_path] = (mbrief, False)\n    else:\n        subprompt_parts = []\n        children_briefs = {}\n        for child in childrens:\n            if child.endswith(\"/\"):\n                generate_directory_summary_brief(\n                    child, childrens_mapping, file_briefs, directory_briefs\n                )\n                cbrief = directory_briefs[child][0]\n            else:\n                cbrief = file_briefs[child]\n            children_briefs[child] = cbrief\n        candidates = list(children_briefs.items())\n        candidates.sort(key=lambda x: x[0])\n        for k, v in candidates:\n            if not k.endswith(\"/\"):\n                mark = \"file\"\n            else:\n                mark = \"directory\"\n            relpath = os.path.relpath(k, directory_path)\n            it = f\"Brief for {mark} '{relpath}': {v}\"\n            subprompt_parts.append(it)\n        subprompt = \"\\n\".join(subprompt_parts)\n        prompt = f\"\"\"\n{subprompt}\nBrief for directory '{directory_path}' in 7 words (do not quote your brief, just write it out):",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:106-134"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:192-219"
     },
     "229": {
         "file_id": 21,
-        "content": "This code is creating a visual file selector by ignoring specific rules. It breaks when it encounters the \"devcontainer.json\" file, appends existing file paths to a list, calculates their sizes and converts them to readable strings, adds subtrees to a tree structure with gray color and file size information, and handles directories by setting their style to white. It also maintains two dictionaries: one for storing file sizes and another for mapping file paths to their corresponding subtrees in the tree structure.",
+        "content": "This code is generating a summary brief for each directory and file in the given folder hierarchy. It checks if the item is a directory or a file, and then sorts them based on their names. The brief includes the type of item (directory or file) and its relative path, and prompts the user to provide a 7-word brief description for the directory.",
         "type": "comment"
     },
     "230": {
         "file_id": 21,
-        "content": "# can have missing files.\ndef iterate_all_keys(contents, basemap, basedir=\".\"):\n    for item in contents:\n        if item[\"type\"] == \"directory\":\n            subpaths = item.get(\"contents\", [])\n            if subpaths:\n                dirlc = 0\n                cached_count = 0\n                # total_lc = 0\n                for lc in iterate_all_keys(\n                    subpaths, basemap, os.path.join(basedir, item[\"name\"])\n                ):\n                    # total_lc +=1\n                    if lc == -3:\n                        cached_count += 1\n                        continue\n                    dirlc += lc\n                    yield lc\n                if dirlc != 0:\n                    selected_dirs.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n                    set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    line_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirlc\n                elif len(subpaths) == cached_count:",
+        "content": "\"\"\"\n        mhash = hash_key(prompt)\n        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == directory_path)\n        )\n        if rec:\n            mbrief = rec[\"brief\"]\n        else:\n            init_prompt = \"\"\"You are a professional brief writer. You can turn a list of briefs into a single short, concise, conclusive and meaningful brief within 7 words. You will be given a list of briefs and relative paths of the directory children and produce a concise brief that best describes the directory.\"\"\"\n            with llm_context(init_prompt) as model:\n                mbrief = strip_quote(model.run(prompt).strip())\n            mdoc = dict(path=directory_path, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == directory_path)\n        directory_briefs[directory_path] = (mbrief, True)\n    return directory_briefs\nfile_summaries = {\n    v[\"filepath\"]: data[str(v[\"entry_id\"] + 1)][\"content\"]\n    for v in file_mapping.values()\n}\n# print(file_summaries)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:137-161"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:220-242"
     },
     "231": {
         "file_id": 21,
-        "content": "This function iterates through all keys in the \"contents\" dictionary, checking for directories and recursively calling itself to handle their contents. It keeps track of the total count of files and directories (lc) and yields each file or directory encountered. If a directory is found, it adds it to the selected_dirs list and updates the line_map with the count of files in that directory.",
+        "content": "This code retrieves a brief description for a directory based on its path and hash value using an LLM (Language Model) context. If the record already exists in the cache_tree, it fetches the brief from there; otherwise, it prompts the LLM to generate a brief and stores it in the cache_tree before adding it to the directory_briefs dictionary. It also generates file summaries for the files in the given file_mapping.",
         "type": "comment"
     },
     "232": {
         "file_id": 21,
-        "content": "                    # elif total_lc == cached_count:\n                    subtree = set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    subtree.label = f\"[Cached] \" + item[\"name\"]\n                    cached_verified.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n        else:  # file\n            # breakpoint()\n            selected_keys.append(os.path.join(basedir, item[\"name\"]))\n            linecount = read_file_and_get_line_count(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            line_map[os.path.join(basedir, item[\"name\"])] = linecount\n            subtree = set_path_to_white(os.path.join(basedir, item[\"name\"]), basemap)\n            error = True\n            if linecount == 0:\n                label = \"Empty\"\n            elif linecount == -1:\n                label = \"Missing\"\n            elif linecount == -2:\n                label = \"Error\"\n            elif linecount == -3:",
+        "content": "# file_briefs = {k: generate_file_summary_brief(k, v) for k, v in file_summaries.items()}\nfile_briefs = {}\nitems_count = len(file_summaries.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{items_count}\")\ncounter = 0\nfor k, v in file_summaries.items():\n    file_briefs[k] = generate_file_summary_brief(k, v)\n    counter += 1\n    print(f\"\\n>>>> PROCESSING PROGRESS: {counter}/{items_count}\")\nchildrens_mapping = defaultdict(set)\nfor k in file_summaries.keys():\n    print(k)\n    split_k = k.split(\"/\")\n    print(split_k)  # [dir1, dir2, ... filename]\n    # add \"/\" to the right and left of dir.\n    for i in range(len(split_k) - 1):\n        parent = \"/\".join(split_k[: i + 1]) + \"/\"\n        child = parent + split_k[i + 1]\n        if i != len(split_k) - 2:  # is directory:\n            child += \"/\"\n        print({\"i\": i, \"parent\": parent, \"child\": child, \"k\": k})\n        childrens_mapping[parent].add(child)\n# breakpoint()\ndirectory_briefs = generate_directory_summary_brief(\"/\", childrens_mapping, file_briefs)\n# now, let's generate the representation.",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:162-184"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:244-273"
     },
     "233": {
         "file_id": 21,
-        "content": "The code is checking the line count of a file and assigning a corresponding label to its tree structure representation. If the line count is 0, it's marked as \"Empty\", if it's -1, it's marked as \"Missing\", if it's -2, it's marked as \"Error\", and any other value is ignored. It also keeps track of cached directories and appends selected file paths to the `selected_keys` list.",
+        "content": "The code generates a directory hierarchy brief by iterating through file summaries, creating a mapping of child directories and files, and generating directory and file briefs using the mapping. It then uses these briefs to generate the final representation of the folder hierarchy.",
         "type": "comment"
     },
     "234": {
         "file_id": 21,
-        "content": "                label = \"Cached\"\n                error = False\n                cached_verified.append(os.path.join(basedir, item[\"name\"]))\n            else:\n                label = f\"{linecount} L\"\n                error = False\n            if error:\n                error_map[label].append(os.path.join(basedir, item[\"name\"]))\n            else:\n                yield linecount\n            subtree.label = f\"[{label}] \" + item[\"name\"]\ndef read_file_and_get_line_count(filepath: str):\n    filepath = os.path.abspath(filepath)\n    if not os.path.exists(filepath):\n        return -1\n    if filepath in cached_paths:\n        return -3\n    try:\n        with open(filepath, \"r\") as f:\n            lines = f.readlines()\n            return len(lines)\n    except:\n        return -2\nselected_keys = []\ndef get_selected_keys(tree_data, basemap):\n    iterate_all_keys(tree_data[0].get(\"contents\", []), basemap)\n    return selected_keys\ntree = Tree(\".\")\n# tree = Tree(\"agi_computer_control\", style=GREY, guide_style=GREY)\nroot = tree_data[0]  # Assuming the first item in the JSON is the root directory",
+        "content": "briefs = generate_tree_repesentation(\n    \"/\", childrens_mapping, file_briefs, directory_briefs\n)\n# briefs.insert(0,\"# Project Structure:\")\nbriefs.insert(\n    0,\n    f'## Project Structure<span hierarchy=\"0\" class=\"partial-repository-url\"> of: {metadata[\"url\"][\"partial\"]}</span><div style=\"float: right;\"><a href=\"tree.html?full=true\"><i class=\"bi bi-arrow-down-right-circle\"></i></a><a href=\"index.html\"><i class=\"bi bi-search\"></i></a></div>',\n)\nprint(\"=\" * 40)\nprint(\"\\n\".join(briefs))\n### building\n# render README.md into index.html\nimport markdown\nfrom jinja2 import Template\n# Markdown content\nmarkdown_content = \"\\n\".join(briefs)\n# Convert Markdown to HTML\nhtml_content = markdown.markdown(markdown_content)\ntemplate_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), \"tree.html.j2\")\ncss_path = os.path.join(\n    os.path.abspath(os.path.dirname(__file__)), \"github-markdown.css\"\n)\ntemplate = Template(open(template_path, \"r\").read())\n# Render the template with the data\nrendered_template = template.render(content=html_content)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:185-222"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:274-303"
     },
     "235": {
         "file_id": 21,
-        "content": "Line 184-221: Reads file names from the tree structure and verifies if they are cached or not. If not cached, it reads the line count of each file using the read_file_and_get_line_count function and appends to either cache list or error list. The yield statement returns line counts for non-error files.\nLine 185: Adds \"Cached\" label if item is in cached_paths, sets error flag as False, and appends file path to cached_verified list.\nLine 193: Adds the linecount label if it's not already an error file, sets error flag as False, and yields the linecount.\nLines 204-217: Reads the line count of the given filepath, handles non-existent files and cached files. Returns -1 for non-existing files, -3 for cached files.\nLine 219: Initializes selected_keys list, to be used in get_selected_keys function.\nLines 220-221: Recursively iterates through all keys in the tree structure and appends unique keys to selected_keys list.",
+        "content": "This code generates a tree representation of a project structure and then converts it into Markdown format. The generated Markdown content is used to create HTML using Jinja2 templates, and the final result is written to \"tree.html\" file. It helps display the project hierarchy in an organized manner for better understanding.",
         "type": "comment"
     },
     "236": {
         "file_id": 21,
-        "content": "mymap = {\"./\": tree}\nexisting_keys.append(\"./\")\ntotal_size = sum(add_tree_contents(tree, root.get(\"contents\", []), basemap=mymap))\nnonexist_keys = [k for k in mymap.keys() if k not in existing_keys]\nfor key in nonexist_keys:\n    it = mymap.get(key, None)\n    if it is not None:\n        parent, child = dirsplit(key)\n        parent_it = mymap.get(parent + \"/\", None)\n        if parent_it is not None:\n            parent_it.children.remove(it)\n        del mymap[key]\ntotal_lines = sum(iterate_all_keys(selected_json[0].get(\"contents\", []), mymap))\n# Print the tree\nsize_map[\"./\"] = total_size\nif total_lines != 0:\n    selected_dirs.append(\"./\")\n    line_map[\"./\"] = total_lines\ntree.label = Text.assemble(\n    (\n        (\n            f\"[{total_lines} L] \"\n            if total_lines != 0\n            else f\"x <{size_to_readable_string(total_size)}> \"\n        )\n        + tree.label,\n        \"magenta\",\n    )\n)\ndef estimate_time_from_lines(line_count: int):\n    seconds = (line_count / 10) * 100\n    return humanize.naturaltime(datetime.timedelta(seconds=seconds)).split(\" ago\")[0]",
+        "content": "print(\"Template rendered.\")\ntree_fname = \"tree.html\"\n# Write the template content to a file\nwith open(os.path.join(source_dir, tree_fname), \"w+\", encoding=\"utf-8\") as file:\n    file.write(rendered_template)\nimport shutil\nshutil.copy(css_path, source_dir)\nprint(\n    f\"Markdown converted to HTML and written to {os.path.join(source_dir, tree_fname)}\"\n)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:223-261"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:305-318"
     },
     "237": {
         "file_id": 21,
-        "content": "This code updates the map with the tree structure and its contents, removes nonexistent keys, calculates the total size and lines for existing directories, labels the tree with size and line count, and estimates time from lines.",
+        "content": "This code renders a template, writes it to a file along with copied CSS, and converts Markdown to HTML.",
         "type": "comment"
     },
     "238": {
-        "file_id": 21,
-        "content": "for k, v in mymap.items():\n    if k.endswith(\"/\"):\n        _, name = dirsplit(k)\n        if k in cached_verified:\n            continue\n        elif k in selected_dirs:\n            v.label = f\"[{line_map[k]} L] \" + name\n            # v.label = f\"[{estimate_time_from_lines(line_map[k])}] \"+ name\n        else:\n            v.label = f\"x <{size_to_readable_string(size_map[k])}> \" + name\nconsole = Console()\nconsole.print(tree)\n# total_size = sum(size_map.values())\nselected_size  = 0\nfor k in selected_keys:\n    # try:\n    s =  size_map[k] \n    selected_size +=s\n    # except KeyError:\n    #     print(\"key\", k ,\"not found\")\n    #     breakpoint()\n# make mapping between displayed tree and actual tree\nprint(\n    dict(\n        total=size_to_readable_string(total_size),\n        selected=size_to_readable_string(selected_size),\n    )\n)\n# total_lines = sum(line_map.values())\nprocessing_time = estimate_time_from_lines(total_lines)\nprint(dict(selected_lines=humanize.intword(total_lines) + \" lines\", processing_time=processing_time))\ntotal_size_by_suffix = defaultdict(int)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:264-300"
+        "file_id": 22,
+        "content": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py",
+        "type": "filepath"
     },
     "239": {
-        "file_id": 21,
-        "content": "Iterating through the dictionary mymap, setting label for directories in the tree based on their presence in cached_verified or selected_dirs, calculating selected size and total size of files, estimating processing time from lines, and storing it all in dictionaries for printing.",
-        "type": "comment"
+        "file_id": 22,
+        "content": "The script generates a markdown filesystem hierarchy, supports multiple languages, and has TODO functionality. It uses metadata.json and data/*.json for structure, retrieves file info from LLM model, stores hashes in TinyDB, and creates a searchable tree representation with HTML briefs.",
+        "type": "summary"
     },
     "240": {
-        "file_id": 21,
-        "content": "filecount_by_suffix = defaultdict(int)\nfor k, v in size_map.items():\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    total_size_by_suffix[suffix] += v\n    filecount_by_suffix[suffix] += 1\nlines_by_suffix = defaultdict(int)\nselected_filecount_by_suffix = defaultdict(int)\nfor k in selected_keys:\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    selected_filecount_by_suffix[suffix] += 1\n    v = line_map[k]\n    lines_by_suffix[suffix] += v\nprint(\n    dict(\n        total={k: size_to_readable_string(v) for k, v in total_size_by_suffix.items()},\n        # total=set(os.path.split(it)[1].split(\".\")[-1] for it in size_map.keys()),\n        selected={\n            k: humanize.intword(v) + \" lines\" for k, v in lines_by_suffix.items()\n        },\n    )\n)\nprint(dict(total=filecount_by_suffix, selected=selected_filecount_by_suffix))\nprint(\"error:\", {k: len(v) for k, v in error_map.items()})\nprint(\"error map:\", error_map)\n# print(mymap)",
+        "file_id": 22,
+        "content": "# demo logic to generate filesystem hierarchy in markdown\n# TODO: diff and line markers shifts based reprocessing: just process the changed part instead of the whole file again\n# TODO: calculate code duplication percent across directories, prefer files by timestamp or size\n# TODO: show the total stage progress like [Stage 1/4], [Stage 2/4]\n# TODO: generate sitemap\n# TODO: modify all titles in all pages to contain full project name and project description (more informative titles)\n# TODO: print progress info during directory brief generation process\n# TODO: provide a brief view to file chunks.\n# TODO: provide an AST view (language specific) to file chunks.\n# TODO: make our prompt into json to formalize the input structure, and parse the output as json\n# language specific shall be built on language agnostic\nimport os\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"-s\", \"--source_dir\", type=str, required=True)\nargs = parser.parse_args()\n# the only parameter.\nsource_dir = args.source_dir",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:301-329"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:1-25"
     },
     "241": {
-        "file_id": 21,
-        "content": "The code calculates and prints the total file count and line count by file suffix for all files (total) and selected files (selected). It also prints the number of errors encountered.",
+        "file_id": 22,
+        "content": "The code is a Python script that generates a filesystem hierarchy in markdown format. It requires the source directory as input and provides various TODO features, including diff and line marker shift-based reprocessing, calculating code duplication percent across directories, generating sitemaps, modifying titles with project information, printing progress info during directory brief generation, providing file chunks' brief view and AST view (language specific), and formalizing the input/output structure using JSON. The language-specific functionality is built upon a language-agnostic base.",
         "type": "comment"
     },
     "242": {
         "file_id": 22,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
-        "type": "filepath"
+        "content": "assert os.path.exists(source_dir)\nassert os.path.isdir(source_dir)\nassert os.path.isabs(source_dir)\nfrom collections import defaultdict\nimport json\nimport urllib.parse\nimport sys\nsys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), \"../\"))\nfrom llm import llm_context\nmetadata = json.loads(open(os.path.join(source_dir, \"metadata.json\"), \"r\").read())\nfile_mapping = metadata[\"file_mapping\"]\nsplit_count = metadata[\"split_count\"]\nproject_name = metadata[\"project_name\"]\ndata = {}\nfor i in range(split_count):\n    new_data = json.loads(open(os.path.join(source_dir, f\"data/{i}.json\"), \"r\").read())\n    data.update(new_data)\ndef strip_quote(s: str):\n    if s[0] == s[-1]:\n        if s[0] in ['\"', \"'\"]:\n            return s[1:-1].strip()\n    return s.strip()\n# read metadata.json & data/*.json\n# create and read some cache_tree.json, which you may want to include in .gitignore\n# produce tree.json\n# copy tree.html\nimport html.entities\nhtml5_escapes = html.entities.html5\nhtml_escape_mapping = {}\nfor k,v in html5_escapes.items():",
+        "type": "code",
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:27-67"
     },
     "243": {
         "file_id": 22,
-        "content": "The code processes command line arguments, generates file lists using fd, iterates over paths to copy files into a target directory. It uses argparse for args handling, os and shutil for operations, subprocess for shell commands, and assertions for checking absolute paths. The process checks if the file exists and is a file, gets relative path, joins with target directory, creates new directories as needed, and copies using shutil.copy2().",
-        "type": "summary"
+        "content": "Code reads metadata.json and data/*.json, creates cache_tree.json, produces tree.json, and copies tree.html. It also defines a strip_quote function to remove surrounding quotes from strings if present.",
+        "type": "comment"
     },
     "244": {
         "file_id": 22,
-        "content": "import os\nimport shutil\nimport argparse\nparser = argparse.ArgumentParser()\n# parser.add_argument(\n#     \"-f\", \"--filelist\", help=\"path to filelist, generated by fd\", type=str, required=True\n# )\nparser.add_argument(\n    \"-b\", \"--basedir\", help=\"common prefix of filepaths\", type=str, required=True\n)\nparser.add_argument(\n    \"-t\",\n    \"--targetdir\",\n    help=\"target directory to copy files into\",\n    type=str,\n    required=True,\n)\nargs = parser.parse_args()\n# filelist = args.filelist\n# filepaths = open(filelist).read().split(\"\\n\")\nbasedir = args.basedir  # common prefix of filepaths\ncommand = [\"bash\", \"-c\", f\"cd '{basedir}' && fd -S '+1b'\"]\nassert os.path.isabs(basedir)\ntargetdir = args.targetdir  # target directory to copy files into\nassert os.path.isabs(targetdir)\nimport subprocess\nmoutput = subprocess.check_output(command, encoding='utf-8')\nfilepaths = moutput.split(\"\\n\")\nfor fp0 in filepaths:\n    fp0 = fp0.strip()\n    if fp0:\n        if fp0.endswith(\"/\"): continue\n        fp = os.path.join(basedir, fp0)\n        assert os.path.isabs(fp)",
+        "content": "    if k.endswith(\";\"):  html_escape_mapping[v] = \"&\"+k\ndef html_escape(s: str):\n    ret = \"\"\n    for elem in s:\n        if elem in html_escape_mapping.keys():\n            ret += html_escape_mapping[elem]\n        else:\n            ret += elem\n    return ret\nimport hashlib\ndef hash_key(summary: str):\n    enc = summary.strip()\n    if enc:\n        # Generate a hash for the given summary\n        hash_object = hashlib.md5(enc.encode())\n        return hash_object.hexdigest()\nimport tinydb\ncache_tree = tinydb.TinyDB(os.path.join(source_dir, \"cache_tree.json\"))\ndef generate_file_summary_brief(filepath, summary):\n    # Generate a brief for the file based on its summary\n    stripped_summary = summary.strip()\n    if stripped_summary:\n        prompt = f\"\"\"\nFilepath: {filepath}\nSummary:\n{stripped_summary}\nBrief in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        mhash = hash_key(prompt)\n        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == filepath)\n        )\n        if rec:",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:1-41"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:68-112"
     },
     "245": {
         "file_id": 22,
-        "content": "The code is parsing command line arguments, generating a file list using fd command, and then iterating over the file paths to copy them into a target directory. It uses argparse for handling command-line arguments, os and shutil libraries for file operations, subprocess for running shell commands, and assertions for checking file paths are absolute.",
+        "content": "This code segment checks if a string ends with ';', creates an HTML-escaped version of the string, generates a hash for the summary, and generates a brief for the file based on its summary. It uses the TinyDB to store hashed summaries and prompts, retrieving previous records from cache if they exist. The function also performs HTML escaping for elements found in the keys of the html_escape_mapping dictionary.",
         "type": "comment"
     },
     "246": {
         "file_id": 22,
-        "content": "        assert os.path.exists(fp)\n        assert os.path.isfile(fp)\n        rel = os.path.relpath(fp, basedir)\n        new_path = os.path.join(targetdir, rel)\n        new_dir = os.path.dirname(new_path)\n        if not os.path.exists(new_dir):\n            os.makedirs(new_dir)\n        print(fp,\"->\", new_path)\n        # exit()\n        # breakpoint()\n        shutil.copy2(fp, new_path)",
+        "content": "            return rec[\"brief\"]\n        else:\n            init_prompt = \"\"\"You are a professional brief writer. You can turn long summaries into a single short brief within 7 words. You will be given a filepath, a summary of the file and produce a concise brief that best describes the file.\n\"\"\"\n            with llm_context(init_prompt) as model:\n                mbrief = strip_quote(model.run(prompt).strip())\n            mdoc = dict(path=filepath, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == filepath)\n            return mbrief\n    return \"\"\ndef generate_tree_repesentation(\n    directory_path: str,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs: dict[str, str],\n    indent=0,\n    briefs=[],\n):\n    childrens = list(childrens_mapping[directory_path])\n    childrens.sort(key=lambda x: x.lower())\n    if directory_path == \"/\":\n        name = project_name\n    else:\n        name = directory_path.strip(\"/\").split(\"/\")[-1]\n    mbrief, show = directory_briefs[directory_path]",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:42-52"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:113-139"
     },
     "247": {
         "file_id": 22,
-        "content": "Checking if file exists and is a file, getting relative path, joining with target directory, creating new directory if needed, and copying the file using shutil.copy2().",
+        "content": "The code recursively generates a tree representation of the directory structure and assigns brief descriptions to each file or directory. It retrieves file hashes, produces concise briefs using an LLM model, and sorts the directories alphabetically. The function takes in a directory path, children mappings, file and directory briefs, and an indent level as parameters.",
         "type": "comment"
     },
     "248": {
-        "file_id": 23,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
-        "type": "filepath"
+        "file_id": 22,
+        "content": "    mbrief = strip_quote(mbrief)\n    briefs.append(\n        \" \" * indent * 4\n        + f'- <span hierarchy=\"{indent}\" class=\"expanded\" onclick=\"toggleVisibility(this)\" ><strong class=\"directory\" id=\"{directory_path}\"><code>{html_escape(name)}</code></strong>'\n        + (\"\" if not show else f\" <em>{mbrief}</em>\")\n        + \"</span>\"\n        # \" \" * indent * 4 + f\"- **`{name}`**\" + (\"\" if not show else f\" <em>{mbrief}</em>\")\n    )\n    for child in childrens:\n        child_name = child.strip(\"/\").split(\"/\")[-1]\n        if child.endswith(\"/\"):\n            # mbrief, show= directory_briefs[child]\n            # briefs.append(\n            #     \" \" * (indent + 1) * 4\n            #     + f\"- **`{child_name}`**\"+(\"\" if not show else f\" *{mbrief}*\")\n            # )\n            generate_tree_repesentation(\n                child,\n                childrens_mapping,\n                file_briefs,\n                directory_briefs,\n                indent + 1,\n                briefs,\n            )\n        else:\n            child_link = f\"index.html?q={urllib.parse.quote(child)}\"",
+        "type": "code",
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:140-166"
     },
     "249": {
-        "file_id": 23,
-        "content": "The code creates a command-line tool for comparing files using the \"tree\" command, asynchronously runs commands, includes visualization for ignored files, features a progress bar and GUI updates, and manages UI elements while processing data or files. The code also contains two functions: one to toggle dark mode and another to exit the application.",
-        "type": "summary"
+        "file_id": 22,
+        "content": "This code is generating a tree representation of a file/directory hierarchy. It uses recursion to traverse the directory structure, adding each directory and its files as nodes in the tree. The 'briefs' list holds the HTML markup for each node, including folder names, optional brief descriptions, and expand/collapse buttons. It handles folders with nested directories by recursively calling itself, and includes a search functionality linking to individual files or directories.",
+        "type": "comment"
     },
     "250": {
-        "file_id": 23,
-        "content": "from textual.app import App, ComposeResult\nfrom textual.widgets import Header, Footer, RichLog, Label\nfrom rich.text import Text\nfrom textual.timer import Timer\nfrom threading import Lock\nimport subprocess\n# from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nfrom datetime import datetime\n# import os\nINTERVAL = 5\nimport asyncio\nasync def run_command(command:str):\n    process = await asyncio.create_subprocess_shell(\n        command,\n        stdout=subprocess.PIPE,\n        stderr=subprocess.PIPE\n    )\n    stdout, stderr = await process.communicate()\n    return stdout.decode().strip(), stderr.decode().strip()\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile > \"{{tempdir}}/all_tree.txt\"\nfd | tree --fromfile > \"{{tempdir}}/selected_tree.txt\"\ndiff -y \"{{tempdir}}/all_tree.txt\" \"{{tempdir}}/selected_tree.txt\" > \"{{tempdir}}/diff_tree.txt\"\ncat \"{{tempdir}}/diff_tree.txt\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties",
+        "file_id": 22,
+        "content": "            briefs.append(\n                \" \" * (indent + 1) * 4\n                + f'- <a class=\"file_link\" href=\"{child_link}\" id=\"{child}\"><code>{html_escape(child_name)}</code></a> <em>{strip_quote(file_briefs[child])}</em>'\n            )\n    return briefs\ndef comment_summarizer(summary_model, comments: list[str],directory_path:str) -> str:\n    def combine_comments(comment1: str, comment2: str):\n        summary_query = f\"\"\"\n{comment1}\n{comment2}\nBrief for directory '{directory_path}' in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        ret = summary_model.run(summary_query)\n        return ret\n    def recursive_combine(comments_list: list[str]):\n        if len(comments_list) == 0:\n            raise Exception(\"No comments to combine\")\n        elif len(comments_list) == 1:\n            return comments_list[0]\n        elif len(comments_list) % 2 == 0:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])\n                for i in range(0, len(comments_list), 2)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:1-36"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:167-197"
     },
     "251": {
-        "file_id": 23,
-        "content": "Code imports necessary modules and defines variables for a command-line tool that generates differences between selected and all files in a directory using the \"tree\" command. It also includes functions to run commands asynchronously and define a script template for generating the diff report.",
+        "file_id": 22,
+        "content": "This code defines a function `comment_summarizer` that takes a summary model, list of comments, and a directory path as input. It uses the `combine_comments` function to recursively combine comments into a single brief for the given directory. The brief should be 7 words long and is generated using the provided summary model. The code also defines the `combine_comments` function which combines two comments into a single brief and generates a query for the summary model. If there are no comments or only one comment, it returns the comment(s) as is.",
         "type": "comment"
     },
     "252": {
-        "file_id": 23,
-        "content": "# count file size\n# render tree json\nscript_template = Template(script_template_str)\nRELATIVE_TEMP_DIR_SCRIPT_PATH = \"script.sh\"\ndef parse_args():\n    parser = ArgumentParser()\n    parser.add_argument(\"-d\", \"--diffpath\", help=\"Path to visualize ignored files\")\n    args = parser.parse_args()\n    return args.diffpath\n@beartype\ndef render_script_template(diffpath: str, tempdir: str) -> str:\n    return script_template.render(diffpath=diffpath, tempdir=tempdir)\nprocessingLock = Lock()\nclass VisualIgnoreApp(App):\n    \"\"\"A Textual app to visualize ignore files.\"\"\"\n    BINDINGS = [(\"d\", \"toggle_dark\", \"Toggle dark mode\"), (\"e\", \"exit\", \"Exit\")]\n    timer: Timer\n    def __init__(self, diffpath, *args, **kwargs):\n        super().__init__(*args, **kwargs)\n        self.header = Header()\n        self.diffpath = diffpath\n        self.treeview = RichLog(auto_scroll=False)\n        self.footer = Footer()\n        # self.counter = 0\n        self.label = Label(Text.assemble((\"ETA:\", \"bold\")), expand=True)\n        self.label.styles.background = \"red\"",
+        "file_id": 22,
+        "content": "            ]\n        else:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])\n                for i in range(0, len(comments_list) - 1, 2)\n            ]\n            combined += [comments_list[-1]]\n        return recursive_combine(combined)\n    summary = recursive_combine(comments)\n    del summary_model\n    return summary\ndef generate_directory_summary_brief(\n    directory_path,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs={},\n):\n    # Generate a brief for the directory based on its direct children's briefs\n    childrens = list(childrens_mapping[directory_path])\n    if len(childrens) == 0:\n        raise Exception(f\"Directory '{directory_path}' has no children\")\n    if len(childrens) == 1:\n        if childrens[0].endswith(\"/\"):\n            generate_directory_summary_brief(\n                childrens[0], childrens_mapping, file_briefs, directory_briefs\n            )\n            mbrief = directory_briefs[childrens[0]][0]",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:37-74"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:198-227"
     },
     "253": {
-        "file_id": 23,
-        "content": "This code defines a class `VisualIgnoreApp` that visualizes ignored files. It takes a `diffpath` as input and renders a script template using the `render_script_template` function. The class also has a header, treeview, footer, and a label for displaying progress. A lock `processingLock` is used for synchronization.",
+        "file_id": 22,
+        "content": "This code defines a function `generate_directory_summary_brief` that takes a directory path, childrens mapping, file briefs, and directory briefs as input. It generates a brief for the given directory based on its direct children's briefs. If the directory has no children or only one child which is another directory, it recursively calls itself to generate the directory's brief.",
         "type": "comment"
     },
     "254": {
-        "file_id": 23,
-        "content": "        # self.label.styles.border = ('solid','red')\n        # self.label.styles.height = 3\n        self.label.styles.height = 1\n        # self.label.styles.dock = 'bottom'\n    async def progress(self):\n        locked = processingLock.acquire(blocking=False)\n        if locked: # taking forever. bad.\n            cont, _= await run_command(\n            # diff_content = subprocess.check_output(\n                f'python3 run_simple.py -d \"{self.diffpath}\"'\n                # [\"python3\", \"run_simple.py\", \"-d\", self.diffpath]\n            )\n            # cont = diff_content.decode()\n            has_error = False\n            # TODO: you may outsource this part to external process as well, emit as last line.\n            for it in cont.split(\"\\n\"):\n                if it.startswith(\"{\"):\n                    if \"processing_time\" in it and \"selected_lines\" in it:\n                        self.label.renderable = \"ETA: \"+it + \" \"+ datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n                    if it.endswith(\"}\"):\n                        if \"Error\" in it or \"Empty\" in it or \"Missing\" in it:",
+        "file_id": 22,
+        "content": "        else:\n            mbrief = file_briefs[childrens[0]]\n        directory_briefs[directory_path] = (mbrief, False)\n    else:\n        subprompt_parts = []\n        children_briefs = {}\n        for child in childrens:\n            if child.endswith(\"/\"):\n                generate_directory_summary_brief(\n                    child, childrens_mapping, file_briefs, directory_briefs\n                )\n                cbrief = directory_briefs[child][0]\n            else:\n                cbrief = file_briefs[child]\n            children_briefs[child] = cbrief\n        candidates = list(children_briefs.items())\n        candidates.sort(key=lambda x: x[0].lower())\n        for k, v in candidates:\n            if not k.endswith(\"/\"):\n                mark = \"file\"\n            else:\n                mark = \"directory\"\n            relpath = os.path.relpath(k, directory_path)\n            it = f\"Brief for {mark} '{relpath}': {v}\"\n            subprompt_parts.append(it)\n        subprompt = \"\\n\".join(subprompt_parts)\n        prompt = f\"\"\"",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:75-96"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:228-254"
     },
     "255": {
-        "file_id": 23,
-        "content": "Creating a progress bar for the file processing task by running external Python script and updating label with ETA information.",
+        "file_id": 22,
+        "content": "This code generates a directory summary brief and file briefs for a given path. If the path is a directory, it recursively calls itself to process its child directories and files. It then creates a prompt with brief details for each item in the path, indicating whether they are directories or files. The prompt is formatted using markdown.",
         "type": "comment"
     },
     "256": {
-        "file_id": 23,
-        "content": "                            has_error  = True\n            if has_error:\n                self.label.renderable += \" [Error]\"\n            self.label.refresh()\n            # with TemporaryDirectory() as tempdir:\n            #     content = render_script_template(self.diffpath, tempdir)\n            #     script_path = os.path.join(tempdir, RELATIVE_TEMP_DIR_SCRIPT_PATH)\n            #     with open(script_path, \"w+\") as f:\n            #         f.write(content)\n            #     diff_content = subprocess.check_output(['bash', script_path])\n            # self.treeview.call_later\n            self.treeview.clear()\n            self.treeview.write(cont)  # newline by default.\n            processingLock.release()\n        # self.counter += 1\n    def compose(self) -> ComposeResult:\n        \"\"\"Create child widgets for the app.\"\"\"\n        return [self.header, self.treeview, self.label, self.footer]\n    def on_mount(self) -> None:\n        self.timer = self.set_interval(INTERVAL, self.progress)\n    def action_toggle_dark(self) -> None:",
+        "file_id": 22,
+        "content": "{subprompt}\nBrief for directory '{directory_path}' in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        mhash = hash_key(prompt)\n        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == directory_path)\n        )\n        if rec:\n            mbrief = rec[\"brief\"]\n        else:\n            # TODO: use recursive summarization.\n            init_prompt = \"\"\"You are a professional brief summarizer. You can produce a single short brief within 7 words. You will be given a pair of briefs and produce a concise brief that best describes the directory.\n\"\"\"\n            with llm_context(init_prompt) as model:\n                ret = comment_summarizer(model, subprompt_parts,directory_path)\n                mbrief = strip_quote(ret.strip())\n                # mbrief = strip_quote(model.run(prompt).strip())\n            mdoc = dict(path=directory_path, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == directory_path)\n        directory_briefs[directory_path] = (mbrief, True)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:97-124"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:255-276"
     },
     "257": {
-        "file_id": 23,
-        "content": "This code appears to be part of a larger application with multiple classes and methods. It defines a class, presumably for a GUI-based user interface, with methods like \"compose,\" \"on_mount,\" and \"action_toggle_dark.\" \n\nThe code block seems to handle an error condition, update the GUI label, clear the treeview and write new content, and potentially execute a script. It also has methods that define child widgets for the app, start an interval timer, and toggle dark mode. \n\nOverall, this code appears to be part of a more complex program with interactive user interface elements and functionality to process data or files.",
+        "file_id": 22,
+        "content": "This code checks if a brief for the given directory exists in the cache. If it does, it retrieves the existing brief. If not, it initializes a summarizer model and generates a brief using recursive summarization. The newly generated brief is stored in the cache for future use.",
         "type": "comment"
     },
     "258": {
-        "file_id": 23,
-        "content": "        \"\"\"An action to toggle dark mode.\"\"\"\n        self.dark = not self.dark\n    def action_exit(self):\n        \"\"\"An action to exit the app.\"\"\"\n        self.exit()\ndef main():\n    diffpath = parse_args()\n    app = VisualIgnoreApp(diffpath)\n    app.run()\nif __name__ == \"__main__\":\n    main()",
+        "file_id": 22,
+        "content": "    return directory_briefs\nfile_summaries = {\n    v[\"filepath\"]: data[str(v[\"entry_id\"] + 1)][\"content\"]\n    for v in file_mapping.values()\n}\n# print(file_summaries)\n# file_briefs = {k: generate_file_summary_brief(k, v) for k, v in file_summaries.items()}\nfile_briefs = {}\nitems_count = len(file_summaries.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{items_count}\")\ncounter = 0\nfor k, v in file_summaries.items():\n    file_briefs[k] = generate_file_summary_brief(k, v)\n    counter += 1\n    print(f\"\\n>>>> PROCESSING PROGRESS: {counter}/{items_count}\")\nchildrens_mapping = defaultdict(set)\nfor k in file_summaries.keys():\n    print(k)\n    split_k = k.split(\"/\")\n    print(split_k)  # [dir1, dir2, ... filename]\n    # add \"/\" to the right and left of dir.\n    for i in range(len(split_k) - 1):\n        parent = \"/\".join(split_k[: i + 1]) + \"/\"\n        child = parent + split_k[i + 1]\n        if i != len(split_k) - 2:  # is directory:\n            child += \"/\"\n        print({\"i\": i, \"parent\": parent, \"child\": child, \"k\": k})\n        childrens_mapping[parent].add(child)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:125-140"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:277-309"
     },
     "259": {
-        "file_id": 23,
-        "content": "The code contains two functions: \"action_toggle_darkmode\" and \"action_exit\". The first function toggles the dark mode on or off, while the second one exits the application. The main function is responsible for parsing arguments, creating an instance of the VisualIgnoreApp class, and running the app.",
+        "file_id": 22,
+        "content": "Code fetches file summaries, generates briefs for each file, and creates a children's mapping by iterating through the file summaries. It splits file paths into directories and filenames, adds slashes to create parent and child paths, and stores them in a mapping dictionary. This helps to understand the folder hierarchy.",
         "type": "comment"
     },
     "260": {
-        "file_id": 24,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py",
-        "type": "filepath"
+        "file_id": 22,
+        "content": "# breakpoint()\ndirectory_briefs = generate_directory_summary_brief(\"/\", childrens_mapping, file_briefs)\n# now, let's generate the representation.\nbriefs = generate_tree_repesentation(\n    \"/\", childrens_mapping, file_briefs, directory_briefs\n)\n# briefs.insert(0,\"# Project Structure:\")\nbriefs.insert(\n    0,\n    f'## Project structure<span hierarchy=\"0\" class=\"partial-repository-url\"> of: {metadata[\"url\"][\"partial\"]}</span><div style=\"float: right;\"><a title=\"Document index\" style=\"margin:3.5px;\" href=\"index.html\"><i class=\"bi bi-search\"></i></a><a title=\"Feeling lucky\" style=\"margin:3.5px;\" id=\"feeling-lucky\" href=\"#\"><i class=\"bi bi-dice-3\"></i></a><a title=\"Expand tree\" style=\"margin:3.5px;\" href=\"tree.html?full=true\" id=\"expand-tree\"><i class=\"bi bi-caret-down-square\"></i></a></div>',\n)\nprint(\"=\" * 40)\nprint(\"\\n\".join(briefs))\n### building\n# render README.md into index.html\nimport markdown\nfrom jinja2 import Template\n# Markdown content\nmarkdown_content = \"\\n\".join(briefs)\n# Convert Markdown to HTML\nhtml_content = markdown.markdown(markdown_content)",
+        "type": "code",
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:311-337"
     },
     "261": {
-        "file_id": 24,
-        "content": "Both comments discuss file system functions and Textual app class for efficient line counts, asynchronous file reading, and visualization of ignore files. They also mention code iterations over directories, handling file selection and rules, error information, UI functions, timers, dark mode toggle, and Flask application initiation for server execution.",
-        "type": "summary"
+        "file_id": 22,
+        "content": "Generating and printing the tree representation of project structure in HTML format for easier navigation.",
+        "type": "comment"
     },
     "262": {
-        "file_id": 24,
-        "content": "# this version is for pyjom, our ultimate challenge.\n# TODO: show file extension counts \n# TODO: click extension name or error count for iteratively jumping to the next file with extension or error\n# TODO: type \"R\" to refresh the tree\n# TODO: filter empty files using fd\n# TODO: visualize unselected files by calling fd -u\n# TODO: add visualization of tree files.\n# TODO: add action to restart the processing thread\n# TODO: mark if file is not utf-8 encoded (as binary?) even if not selected\n# TODO: exit with error if previous error counters are not zeros.\n# to find empty files:\n# fd -S \"-1b\"\n# import sys\n# filter out empty files:\n# fd -S \"+1b\"\nimport humanize\nimport numpy\nfrom textual.app import App, ComposeResult\nfrom textual.widgets import Header, Footer, Tree, Label\nfrom rich.text import Text\nfrom textual.timer import Timer\nfrom threading import Lock\n# from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nfrom datetime import datetime, timedelta",
+        "file_id": 22,
+        "content": "template_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), \"tree.html.j2\")\ncss_path = os.path.join(\n    os.path.abspath(os.path.dirname(__file__)), \"github-markdown.css\"\n)\ntemplate = Template(open(template_path, \"r\").read())\n# Render the template with the data\nrendered_template = template.render(content=html_content, project_name=metadata[\"url\"][\"partial\"])\nprint(\"Template rendered.\")\ntree_fname = \"tree.html\"\n# Write the template content to a file\nwith open(os.path.join(source_dir, tree_fname), \"w+\", encoding=\"utf-8\") as file:\n    file.write(rendered_template)\nimport shutil\nshutil.copy(css_path, source_dir)\nprint(\n    f\"Markdown converted to HTML and written to {os.path.join(source_dir, tree_fname)}\"\n)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:1-35"
+        "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:339-360"
     },
     "263": {
-        "file_id": 24,
-        "content": "This code is for a visual file selector using PyJom. It includes various TODOs such as showing extension counts, clicking on extension names to jump to files with the same extension, refreshing the tree by typing \"R\", filtering empty files, visualizing unselected files, adding actions to restart processing thread, marking non-UTF-8 encoded files, and exiting with error if previous errors exist. It also includes imports for various functionalities such as humanize, numpy, and textual.app.",
+        "file_id": 22,
+        "content": "This code renders a template with provided data, writes the rendered result to a file, and copies an external CSS file to the source directory.",
         "type": "comment"
     },
     "264": {
-        "file_id": 24,
-        "content": "import os\ncached_paths = []\nIGNORE_RULE_FILES = (\".gitignore\", \".fdignore\", \".ignore\") # TODO: set fd to respect .gitignore even if without .git folders\nDOCS_FOLDER_NAME = \"docs\"\nINTERVAL = 0.1\nSLEEP=7\nimport asyncio\ndef format_timedelta(td):\n    hours, remainder = divmod(td.seconds, 3600)\n    minutes, seconds = divmod(remainder, 60)\n    return f\"{hours}:{minutes}:{seconds}\"\ndef estimate_time_from_lines(line_count: int):\n    seconds = (line_count / 35) * 60\n    return seconds\ndef naturaltime(seconds):\n    return humanize.naturaltime(timedelta(seconds=seconds)).split(\" ago\")[0]\ndef estimate_time_from_filesize(filesize: int):\n    seconds = (filesize / 1000) * 60\n    return seconds\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile > \"{{tempdir}}/all_tree.txt\"\nfd | tree --fromfile > \"{{tempdir}}/selected_tree.txt\"\ndiff -y \"{{tempdir}}/all_tree.txt\" \"{{tempdir}}/selected_tree.txt\" > \"{{tempdir}}/diff_tree.txt\"\ncat \"{{tempdir}}/diff_tree.txt\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:36-71"
+        "file_id": 23,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
+        "type": "filepath"
     },
     "265": {
-        "file_id": 24,
-        "content": "The code imports necessary modules, defines functions for formatting time and estimating time from lines/filesize, provides a script template for comparing tree outputs using FD and tree commands, and mentions loading tree output in JSON format.",
-        "type": "comment"
+        "file_id": 23,
+        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+        "type": "summary"
     },
     "266": {
-        "file_id": 24,
-        "content": "# count file size\n# render tree json\nscript_template = Template(script_template_str)\nRELATIVE_TEMP_DIR_SCRIPT_PATH = \"script.sh\"\nimport aiofiles\ndef expand_parent(elem):\n    elem.expand()\n    if not elem.is_root:\n        expand_parent(elem.parent)\nasync def read_file_and_get_line_count(filepath: str):\n    filepath = os.path.abspath(filepath)\n    if not os.path.exists(filepath):\n        return -1\n    if filepath in cached_paths:\n        return -3\n    try:\n        readable = False\n        async with aiofiles.open(filepath, mode='r', encoding='utf-8') as f:\n            _ = await f.readline()\n            readable = True\n        if readable:\n            lc = 0\n            # use 'cat' & 'wc -l'\n            cmd = ['wc', '-l', filepath]\n            p = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE)\n            line = await p.stdout.read()\n            decline = line.decode().strip()\n            # with open(\"lc.txt\", 'w+') as f:\n            #     f.write(decline)\n            #     exit()\n            #     # sys.exit()",
+        "file_id": 23,
+        "content": "import asyncio\nasync def read_lines(stream:asyncio.StreamReader):\n    while True:\n        line = await stream.readline()\n        # print(\"line\")\n        if not line:\n            break\n        else: \n            yield line\nasync def run_command(command:list[str]):\n    process = await asyncio.create_subprocess_exec(\n        *command,\n        stdout=asyncio.subprocess.PIPE,\n        # stderr=asyncio.subprocess.PIPE\n    )\n    f = [it for it in read_lines(process.stdout)]\n    # stderr_reader = asyncio.StreamReader()\n    # Read lines from stdout and stderr concurrently\n    # await asyncio.gather(\n    #     read_lines(stdout_reader),\n    #     read_lines(stderr_reader)\n    # )\n    # Wait for the process to complete\n    await process.wait()\nasync def main():\n    command = [\"ls\", \"-l\"]\n    # Run the command asynchronously\n    await run_command(command)\nif __name__ == \"__main__\":\n    # Run the event loop\n    asyncio.run(main())",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:72-107"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py:1-37"
     },
     "267": {
-        "file_id": 24,
-        "content": "This code reads a file's content and returns the line count using subprocess commands (wc -l). If the file doesn't exist, it returns -1. If the filepath is already in the cache (cached_paths), it also returns -3 to avoid unnecessary work. It ensures readability by checking if the file can be opened and reading a line from it before using 'wc -l'.",
+        "file_id": 23,
+        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
         "type": "comment"
     },
     "268": {
         "file_id": 24,
-        "content": "            lc = decline.split(' ')[0]\n            lc = int(lc)\n            await p.wait()\n            return lc if lc else 1\n    except:\n        return -2\nfrom collections import defaultdict\n# def patch_missing_files(path, basemap, expand=False, ):\ndef patch_missing_files(path, basemap, expand=False, processor=lambda x: x):\n    subpath, filename = dirsplit(path)\n    # breakpoint()\n    if basemap.get(path) is None:\n        subtree, _, _ = patch_missing_files(subpath + \"/\", basemap, processor = processor)\n        # renderable = Text.assemble((processor(filename), color))\n        if path.endswith(\"/\"):\n            subsubtree = subtree.add(processor(filename), expand=expand)\n        else:\n            subsubtree = subtree.add_leaf(processor(filename))\n        # subsubtree = subtree.add(processor(filename), expanded=expanded,style=color, guide_style=color)\n        # print(filename)\n        basemap[path] = subsubtree\n        return subsubtree, filename, False\n    else:\n        return basemap.get(path), filename, True",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:108-132"
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
+        "type": "filepath"
     },
     "269": {
         "file_id": 24,
-        "content": "This function patches missing files in a file system using a basemap and applies a processor function to the filenames. It recursively traverses the directory structure, adding files or subdirectories as needed. If the path exists in the basemap, it returns the existing entry with a flag indicating if it was found. If not, it creates a new entry in the basemap and returns it, along with the filename and a boolean flag. It also handles expanding directories if the 'expand' argument is set to True. The processor function can be used to modify filenames before adding them to the basemap.",
-        "type": "comment"
+        "content": "The script uses the \"rich\" library to display tree structures and handles command line arguments, file/directory operations. The function recursively traverses a dictionary, managing directories and updating counts. It labels tree structures with size, line count, estimates time from lines, reads file names, and yields line counts for non-error files. The code iterates through the dictionary, calculating sizes and processing time, and prints total and selected file counts, line counts by suffix, and error count.",
+        "type": "summary"
     },
     "270": {
         "file_id": 24,
-        "content": "async def get_file_size(filename):\n    try:\n        async with aiofiles.open(filename, mode='rb') as file:\n            file_size = os.fstat(file.fileno()).st_size\n            return file_size\n    except:\n        return -1\ndef parse_args():\n    parser = ArgumentParser()\n    parser.add_argument(\"-d\", \"--diffpath\", help=\"Path to visualize ignored files\")\n    args = parser.parse_args()\n    return args.diffpath\ndef dirsplit(path):\n    if path.endswith(\"/\"):\n        path = path[:-1]\n    return os.path.split(path)\ndef iterate_parent_dirs(path):\n    parts = path.split(\"/\")\n    for i in range(1, len(parts)):\n        yield \"/\".join(parts[:i])+\"/\", parts[i-1]\n@beartype\ndef render_script_template(diffpath: str, tempdir: str) -> str:\n    return script_template.render(diffpath=diffpath, tempdir=tempdir)\nprocessingLock = Lock()\nclass VisualIgnoreApp(App):\n    \"\"\"A Textual app to visualize ignore files.\"\"\"\n    BINDINGS = [(\"d\", \"toggle_dark\", \"Toggle dark mode\"), \n    (\"e\", \"exit\", \"Exit\"),\n    (\"r\", \"restart\", \"Restart\")\n    ]\n    timer: Timer",
+        "content": "from rich.text import Text\nfrom rich.console import Console\nimport datetime\n# color from:\nfrom rich.color import ANSI_COLOR_NAMES\nfrom collections import defaultdict\nconsole = Console()\nfrom rich.tree import Tree\nfrom rich import print\nimport json\nimport os\nimport humanize\nerror_map = defaultdict(list)\ncached_verified = []\ndef patch_missing_files(path, basemap, color, processor=lambda x: x):\n    subpath, filename = dirsplit(path)\n    # breakpoint()\n    if basemap.get(path) is None:\n        subtree = patch_missing_files(subpath + \"/\", basemap, color)\n        subsubtree = subtree.add(processor(filename), style=color, guide_style=color)\n        # print(filename)\n        basemap[path] = subsubtree\n        return subsubtree\n    else:\n        return basemap.get(path)\ndef size_to_readable_string(size: int):\n    return humanize.naturalsize(size)\nGREY = \"bright_black\"\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"--full\", help=\"full tree\", type=str, required=True)\nparser.add_argument(\"--selected\", help=\"selected tree\", type=str, required=True)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:134-174"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:1-44"
     },
     "271": {
         "file_id": 24,
-        "content": "The code defines a function `get_file_size` that asynchronously reads the file size, a `parse_args` function to parse command-line arguments, a `dirsplit` function to split a path into directory and filename, an `iterate_parent_dirs` generator that yields parent directories of a given path, a `render_script_template` function that renders a script template with provided diffpath and tempdir, a `VisualIgnoreApp` class representing a Textual app for visualizing ignore files with bindings for dark mode toggle, exit, and restart. It also includes an instance of `Lock` named `processingLock`.",
+        "content": "This code is a Python script that uses the \"rich\" library for creating and displaying a tree structure. It allows you to patch missing files, convert file sizes to readable strings, and handle command line arguments using \"argparse\". The script takes two input parameters: \"--full\" for the full tree and \"--selected\" for the selected tree.",
         "type": "comment"
     },
     "272": {
         "file_id": 24,
-        "content": "    def action_restart(self):\n        self.loop_break = True\n    def __init__(self, diffpath, *args, **kwargs):\n        super().__init__(*args, **kwargs)\n        self.header = Header()\n        self.diffpath = diffpath\n        self.treeview = Tree(\".\")\n        # do not expand, since this is slow.\n        self.treeview.root.expand()\n        self.footer = Footer()\n        self.mymap = {\"./\":self.treeview.root}\n        # self.counter = 0\n        default_label = \"Processing time: -/- (lines) -/- (size)\\nLines: -/- Size: -/- Count: -/- Errors: -/-\\nLast selection: - Selection: -/-\\nTotal size: -/- Total count: -/- Errors: -/-\\nLast scanning: - Scanning: -/-\"\n        self.label = Label(Text.assemble((default_label, \"bold\")), expand=True)\n        self.label.styles.background = \"red\"\n        # self.label.styles.border = ('solid','red')\n        # self.label.styles.height = 3\n        self.label.styles.height = 5\n        # self.label.styles.dock = 'bottom'\n        self.processing_time_by_line = 0\n        self.processing_time_by_size = 0",
+        "content": "parser.add_argument(\"--basepath\", help=\"path to the base\", type=str, required=True)\nargs = parser.parse_args()\nfull_json = args.full\nselected_json = args.selected\nbasepath = args.basepath\nassert os.path.isabs(basepath)\nbasepath = os.path.abspath(basepath)\ntree_data = json.load(open(full_json))\nselected_json = json.load(open(selected_json))  # could be different.\n# cached_paths = [\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/recursive_document_writer.py\",\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/code_view_with_path_argument_and_anchor/code_view_demo.py\",\n# ]\ncached_paths = []\nfor p in cached_paths:\n    assert os.path.isabs(p)\ncached_paths = [os.path.abspath(p) for p in cached_paths]\nfor p in cached_paths:\n    assert os.path.commonprefix([p, basepath]) == basepath\nsize_map = {}\nselected_keys = []\nexisting_keys = []\n# Add the tree contents recursively\ndef add_tree_contents(parent, contents, basedir=\".\", basemap={}):\n    for item in contents:",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:176-197"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:45-78"
     },
     "273": {
         "file_id": 24,
-        "content": "This code initializes a class for processing file differences and sets up various attributes such as the header, footer, treeview, mymap, default label, and label styles. It also handles restarting the process and prevents expansion of the treeview to improve performance.",
+        "content": "This code is parsing command-line arguments, loading JSON files, ensuring paths are absolute, and checking common prefixes. It then defines a function to recursively add tree contents and initializes variables for selected keys and existing keys.",
         "type": "comment"
     },
     "274": {
         "file_id": 24,
-        "content": "        self.previous_processing_time_by_line = \"-\"\n        self.previous_processing_time_by_size = \"-\"\n        self.line_count_map = defaultdict(int)\n        self.size_map = defaultdict(int)\n        self.error_size_map = defaultdict(int)\n        self.line_count = 0\n        self.previous_line_count = \"-\"\n        self.error_count_map = defaultdict(int)\n        self.error_count = 0\n        self.previous_error_count = \"-\"\n        self.previous_time = datetime.now()\n        self.previous_selection_formatted = \"-\"\n        self.previous_scanning_formatted = \"-\"\n        self.previous_selection = \"-\"\n        self.selected_paths = {\"./\"}\n        self.existing_paths = {\"./\"}\n        self.previous_selected_paths = {\"./\"}\n        self.previous_existing_paths = {\"./\"}\n        self.error_size_count = 0\n        self.previous_error_size_count = \"-\"\n        self.previous_scanning = \"-\"\n        self.error_count_type_map = defaultdict(int)\n        self.filesize = 0\n        self.previous_filesize = \"-\"\n        self.loop_break = False",
+        "content": "        if item[\"type\"] == \"directory\":\n            # subtree = parent.add(f\"[bold]{item['name']}\")\n            # subtree = parent.add(\n            #     Text.assemble((item[\"name\"], \"bold\")),\n            #     style=GREY,\n            #     guide_style=GREY,\n            # )\n            subtree = patch_missing_files(\n                os.path.join(basedir, item[\"name\"] + \"/\"),\n                basemap,\n                GREY,\n                lambda x: Text.assemble((x, \"bold\")),\n            )\n            existing_keys.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n            # basemap[os.path.join(basedir, item[\"name\"] + \"/\")] = subtree\n            dirfs = 0\n            for fs in add_tree_contents(\n                subtree,\n                item.get(\"contents\", []),\n                os.path.join(basedir, item[\"name\"]),\n                basemap,\n            ):\n                dirfs += fs\n                yield fs\n            size_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirfs\n        else:  # file\n            # subtree = parent.add(item['name'])",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:198-222"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:79-105"
     },
     "275": {
         "file_id": 24,
-        "content": "This code initializes various instance variables for tracking file selection progress and errors. It uses defaultdict for efficient counting of line counts, error types, and sizes. The previous values are set to \"-\" for easy comparison during processing time calculations. The selected paths and existing paths are initialized with a single directory \"./\". The loop break flag is set to False.",
+        "content": "If item type is directory:\n- Create a subtree for the directory name.\n- Add missing files to the subtree.\n- Append the directory path to existing keys.\n- Add the subtree to the base map.\n- Count and yield the number of files in the subtree.\n- Store the total file size in size_map.\nElse if item type is file:\n- Add the file name as a subtree.\n- Append the file path to existing keys.\n- Yield 1 (as there's only one file).",
         "type": "comment"
     },
     "276": {
         "file_id": 24,
-        "content": "        self.selected_size = 0\n        self.previous_selected_size = \"-\"\n        self.selected_count = 0\n        self.previous_selected_count = \"-\"\n        self.total_count = 0\n        self.previous_total_count = \"-\"\n    async def progress(self):\n        locked = processingLock.acquire(blocking=False)\n        if locked: # taking forever. bad.\n            self.processing_time_by_line = 0\n            self.processing_time_by_size = 0\n            self.selected_count = 0\n            # self.previous_selected_count = \"-\"\n            self.total_count = 0\n            # self.previous_total_count = \"-\"\n            self.line_count = 0\n            self.selected_size = 0\n            # self.previous_selected_size = \"-\"\n            self.filesize = 0\n            self.loop_break = False\n            self.selected_paths = {\"./\"}\n            self.existing_paths = {\"./\"}\n            self.line_count_map = defaultdict(int)\n            self.error_count_map = defaultdict(int)\n            self.error_count_type_map = defaultdict(int)\n            self.size_map = defaultdict(int)",
+        "content": "            # if item['name'] == \"devcontainer.json\": breakpoint()\n            existing_keys.append(os.path.join(basedir, item[\"name\"]))\n            filesize = os.path.getsize(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            size_map[os.path.join(basedir, item[\"name\"])] = filesize\n            filesize_human = size_to_readable_string(filesize)\n            # subtree = patch_missing_files(os.path.join(basedir, item[\"name\"]),basemap, GREY, lambda x: f\"[{filesize_human}] \" + x)\n            subtree = parent.add(f\"x <{filesize_human}> \" + item[\"name\"], style=GREY)\n            basemap[os.path.join(basedir, item[\"name\"])] = subtree\n            yield filesize\ndef dirsplit(path):\n    if path.endswith(\"/\"):\n        path = path[:-1]\n    return os.path.split(path)\ndef set_path_to_white(path, basemap):\n    subtree = patch_missing_files(path, basemap, \"white\")\n    subtree.style = \"white\"\n    subtree.guide_style = \"white\"\n    return subtree\nselected_dirs = []\nline_map = {}",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:223-251"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:106-134"
     },
     "277": {
         "file_id": 24,
-        "content": "This code initializes variables for tracking progress during file processing. It acquires a lock, and if successful, resets various counters and maps to track the number of lines, errors by type, and sizes of selected files. It also sets a loop_break flag and selected paths.",
+        "content": "This code is creating a visual file selector by ignoring specific rules. It breaks when it encounters the \"devcontainer.json\" file, appends existing file paths to a list, calculates their sizes and converts them to readable strings, adds subtrees to a tree structure with gray color and file size information, and handles directories by setting their style to white. It also maintains two dictionaries: one for storing file sizes and another for mapping file paths to their corresponding subtrees in the tree structure.",
         "type": "comment"
     },
     "278": {
         "file_id": 24,
-        "content": "            self.error_size_map = defaultdict(int)\n            self.error_count = 0\n            self.error_size_count = 0\n            self.previous_time = datetime.now()\n            command = [\"bash\", \"-c\", f\"cd '{self.diffpath}' && fd -S '+1b'\"]\n            # command = [\"bash\", \"-c\", f\"cd '{self.diffpath}' && fd\"]\n            process = await asyncio.create_subprocess_exec(\n                *command,\n                stdout=asyncio.subprocess.PIPE,\n                # stderr=asyncio.subprocess.PIPE\n            )\n            banner_refresh_counter = 0\n            while not self.loop_break:\n                line = await process.stdout.readline() # type:ignore\n                if not line: break\n                decline = line.decode(\"utf-8\").strip()\n                if decline == \"\": break\n                relpath = \"./\"+decline\n                self.selected_paths.add(relpath)\n                subtree, fname, _ = patch_missing_files(relpath, self.mymap)\n                if not relpath.endswith(\"/\"):\n                    self.selected_count +=1",
+        "content": "# can have missing files.\ndef iterate_all_keys(contents, basemap, basedir=\".\"):\n    for item in contents:\n        if item[\"type\"] == \"directory\":\n            subpaths = item.get(\"contents\", [])\n            if subpaths:\n                dirlc = 0\n                cached_count = 0\n                # total_lc = 0\n                for lc in iterate_all_keys(\n                    subpaths, basemap, os.path.join(basedir, item[\"name\"])\n                ):\n                    # total_lc +=1\n                    if lc == -3:\n                        cached_count += 1\n                        continue\n                    dirlc += lc\n                    yield lc\n                if dirlc != 0:\n                    selected_dirs.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n                    set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    line_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirlc\n                elif len(subpaths) == cached_count:",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:252-273"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:137-161"
     },
     "279": {
         "file_id": 24,
-        "content": "The code snippet initializes error counters, stores the current time, and creates a command to execute the `fd` command with specific options. It then spawns a subprocess to execute this command and reads its output line by line until the loop is broken. It adds selected file paths to a set, increments count variables, and checks if a path ends with \"/\".",
+        "content": "This function iterates through all keys in the \"contents\" dictionary, checking for directories and recursively calling itself to handle their contents. It keeps track of the total count of files and directories (lc) and yields each file or directory encountered. If a directory is found, it adds it to the selected_dirs list and updates the line_map with the count of files in that directory.",
         "type": "comment"
     },
     "280": {
         "file_id": 24,
-        "content": "                    linecount = await read_file_and_get_line_count(os.path.join(self.diffpath, relpath))\n                    fs_str = \"error\"\n                    if fname in IGNORE_RULE_FILES:\n                        fs = -2\n                    else:\n                        fs = await get_file_size(os.path.join(self.diffpath, relpath))\n                    if fs != -1:\n                        fs_str = humanize.naturalsize(fs)\n                        self.filesize += fs\n                        self.selected_size += fs\n                    for parent_path, parent_name in iterate_parent_dirs(relpath): # ends with \"/\"\n                        self.selected_paths.add(parent_path)\n                        if fs != -1:\n                            self.size_map[parent_path] += fs\n                    error =True\n                    if linecount == 0:\n                        label = \"Empty\"\n                    elif linecount == -1:\n                        label = \"Missing\"\n                    elif linecount == -2:\n                        label = \"Error\"",
+        "content": "                    # elif total_lc == cached_count:\n                    subtree = set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    subtree.label = f\"[Cached] \" + item[\"name\"]\n                    cached_verified.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n        else:  # file\n            # breakpoint()\n            selected_keys.append(os.path.join(basedir, item[\"name\"]))\n            linecount = read_file_and_get_line_count(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            line_map[os.path.join(basedir, item[\"name\"])] = linecount\n            subtree = set_path_to_white(os.path.join(basedir, item[\"name\"]), basemap)\n            error = True\n            if linecount == 0:\n                label = \"Empty\"\n            elif linecount == -1:\n                label = \"Missing\"\n            elif linecount == -2:\n                label = \"Error\"\n            elif linecount == -3:",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:274-295"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:162-184"
     },
     "281": {
         "file_id": 24,
-        "content": "This code calculates the file size and label based on the file name. It also stores the file path in a set for later use, and keeps track of the total selected size and the size map of parent paths. If the file count is 0, it labels as \"Empty\", if it's -1 as \"Missing\", and if it's -2 as \"Error\".",
+        "content": "The code is checking the line count of a file and assigning a corresponding label to its tree structure representation. If the line count is 0, it's marked as \"Empty\", if it's -1, it's marked as \"Missing\", if it's -2, it's marked as \"Error\", and any other value is ignored. It also keeps track of cached directories and appends selected file paths to the `selected_keys` list.",
         "type": "comment"
     },
     "282": {
         "file_id": 24,
-        "content": "                    elif linecount == -3:\n                        label = \"Cached\"\n                        error = False\n                    else:\n                        label = f\"{linecount} L\"\n                        self.line_count += linecount\n                        self.line_count_map[relpath] = linecount\n                        for parent_path, parent_name in iterate_parent_dirs(relpath): # ends with \"/\"\n                            self.line_count_map[parent_path] += linecount\n                            # self.selected_paths.add(parent_path)\n                            if parent_path not in self.error_count_map.keys():\n                                lb = Text.assemble((f\"[{self.line_count_map[parent_path]} L, {humanize.naturalsize(self.size_map[parent_path])}] \", \"\"), (parent_name,\"\" if parent_name != DOCS_FOLDER_NAME else \"bold magenta\"))\n                                pn = self.mymap.get(parent_path, None)\n                                # if pn is None:\n                                    # breakpoint()",
+        "content": "                label = \"Cached\"\n                error = False\n                cached_verified.append(os.path.join(basedir, item[\"name\"]))\n            else:\n                label = f\"{linecount} L\"\n                error = False\n            if error:\n                error_map[label].append(os.path.join(basedir, item[\"name\"]))\n            else:\n                yield linecount\n            subtree.label = f\"[{label}] \" + item[\"name\"]\ndef read_file_and_get_line_count(filepath: str):\n    filepath = os.path.abspath(filepath)\n    if not os.path.exists(filepath):\n        return -1\n    if filepath in cached_paths:\n        return -3\n    try:\n        with open(filepath, \"r\") as f:\n            lines = f.readlines()\n            return len(lines)\n    except:\n        return -2\nselected_keys = []\ndef get_selected_keys(tree_data, basemap):\n    iterate_all_keys(tree_data[0].get(\"contents\", []), basemap)\n    return selected_keys\ntree = Tree(\".\")\n# tree = Tree(\"agi_computer_control\", style=GREY, guide_style=GREY)\nroot = tree_data[0]  # Assuming the first item in the JSON is the root directory",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:296-310"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:185-222"
     },
     "283": {
         "file_id": 24,
-        "content": "If linecount equals -3, label is set to \"Cached\" and error is set to False. Otherwise, the label is set to the line count, self.line_count is incremented by linecount, and self.line_count_map is updated with relpath and linecount. The code then iterates over parent directories of relpath, updating self.line_count_map and potentially adding new paths to self.error_count_map.",
+        "content": "Line 184-221: Reads file names from the tree structure and verifies if they are cached or not. If not cached, it reads the line count of each file using the read_file_and_get_line_count function and appends to either cache list or error list. The yield statement returns line counts for non-error files.\nLine 185: Adds \"Cached\" label if item is in cached_paths, sets error flag as False, and appends file path to cached_verified list.\nLine 193: Adds the linecount label if it's not already an error file, sets error flag as False, and yields the linecount.\nLines 204-217: Reads the line count of the given filepath, handles non-existent files and cached files. Returns -1 for non-existing files, -3 for cached files.\nLine 219: Initializes selected_keys list, to be used in get_selected_keys function.\nLines 220-221: Recursively iterates through all keys in the tree structure and appends unique keys to selected_keys list.",
         "type": "comment"
     },
     "284": {
         "file_id": 24,
-        "content": "                                    # with open(\"error.txt\", \"w+\") as f:\n                                        # f.write(parent_path+\" should in \"+str(self.mymap.keys()))\n                                #     self.exit()\n                                # else:\n                                pn.set_label(lb)\n                        error = False\n                    color = 'white'\n                    if error:\n                        color = \"bold red\"\n                        expand_parent(subtree)\n                        self.error_count += 1\n                        self.error_count_type_map[label] += 1\n                        for parent_path, parent_name in iterate_parent_dirs(relpath): # ends with \"/\"\n                            self.error_count_map[parent_path] += 1\n                            # self.selected_paths.add(parent_path)\n                            self.mymap[parent_path].set_label(Text.assemble((f\"<{self.error_count_map[parent_path]} E> \", \"bold red\"), (parent_name, \"bold red\" if parent_name!= DOCS_FOLDER_NAME else \"bold magenta\")))",
+        "content": "mymap = {\"./\": tree}\nexisting_keys.append(\"./\")\ntotal_size = sum(add_tree_contents(tree, root.get(\"contents\", []), basemap=mymap))\nnonexist_keys = [k for k in mymap.keys() if k not in existing_keys]\nfor key in nonexist_keys:\n    it = mymap.get(key, None)\n    if it is not None:\n        parent, child = dirsplit(key)\n        parent_it = mymap.get(parent + \"/\", None)\n        if parent_it is not None:\n            parent_it.children.remove(it)\n        del mymap[key]\ntotal_lines = sum(iterate_all_keys(selected_json[0].get(\"contents\", []), mymap))\n# Print the tree\nsize_map[\"./\"] = total_size\nif total_lines != 0:\n    selected_dirs.append(\"./\")\n    line_map[\"./\"] = total_lines\ntree.label = Text.assemble(\n    (\n        (\n            f\"[{total_lines} L] \"\n            if total_lines != 0\n            else f\"x <{size_to_readable_string(total_size)}> \"\n        )\n        + tree.label,\n        \"magenta\",\n    )\n)\ndef estimate_time_from_lines(line_count: int):\n    seconds = (line_count / 10) * 100\n    return humanize.naturaltime(datetime.timedelta(seconds=seconds)).split(\" ago\")[0]",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:311-327"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:223-261"
     },
     "285": {
         "file_id": 24,
-        "content": "This code sets the label of a visual file selector and handles errors by changing color and updating counters. It expands a subtree, increments error counts for paths and labels, and updates labels with colored text based on error counts.",
+        "content": "This code updates the map with the tree structure and its contents, removes nonexistent keys, calculates the total size and lines for existing directories, labels the tree with size and line count, and estimates time from lines.",
         "type": "comment"
     },
     "286": {
         "file_id": 24,
-        "content": "                    subtree.set_label(Text.assemble(((f\"[{label}, {fs_str}]\" if not error else f\"<{label}>\") +\" \", color), (fname, color)))\n                banner_refresh_counter += 1\n                if banner_refresh_counter > 1:\n                # if banner_refresh_counter > 10000:\n                    banner_refresh_counter = 0\n                    running = format_timedelta(datetime.now() - self.previous_time)\n                    self.processing_time_by_line = naturaltime(estimate_time_from_lines(self.line_count))\n                    self.processing_time_by_size = naturaltime(estimate_time_from_filesize(self.selected_size))\n                    self.label.renderable = Text.assemble((f\"Processing time: {self.processing_time_by_line}/{self.previous_processing_time_by_line} (lines) {self.processing_time_by_size}/{self.previous_processing_time_by_size} (size)\\nLines: {self.line_count}/{self.previous_line_count} Size: {humanize.naturalsize(self.selected_size)}/{self.previous_selected_size} Count: {",
+        "content": "for k, v in mymap.items():\n    if k.endswith(\"/\"):\n        _, name = dirsplit(k)\n        if k in cached_verified:\n            continue\n        elif k in selected_dirs:\n            v.label = f\"[{line_map[k]} L] \" + name\n            # v.label = f\"[{estimate_time_from_lines(line_map[k])}] \"+ name\n        else:\n            v.label = f\"x <{size_to_readable_string(size_map[k])}> \" + name\nconsole = Console()\nconsole.print(tree)\n# total_size = sum(size_map.values())\nselected_size  = 0\nfor k in selected_keys:\n    # try:\n    s =  size_map[k] \n    selected_size +=s\n    # except KeyError:\n    #     print(\"key\", k ,\"not found\")\n    #     breakpoint()\n# make mapping between displayed tree and actual tree\nprint(\n    dict(\n        total=size_to_readable_string(total_size),\n        selected=size_to_readable_string(selected_size),\n    )\n)\n# total_lines = sum(line_map.values())\nprocessing_time = estimate_time_from_lines(total_lines)\nprint(dict(selected_lines=humanize.intword(total_lines) + \" lines\", processing_time=processing_time))\ntotal_size_by_suffix = defaultdict(int)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:329-337"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:264-300"
     },
     "287": {
         "file_id": 24,
-        "content": "This code is updating the processing time and line count every 10,000 lines or 1 second (lines commented out), then updating a label with the new information. It seems to be part of a larger program tracking the processing time and number of lines in real-time. The previous values are stored as variables for comparison.",
+        "content": "Iterating through the dictionary mymap, setting label for directories in the tree based on their presence in cached_verified or selected_dirs, calculating selected size and total size of files, estimating processing time from lines, and storing it all in dictionaries for printing.",
         "type": "comment"
     },
     "288": {
         "file_id": 24,
-        "content": "self.selected_count}/{self.previous_selected_count} Errors: {self.error_count}/{self.previous_error_count}\\nLast selection: {self.previous_selection_formatted} Selection: {running}/{self.previous_selection}\\nTotal size: -/{self.previous_filesize} Total count: -/{self.previous_total_count} Errors: -/{self.previous_error_size_count}\\nLast scanning: {self.previous_scanning_formatted} Scanning: -/{self.previous_scanning}\", \"bold\"))\n                    self.label.refresh()\n            # not_selected = 0\n            if self.loop_break:\n                try:\n                    process.terminate()\n                except:\n                    pass\n            else:\n                map_keys = numpy.array(list(self.mymap.keys()))\n                # map_keys = set(self.mymap.keys())\n                not_selected_paths =numpy.setdiff1d(map_keys,numpy.array(list(self.selected_paths)))\n                not_selected_paths_real = numpy.setdiff1d(not_selected_paths,numpy.array(list(self.previous_selected_paths)))\n                # with open(\"not_selected.txt\", \"w+\") as f:",
+        "content": "filecount_by_suffix = defaultdict(int)\nfor k, v in size_map.items():\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    total_size_by_suffix[suffix] += v\n    filecount_by_suffix[suffix] += 1\nlines_by_suffix = defaultdict(int)\nselected_filecount_by_suffix = defaultdict(int)\nfor k in selected_keys:\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    selected_filecount_by_suffix[suffix] += 1\n    v = line_map[k]\n    lines_by_suffix[suffix] += v\nprint(\n    dict(\n        total={k: size_to_readable_string(v) for k, v in total_size_by_suffix.items()},\n        # total=set(os.path.split(it)[1].split(\".\")[-1] for it in size_map.keys()),\n        selected={\n            k: humanize.intword(v) + \" lines\" for k, v in lines_by_suffix.items()\n        },\n    )\n)\nprint(dict(total=filecount_by_suffix, selected=selected_filecount_by_suffix))\nprint(\"error:\", {k: len(v) for k, v in error_map.items()})\nprint(\"error map:\", error_map)\n# print(mymap)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:337-350"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:301-329"
     },
     "289": {
         "file_id": 24,
-        "content": "This code seems to be a part of a GUI application, updating the display with selection count, errors, and other information. It also checks for paths not selected, potentially for further processing or updates. The loop can break if a certain condition is met, causing the process to terminate.",
+        "content": "The code calculates and prints the total file count and line count by file suffix for all files (total) and selected files (selected). It also prints the number of errors encountered.",
         "type": "comment"
     },
     "290": {
-        "file_id": 24,
-        "content": "                #     f.write(str(not_selected_paths_real))\n                #     self.exit()\n                for k in not_selected_paths_real:\n                    _, fname = dirsplit(k)\n                    self.mymap[k].set_label(Text.assemble((fname, \"bright_black\")))\n                # breakpoint()\n                self.previous_selected_paths = self.selected_paths\n                self.previous_processing_time_by_line = self.processing_time_by_line\n                self.previous_processing_time_by_size = self.processing_time_by_size\n                self.previous_line_count = self.line_count\n                self.previous_selected_count = self.selected_count\n                self.previous_selected_size = humanize.naturalsize(self.selected_size)\n                self.previous_error_count = self.error_count\n                self.previous_selection = format_timedelta(datetime.now() - self.previous_time)\n                self.previous_time = datetime.now()\n                self.previous_selection_formatted = self.previous_time.strftime(\"%Y-%m-%d %H:%M:%S\")",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:351-366"
+        "file_id": 25,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
+        "type": "filepath"
     },
     "291": {
-        "file_id": 24,
-        "content": "This code handles file path selection, sets label colors for unselected files, saves previous selections and timings, updates various properties, and tracks the time taken for file selection.",
-        "type": "comment"
+        "file_id": 25,
+        "content": "The code processes command line arguments, generates file lists using fd, iterates over paths to copy files into a target directory. It uses argparse for args handling, os and shutil for operations, subprocess for shell commands, and assertions for checking absolute paths. The process checks if the file exists and is a file, gets relative path, joins with target directory, creates new directories as needed, and copies using shutil.copy2().",
+        "type": "summary"
     },
     "292": {
-        "file_id": 24,
-        "content": "                await process.wait()\n                # clear those nonselected paths, mark as grey\n                # now for another step\n                command2 = ['bash','-c',f\"cd '{self.diffpath}' && fd -u -S '+1b'\"]\n                process2 = await asyncio.create_subprocess_exec(*command2, stdout = asyncio.subprocess.PIPE)\n                banner_refresh_counter = 0\n                while not self.loop_break:\n                    line = await process2.stdout.readline() # type:ignore\n                    if not line: break\n                    decline = line.decode('utf-8').strip()\n                    if decline == \"\": break\n                    banner_refresh_counter += 1\n                    relpath = \"./\"+decline\n                    self.existing_paths.add(relpath)\n                    # subtree, fname = patch_missing_files(relpath, self.mymap)\n                    subtree, fname, _ = patch_missing_files(relpath, self.mymap, processor = lambda x: Text.assemble((x, \"bright_black\")))\n                    if not relpath.endswith(\"/\"):",
+        "file_id": 25,
+        "content": "import os\nimport shutil\nimport argparse\nparser = argparse.ArgumentParser()\n# parser.add_argument(\n#     \"-f\", \"--filelist\", help=\"path to filelist, generated by fd\", type=str, required=True\n# )\nparser.add_argument(\n    \"-b\", \"--basedir\", help=\"common prefix of filepaths\", type=str, required=True\n)\nparser.add_argument(\n    \"-t\",\n    \"--targetdir\",\n    help=\"target directory to copy files into\",\n    type=str,\n    required=True,\n)\nargs = parser.parse_args()\n# filelist = args.filelist\n# filepaths = open(filelist).read().split(\"\\n\")\nbasedir = args.basedir  # common prefix of filepaths\ncommand = [\"bash\", \"-c\", f\"cd '{basedir}' && fd -S '+1b'\"]\nassert os.path.isabs(basedir)\ntargetdir = args.targetdir  # target directory to copy files into\nassert os.path.isabs(targetdir)\nimport subprocess\nmoutput = subprocess.check_output(command, encoding='utf-8')\nfilepaths = moutput.split(\"\\n\")\nfor fp0 in filepaths:\n    fp0 = fp0.strip()\n    if fp0:\n        if fp0.endswith(\"/\"): continue\n        fp = os.path.join(basedir, fp0)\n        assert os.path.isabs(fp)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:367-383"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:1-41"
     },
     "293": {
-        "file_id": 24,
-        "content": "This code is clearing non-selected paths and marking them as grey, then preparing for another step. It uses a subprocess to find and add new paths from file system, updates existing paths, and marks non-recursive files with bright_black color.",
+        "file_id": 25,
+        "content": "The code is parsing command line arguments, generating a file list using fd command, and then iterating over the file paths to copy them into a target directory. It uses argparse for handling command-line arguments, os and shutil libraries for file operations, subprocess for running shell commands, and assertions for checking file paths are absolute.",
         "type": "comment"
     },
     "294": {
-        "file_id": 24,
-        "content": "                        self.total_count +=1\n                        for parent_path, parent_name in iterate_parent_dirs(relpath): # ends with \"/\"\n                            self.existing_paths.add(parent_path)\n                        if relpath not in self.selected_paths:\n                            if os.path.join(self.diffpath, relpath) not in self.size_map.keys():\n                                filesize = await get_file_size(os.path.join(self.diffpath, relpath))\n                                if filesize != -1:\n                                    self.filesize +=filesize\n                            else:\n                                filesize = self.size_map[os.path.join(self.diffpath, relpath)]\n                            if filesize != -1:\n                                filesize_str = humanize.naturalsize(filesize)\n                                subtree.set_label(Text.assemble((f\"({filesize_str}) \", 'bright_black'), (fname, \"bright_black\" if fname not in IGNORE_RULE_FILES else \"green_yellow\")))",
+        "file_id": 25,
+        "content": "        assert os.path.exists(fp)\n        assert os.path.isfile(fp)\n        rel = os.path.relpath(fp, basedir)\n        new_path = os.path.join(targetdir, rel)\n        new_dir = os.path.dirname(new_path)\n        if not os.path.exists(new_dir):\n            os.makedirs(new_dir)\n        print(fp,\"->\", new_path)\n        # exit()\n        # breakpoint()\n        shutil.copy2(fp, new_path)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:384-397"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:42-52"
     },
     "295": {
-        "file_id": 24,
-        "content": "This code iterates over relpath and its parent directories, adding them to existing_paths. If the relpath is not in selected_paths, it checks if the file exists in size_map. If not, it gets the file size and adds it to filesize. It then creates a Text object for subtree's label with formatted text based on file size and fname, considering IGNORE_RULE_FILES.",
+        "file_id": 25,
+        "content": "Checking if file exists and is a file, getting relative path, joining with target directory, creating new directory if needed, and copying the file using shutil.copy2().",
         "type": "comment"
     },
     "296": {
-        "file_id": 24,
-        "content": "                                for parent_path, parent_name in reversed(list(iterate_parent_dirs(relpath))):\n                                    # self.existing_paths.add(parent_path)\n                                    # if \"0.json\" in relpath:\n                                    #     with open('debug.txt', 'w+') as f:\n                                    #         f.write(str(self.selected_paths)+\"\\n\")\n                                    #         f.write(parent_path+\" \"+parent_name+\"\\n\")\n                                    #         f.write(str(relpath)+\"\\n\")\n                                    #         self.exit()\n                                    if parent_path not in self.selected_paths:\n                                        self.size_map[parent_path] += filesize\n                                        if parent_path not in self.error_size_map.keys():\n                                            self.mymap[parent_path].set_label(Text.assemble((f\"({humanize.naturalsize(self.size_map[parent_path])}) {parent_name}\", 'bright_black')))",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:398-409"
+        "file_id": 26,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
+        "type": "filepath"
     },
     "297": {
-        "file_id": 24,
-        "content": "The code is iterating through parent directories of the current file path in reverse order. It skips adding the parent directory to the existing paths list and updates the size_map with the file size if the parent directory is not already in the selected paths. If the parent directory is not in error_size_map, it updates the label of the corresponding item in the mymap using human-readable file size and parent name.",
-        "type": "comment"
+        "file_id": 26,
+        "content": "The code creates a command-line tool for comparing files using the \"tree\" command, asynchronously runs commands, includes visualization for ignored files, features a progress bar and GUI updates, and manages UI elements while processing data or files. The code also contains two functions: one to toggle dark mode and another to exit the application.",
+        "type": "summary"
     },
     "298": {
-        "file_id": 24,
-        "content": "                                    else:\n                                        break\n                            else: # propagate error?\n                                subtree.set_label(Text.assemble((\"(error)\", \"bold red\"),(f\"{fname}\", 'bright_black' if fname not in IGNORE_RULE_FILES else \"green_yellow\")))\n                                self.error_size_count +=1\n                                for parent_path, parent_name in reversed(list(iterate_parent_dirs(relpath))): # ends with \"/\"\n                                    # self.existing_paths.add(parent_path)\n                                    if parent_path not in self.selected_paths:\n                                        self.error_size_map[parent_path] += 1\n                                        self.mymap[parent_path].set_label(Text.assemble((f\"({self.error_size_map[parent_path]} errors) \", \"bold red\"),(parent_name,'bright_black')))\n                                    else:\n                                        break\n                    banner_refresh_counter += 1",
+        "file_id": 26,
+        "content": "from textual.app import App, ComposeResult\nfrom textual.widgets import Header, Footer, RichLog, Label\nfrom rich.text import Text\nfrom textual.timer import Timer\nfrom threading import Lock\nimport subprocess\n# from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nfrom datetime import datetime\n# import os\nINTERVAL = 5\nimport asyncio\nasync def run_command(command:str):\n    process = await asyncio.create_subprocess_shell(\n        command,\n        stdout=subprocess.PIPE,\n        stderr=subprocess.PIPE\n    )\n    stdout, stderr = await process.communicate()\n    return stdout.decode().strip(), stderr.decode().strip()\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile > \"{{tempdir}}/all_tree.txt\"\nfd | tree --fromfile > \"{{tempdir}}/selected_tree.txt\"\ndiff -y \"{{tempdir}}/all_tree.txt\" \"{{tempdir}}/selected_tree.txt\" > \"{{tempdir}}/diff_tree.txt\"\ncat \"{{tempdir}}/diff_tree.txt\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:410-424"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:1-36"
     },
     "299": {
-        "file_id": 24,
-        "content": "This code handles file selection by ignoring certain rules. If a file is not within the ignore rules, it breaks the loop. If an error occurs, it sets the label with error information and updates the error count for parent directories, setting their labels accordingly. The banner refresh counter is also incremented.",
+        "file_id": 26,
+        "content": "Code imports necessary modules and defines variables for a command-line tool that generates differences between selected and all files in a directory using the \"tree\" command. It also includes functions to run commands asynchronously and define a script template for generating the diff report.",
         "type": "comment"
     }
 }
