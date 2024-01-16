@@ -146,6 +146,36 @@
 </url>
 
 <url>
+  <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py</loc>
+  <lastmod>2023-12-28T09:21:02+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+
+<url>
+  <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py</loc>
+  <lastmod>2023-12-28T09:21:02+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+
+<url>
+  <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py</loc>
+  <lastmod>2023-12-28T09:21:02+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+
+<url>
+  <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py</loc>
+  <lastmod>2023-12-28T09:21:02+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+
+<url>
+  <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py</loc>
+  <lastmod>2023-12-28T09:21:02+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+
+<url>
   <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py</loc>
   <lastmod>2023-12-28T09:21:02+00:00</lastmod>
   <priority>1.00</priority>

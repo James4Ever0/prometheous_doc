@@ -1,0 +1,10 @@
+{
+    "summary": "The code imports OllamaEmbeddings from Langchain and initializes an embedding model. The comments indicate that the model is used for querying and document embedding, but LlamaIndex with its cache could be a potential alternative. The code then embeds a query and some documents using the initialized model and prints the types and shapes of the resulting embeddings.",
+    "details": [
+        {
+            "comment": "The code imports OllamaEmbeddings from Langchain and initializes an embedding model. The comments indicate that the model is used for querying and document embedding, but LlamaIndex with its cache could be a potential alternative. The code then embeds a query and some documents using the initialized model and prints the types and shapes of the resulting embeddings.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py\":0-25",
+            "content": "# create embedding with ollama\n# or use llamaindex instead? it has cache.\n# since small local index is enough, we do not need huge vector search database engine.\n# if that is the case, we just swap the adapter.\nimport rich\nfrom langchain.embeddings import OllamaEmbeddings\nollama_emb = OllamaEmbeddings(\n    model=\"openhermes2.5-mistral:latest\",\n    # model=\"llama:7b\",\n)\nquery = \"hello world\"\ndocuments = [\"hello again\", \"bye world\"]\nq_emb = ollama_emb.embed_query(query)\nd_emb = ollama_emb.embed_documents(documents)\nimport numpy as np\nrich.print(type(q_emb), np.array(q_emb).shape)  # list\nrich.print(type(d_emb), np.array(d_emb).shape)\n# <class 'list'>\n# (4096,)\n# <class 'list'>\n# (2, 4096)"
+        }
+    ]
+}

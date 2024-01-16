@@ -350,196 +350,193 @@
     },
     "264": {
         "file_id": 23,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py",
         "type": "filepath"
     },
     "265": {
         "file_id": 23,
-        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+        "content": "The code utilizes Ollama embeddings and sets up an HnswDocumentIndex for document storage, indexing, and nearest neighbor search using the provided embedding vector.",
         "type": "summary"
     },
     "266": {
         "file_id": 23,
-        "content": "import asyncio\nasync def read_lines(stream:asyncio.StreamReader):\n    while True:\n        line = await stream.readline()\n        # print(\"line\")\n        if not line:\n            break\n        else: \n            yield line\nasync def run_command(command:list[str]):\n    process = await asyncio.create_subprocess_exec(\n        *command,\n        stdout=asyncio.subprocess.PIPE,\n        # stderr=asyncio.subprocess.PIPE\n    )\n    f = [it for it in read_lines(process.stdout)]\n    # stderr_reader = asyncio.StreamReader()\n    # Read lines from stdout and stderr concurrently\n    # await asyncio.gather(\n    #     read_lines(stdout_reader),\n    #     read_lines(stderr_reader)\n    # )\n    # Wait for the process to complete\n    await process.wait()\nasync def main():\n    command = [\"ls\", \"-l\"]\n    # Run the command asynchronously\n    await run_command(command)\nif __name__ == \"__main__\":\n    # Run the event loop\n    asyncio.run(main())",
+        "content": "import hashlib\nimport os\nos.environ[\"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION\"] = \"python\"\nfrom langchain.embeddings import OllamaEmbeddings\nollama_emb = OllamaEmbeddings(\n    model=\"openhermes2.5-mistral:latest\",\n    # model=\"llama:7b\",\n)\ndef hash_doc(enc: str):\n    hash_object = hashlib.md5(enc.encode())\n    return hash_object.hexdigest()\ncache_path = \"./docarray_cache\"\nfrom docarray import BaseDoc\nfrom docarray.index import HnswDocumentIndex\nimport numpy as np\nfrom docarray.typing import NdArray\nclass TextDoc(BaseDoc):\n    text: str\n    text_hash: str\n    embedding: NdArray[4096]\nimport rich\n# create a Document Index\nindex = HnswDocumentIndex[TextDoc](work_dir=cache_path)\n# index your data\ndocs = [\"hello again\", \"bye world\"]\nquery = \"hello world\"\n# find similar Documents\nfor it in docs:\n    docHash = hash_doc(it)\n    index._sqlite_cursor.execute(\n        \"SELECT text FROM docs WHERE text_hash = ?\", (docHash,)\n    )\n    rows = index._sqlite_cursor.fetchall()\n    if len(rows) > 0:\n        cached = False\n        for row in rows:",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py:1-37"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:1-51"
     },
     "267": {
         "file_id": 23,
-        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+        "content": "This code imports necessary libraries, sets up Ollama embeddings, and defines a TextDoc class for document storage. It also creates an HnswDocumentIndex object for indexing documents and searching for similar ones. The code then demonstrates how to insert, retrieve, and search for documents using the provided example data.",
         "type": "comment"
     },
     "268": {
-        "file_id": 24,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
-        "type": "filepath"
+        "file_id": 23,
+        "content": "            if row[0] == it:\n                cached = True\n                break\n        if cached:\n            print(\"document cached:\", it)\n            continue\n    # result = index.text_search(docHash, search_field=\"text_hash\", limit=1)\n    # if result.count == 1:\n    #     if result.documents[0].text_hash == docHash:\n    #         print(\"document cached:\", it)\n    #         continue\n    embed = np.array(ollama_emb.embed_query(it))\n    docObject = TextDoc(text=it, text_hash=docHash, embedding=embed)\n    index.index(docObject)\n# breakpoint()\nindex._sqlite_cursor.execute(\"SELECT doc_id FROM docs WHERE text LIKE 'hello%'\")\n# index._sqlite_cursor.execute(\"SELECT doc_id FROM docs\")\n# [(423764937781332251,), (955323081996155123,)]\n# index._sqlite_cursor.execute(\"SELECT * FROM docs\") # field: doc_id\nrows = index._sqlite_cursor.fetchall()\n# print(rows)\nhashed_ids = set(it[0] for it in rows)\n# hashed_ids = set(str(it[0]) for it in rows)\n# print(hashed_ids)\nans = index._search_and_filter(\n    np.array(ollama_emb.embed_query(query)).reshape(1, -1),",
+        "type": "code",
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:52-81"
     },
     "269": {
-        "file_id": 24,
-        "content": "The script uses the \"rich\" library to display tree structures and handles command line arguments, file/directory operations. The function recursively traverses a dictionary, managing directories and updating counts. It labels tree structures with size, line count, estimates time from lines, reads file names, and yields line counts for non-error files. The code iterates through the dictionary, calculating sizes and processing time, and prints total and selected file counts, line counts by suffix, and error count.",
-        "type": "summary"
+        "file_id": 23,
+        "content": "Checking if the document is cached by iterating through a list and comparing the first element of each row to the current item. If it matches, the document is considered cached and skipped; otherwise, the document's embedding is calculated using Ollama and added to the index.",
+        "type": "comment"
     },
     "270": {
-        "file_id": 24,
-        "content": "from rich.text import Text\nfrom rich.console import Console\nimport datetime\n# color from:\nfrom rich.color import ANSI_COLOR_NAMES\nfrom collections import defaultdict\nconsole = Console()\nfrom rich.tree import Tree\nfrom rich import print\nimport json\nimport os\nimport humanize\nerror_map = defaultdict(list)\ncached_verified = []\ndef patch_missing_files(path, basemap, color, processor=lambda x: x):\n    subpath, filename = dirsplit(path)\n    # breakpoint()\n    if basemap.get(path) is None:\n        subtree = patch_missing_files(subpath + \"/\", basemap, color)\n        subsubtree = subtree.add(processor(filename), style=color, guide_style=color)\n        # print(filename)\n        basemap[path] = subsubtree\n        return subsubtree\n    else:\n        return basemap.get(path)\ndef size_to_readable_string(size: int):\n    return humanize.naturalsize(size)\nGREY = \"bright_black\"\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"--full\", help=\"full tree\", type=str, required=True)\nparser.add_argument(\"--selected\", help=\"selected tree\", type=str, required=True)",
+        "file_id": 23,
+        "content": "    limit=10,\n    search_field=\"embedding\",\n    hashed_ids=hashed_ids,\n)\nrich.print(\"ans:\", ans)\n# breakpoint()\n# hnswlib ids: [955323081996155123, 423764937781332251]\nresults, scores = index.find(\n    ollama_emb.embed_query(query), limit=10, search_field=\"embedding\"\n)\nrich.print(results, scores)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:1-44"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:82-94"
     },
     "271": {
-        "file_id": 24,
-        "content": "This code is a Python script that uses the \"rich\" library for creating and displaying a tree structure. It allows you to patch missing files, convert file sizes to readable strings, and handle command line arguments using \"argparse\". The script takes two input parameters: \"--full\" for the full tree and \"--selected\" for the selected tree.",
+        "file_id": 23,
+        "content": "The code is searching for the nearest neighbors of a query in an HNSWlib index using the provided embedding vector, and it returns the results and scores.",
         "type": "comment"
     },
     "272": {
         "file_id": 24,
-        "content": "parser.add_argument(\"--basepath\", help=\"path to the base\", type=str, required=True)\nargs = parser.parse_args()\nfull_json = args.full\nselected_json = args.selected\nbasepath = args.basepath\nassert os.path.isabs(basepath)\nbasepath = os.path.abspath(basepath)\ntree_data = json.load(open(full_json))\nselected_json = json.load(open(selected_json))  # could be different.\n# cached_paths = [\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/recursive_document_writer.py\",\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/code_view_with_path_argument_and_anchor/code_view_demo.py\",\n# ]\ncached_paths = []\nfor p in cached_paths:\n    assert os.path.isabs(p)\ncached_paths = [os.path.abspath(p) for p in cached_paths]\nfor p in cached_paths:\n    assert os.path.commonprefix([p, basepath]) == basepath\nsize_map = {}\nselected_keys = []\nexisting_keys = []\n# Add the tree contents recursively\ndef add_tree_contents(parent, contents, basedir=\".\", basemap={}):\n    for item in contents:",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:45-78"
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py",
+        "type": "filepath"
     },
     "273": {
         "file_id": 24,
-        "content": "This code is parsing command-line arguments, loading JSON files, ensuring paths are absolute, and checking common prefixes. It then defines a function to recursively add tree contents and initializes variables for selected keys and existing keys.",
-        "type": "comment"
+        "content": "The code imports necessary libraries, sets up a vector store index and embeddings model, initializes an OpenLM model, and constructs a VectorStoreIndex using either the vector store or docstore. The vector store index is used as a retriever to retrieve \"hello\" and print the answer in a rich format.",
+        "type": "summary"
     },
     "274": {
         "file_id": 24,
-        "content": "        if item[\"type\"] == \"directory\":\n            # subtree = parent.add(f\"[bold]{item['name']}\")\n            # subtree = parent.add(\n            #     Text.assemble((item[\"name\"], \"bold\")),\n            #     style=GREY,\n            #     guide_style=GREY,\n            # )\n            subtree = patch_missing_files(\n                os.path.join(basedir, item[\"name\"] + \"/\"),\n                basemap,\n                GREY,\n                lambda x: Text.assemble((x, \"bold\")),\n            )\n            existing_keys.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n            # basemap[os.path.join(basedir, item[\"name\"] + \"/\")] = subtree\n            dirfs = 0\n            for fs in add_tree_contents(\n                subtree,\n                item.get(\"contents\", []),\n                os.path.join(basedir, item[\"name\"]),\n                basemap,\n            ):\n                dirfs += fs\n                yield fs\n            size_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirfs\n        else:  # file\n            # subtree = parent.add(item['name'])",
+        "content": "from llama_index import Document\nfrom llama_index.embeddings import OllamaEmbedding  # OpenAIEmbedding\nfrom llama_index.text_splitter import SentenceSplitter\nfrom llama_index.extractors import TitleExtractor\nfrom llama_index.ingestion import IngestionPipeline\nfrom llama_index.llms import Ollama\nfrom llama_index.storage.docstore import SimpleDocumentStore\nimport os\nos.environ[\"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION\"] = \"python\"\nfrom llama_index import VectorStoreIndex, ServiceContext, LLMPredictor\nfrom llama_index.vector_stores import DocArrayHnswVectorStore\n# from llama_index.vector_stores import SimpleVectorStore\n# from llama_index.ingestion.cache import SimpleCache\nvector_store = DocArrayHnswVectorStore(\"storage\",dim = 4096)\n# create the pipeline with transformations\n# if os.path.exists(\"./storage\"):\n#     vector_store = SimpleVectorStore.from_persist_dir()\n# else:\n#     vector_store = SimpleVectorStore(stores_text=True)\n# vector_store.stores_text=True\nembed = OllamaEmbedding(model_name=\"openhermes2.5-mistral:latest\")",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:79-105"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:1-29"
     },
     "275": {
         "file_id": 24,
-        "content": "If item type is directory:\n- Create a subtree for the directory name.\n- Add missing files to the subtree.\n- Append the directory path to existing keys.\n- Add the subtree to the base map.\n- Count and yield the number of files in the subtree.\n- Store the total file size in size_map.\nElse if item type is file:\n- Add the file name as a subtree.\n- Append the file path to existing keys.\n- Yield 1 (as there's only one file).",
+        "content": "This code imports necessary libraries and sets up a vector store for storing and retrieving documents using the llama_index package. The code utilizes DocArrayHnswVectorStore for efficient storage and retrieval, and also creates an OpenAIEmbedding model to generate embeddings for documents.",
         "type": "comment"
     },
     "276": {
         "file_id": 24,
-        "content": "            # if item['name'] == \"devcontainer.json\": breakpoint()\n            existing_keys.append(os.path.join(basedir, item[\"name\"]))\n            filesize = os.path.getsize(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            size_map[os.path.join(basedir, item[\"name\"])] = filesize\n            filesize_human = size_to_readable_string(filesize)\n            # subtree = patch_missing_files(os.path.join(basedir, item[\"name\"]),basemap, GREY, lambda x: f\"[{filesize_human}] \" + x)\n            subtree = parent.add(f\"x <{filesize_human}> \" + item[\"name\"], style=GREY)\n            basemap[os.path.join(basedir, item[\"name\"])] = subtree\n            yield filesize\ndef dirsplit(path):\n    if path.endswith(\"/\"):\n        path = path[:-1]\n    return os.path.split(path)\ndef set_path_to_white(path, basemap):\n    subtree = patch_missing_files(path, basemap, \"white\")\n    subtree.style = \"white\"\n    subtree.guide_style = \"white\"\n    return subtree\nselected_dirs = []\nline_map = {}",
+        "content": "llm = Ollama(model=\"openhermes2.5-mistral:latest\")\npipeline = IngestionPipeline.construct(\n    transformations=[\n        SentenceSplitter(chunk_size=25, chunk_overlap=0),\n        TitleExtractor(llm=llm),\n        embed,\n    ],\n    docstore=SimpleDocumentStore(),  # do it if you want load/persist to work properly.\n    vector_store=vector_store,\n    validate_arguments=False,\n)\nloadpath = \"./pipeline_storage\"\nif os.path.exists(loadpath):\n    pipeline.load(persist_dir=loadpath)\n# run the pipeline\nnodes = pipeline.run(documents=[Document.example()])  # return newly added nodes.\nimport rich\n# rich.print(nodes)\n# rich.print(pipeline.documents)\n# rich.print(pipeline.docstore.docs)\npipeline.persist(persist_dir=loadpath)  # not persisting document.\nserv_cont = ServiceContext.from_defaults(\n    llm_predictor=LLMPredictor(llm),\n    embed_model=embed,\n)\n# vsindex = VectorStoreIndex.from_vector_store(vectore_store)\nvsindex = VectorStoreIndex.from_vector_store(vector_store, service_context=serv_cont)\n# vsindex = VectorStoreIndex.from_documents(pipeline.docstore.docs.values(),service_context=serv_cont)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:106-134"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:30-60"
     },
     "277": {
         "file_id": 24,
-        "content": "This code is creating a visual file selector by ignoring specific rules. It breaks when it encounters the \"devcontainer.json\" file, appends existing file paths to a list, calculates their sizes and converts them to readable strings, adds subtrees to a tree structure with gray color and file size information, and handles directories by setting their style to white. It also maintains two dictionaries: one for storing file sizes and another for mapping file paths to their corresponding subtrees in the tree structure.",
+        "content": "This code initializes an OpenLM model, creates a pipeline for text processing with transformations like sentence splitting and title extraction, checks if a load path exists and loads the saved pipeline if so. It then runs the pipeline on example documents, prints the resulting nodes, persists the pipeline, creates a service context using the loaded LLM and embed models, and finally constructs a VectorStoreIndex from either the vector store or the documents in the docstore.",
         "type": "comment"
     },
     "278": {
         "file_id": 24,
-        "content": "# can have missing files.\ndef iterate_all_keys(contents, basemap, basedir=\".\"):\n    for item in contents:\n        if item[\"type\"] == \"directory\":\n            subpaths = item.get(\"contents\", [])\n            if subpaths:\n                dirlc = 0\n                cached_count = 0\n                # total_lc = 0\n                for lc in iterate_all_keys(\n                    subpaths, basemap, os.path.join(basedir, item[\"name\"])\n                ):\n                    # total_lc +=1\n                    if lc == -3:\n                        cached_count += 1\n                        continue\n                    dirlc += lc\n                    yield lc\n                if dirlc != 0:\n                    selected_dirs.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n                    set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    line_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirlc\n                elif len(subpaths) == cached_count:",
+        "content": "# this will do RAG. However do you have qualified prompt?\n# engine = vsindex.as_query_engine()\nengine = vsindex.as_retriever()\nans = engine.retrieve(\"hello\")\n# ans = engine.query(\"something interesting in the document\")\nrich.print(ans)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:137-161"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:62-68"
     },
     "279": {
         "file_id": 24,
-        "content": "This function iterates through all keys in the \"contents\" dictionary, checking for directories and recursively calling itself to handle their contents. It keeps track of the total count of files and directories (lc) and yields each file or directory encountered. If a directory is found, it adds it to the selected_dirs list and updates the line_map with the count of files in that directory.",
+        "content": "This code initializes the vector store index (vsindex) as a retriever rather than a query engine, retrieves \"hello\" using the retriever, and prints the answer in a rich format. A qualified prompt is missing to enhance the functionality of the query or retrieve function.",
         "type": "comment"
     },
     "280": {
-        "file_id": 24,
-        "content": "                    # elif total_lc == cached_count:\n                    subtree = set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    subtree.label = f\"[Cached] \" + item[\"name\"]\n                    cached_verified.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n        else:  # file\n            # breakpoint()\n            selected_keys.append(os.path.join(basedir, item[\"name\"]))\n            linecount = read_file_and_get_line_count(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            line_map[os.path.join(basedir, item[\"name\"])] = linecount\n            subtree = set_path_to_white(os.path.join(basedir, item[\"name\"]), basemap)\n            error = True\n            if linecount == 0:\n                label = \"Empty\"\n            elif linecount == -1:\n                label = \"Missing\"\n            elif linecount == -2:\n                label = \"Error\"\n            elif linecount == -3:",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:162-184"
+        "file_id": 25,
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py",
+        "type": "filepath"
     },
     "281": {
-        "file_id": 24,
-        "content": "The code is checking the line count of a file and assigning a corresponding label to its tree structure representation. If the line count is 0, it's marked as \"Empty\", if it's -1, it's marked as \"Missing\", if it's -2, it's marked as \"Error\", and any other value is ignored. It also keeps track of cached directories and appends selected file paths to the `selected_keys` list.",
-        "type": "comment"
+        "file_id": 25,
+        "content": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
+        "type": "summary"
     },
     "282": {
-        "file_id": 24,
-        "content": "                label = \"Cached\"\n                error = False\n                cached_verified.append(os.path.join(basedir, item[\"name\"]))\n            else:\n                label = f\"{linecount} L\"\n                error = False\n            if error:\n                error_map[label].append(os.path.join(basedir, item[\"name\"]))\n            else:\n                yield linecount\n            subtree.label = f\"[{label}] \" + item[\"name\"]\ndef read_file_and_get_line_count(filepath: str):\n    filepath = os.path.abspath(filepath)\n    if not os.path.exists(filepath):\n        return -1\n    if filepath in cached_paths:\n        return -3\n    try:\n        with open(filepath, \"r\") as f:\n            lines = f.readlines()\n            return len(lines)\n    except:\n        return -2\nselected_keys = []\ndef get_selected_keys(tree_data, basemap):\n    iterate_all_keys(tree_data[0].get(\"contents\", []), basemap)\n    return selected_keys\ntree = Tree(\".\")\n# tree = Tree(\"agi_computer_control\", style=GREY, guide_style=GREY)\nroot = tree_data[0]  # Assuming the first item in the JSON is the root directory",
+        "file_id": 25,
+        "content": "from llama_index import VectorStoreIndex, LLMPredictor\nfrom llama_index import Document\nfrom llama_index.llms import Ollama\nfrom llama_index.embeddings import OllamaEmbedding\nfrom llama_index import ServiceContext\nembed = OllamaEmbedding(model_name=\"openhermes2.5-mistral:latest\")\nllm = Ollama(model=\"openhermes2.5-mistral:latest\")\nserv_cont = ServiceContext.from_defaults(\n    llm_predictor=LLMPredictor(llm),\n    embed_model=embed,\n)\ndocuments = [Document.example()]\n# print(documents)\nindex = VectorStoreIndex.from_documents(documents, service_context=serv_cont)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:185-222"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py:1-16"
     },
     "283": {
-        "file_id": 24,
-        "content": "Line 184-221: Reads file names from the tree structure and verifies if they are cached or not. If not cached, it reads the line count of each file using the read_file_and_get_line_count function and appends to either cache list or error list. The yield statement returns line counts for non-error files.\nLine 185: Adds \"Cached\" label if item is in cached_paths, sets error flag as False, and appends file path to cached_verified list.\nLine 193: Adds the linecount label if it's not already an error file, sets error flag as False, and yields the linecount.\nLines 204-217: Reads the line count of the given filepath, handles non-existent files and cached files. Returns -1 for non-existing files, -3 for cached files.\nLine 219: Initializes selected_keys list, to be used in get_selected_keys function.\nLines 220-221: Recursively iterates through all keys in the tree structure and appends unique keys to selected_keys list.",
+        "file_id": 25,
+        "content": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
         "type": "comment"
     },
     "284": {
-        "file_id": 24,
-        "content": "mymap = {\"./\": tree}\nexisting_keys.append(\"./\")\ntotal_size = sum(add_tree_contents(tree, root.get(\"contents\", []), basemap=mymap))\nnonexist_keys = [k for k in mymap.keys() if k not in existing_keys]\nfor key in nonexist_keys:\n    it = mymap.get(key, None)\n    if it is not None:\n        parent, child = dirsplit(key)\n        parent_it = mymap.get(parent + \"/\", None)\n        if parent_it is not None:\n            parent_it.children.remove(it)\n        del mymap[key]\ntotal_lines = sum(iterate_all_keys(selected_json[0].get(\"contents\", []), mymap))\n# Print the tree\nsize_map[\"./\"] = total_size\nif total_lines != 0:\n    selected_dirs.append(\"./\")\n    line_map[\"./\"] = total_lines\ntree.label = Text.assemble(\n    (\n        (\n            f\"[{total_lines} L] \"\n            if total_lines != 0\n            else f\"x <{size_to_readable_string(total_size)}> \"\n        )\n        + tree.label,\n        \"magenta\",\n    )\n)\ndef estimate_time_from_lines(line_count: int):\n    seconds = (line_count / 10) * 100\n    return humanize.naturaltime(datetime.timedelta(seconds=seconds)).split(\" ago\")[0]",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:223-261"
+        "file_id": 26,
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py",
+        "type": "filepath"
     },
     "285": {
-        "file_id": 24,
-        "content": "This code updates the map with the tree structure and its contents, removes nonexistent keys, calculates the total size and lines for existing directories, labels the tree with size and line count, and estimates time from lines.",
-        "type": "comment"
+        "file_id": 26,
+        "content": "The code imports OllamaEmbeddings from Langchain and initializes an embedding model. The comments indicate that the model is used for querying and document embedding, but LlamaIndex with its cache could be a potential alternative. The code then embeds a query and some documents using the initialized model and prints the types and shapes of the resulting embeddings.",
+        "type": "summary"
     },
     "286": {
-        "file_id": 24,
-        "content": "for k, v in mymap.items():\n    if k.endswith(\"/\"):\n        _, name = dirsplit(k)\n        if k in cached_verified:\n            continue\n        elif k in selected_dirs:\n            v.label = f\"[{line_map[k]} L] \" + name\n            # v.label = f\"[{estimate_time_from_lines(line_map[k])}] \"+ name\n        else:\n            v.label = f\"x <{size_to_readable_string(size_map[k])}> \" + name\nconsole = Console()\nconsole.print(tree)\n# total_size = sum(size_map.values())\nselected_size  = 0\nfor k in selected_keys:\n    # try:\n    s =  size_map[k] \n    selected_size +=s\n    # except KeyError:\n    #     print(\"key\", k ,\"not found\")\n    #     breakpoint()\n# make mapping between displayed tree and actual tree\nprint(\n    dict(\n        total=size_to_readable_string(total_size),\n        selected=size_to_readable_string(selected_size),\n    )\n)\n# total_lines = sum(line_map.values())\nprocessing_time = estimate_time_from_lines(total_lines)\nprint(dict(selected_lines=humanize.intword(total_lines) + \" lines\", processing_time=processing_time))\ntotal_size_by_suffix = defaultdict(int)",
+        "file_id": 26,
+        "content": "# create embedding with ollama\n# or use llamaindex instead? it has cache.\n# since small local index is enough, we do not need huge vector search database engine.\n# if that is the case, we just swap the adapter.\nimport rich\nfrom langchain.embeddings import OllamaEmbeddings\nollama_emb = OllamaEmbeddings(\n    model=\"openhermes2.5-mistral:latest\",\n    # model=\"llama:7b\",\n)\nquery = \"hello world\"\ndocuments = [\"hello again\", \"bye world\"]\nq_emb = ollama_emb.embed_query(query)\nd_emb = ollama_emb.embed_documents(documents)\nimport numpy as np\nrich.print(type(q_emb), np.array(q_emb).shape)  # list\nrich.print(type(d_emb), np.array(d_emb).shape)\n# <class 'list'>\n# (4096,)\n# <class 'list'>\n# (2, 4096)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:264-300"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py:1-26"
     },
     "287": {
-        "file_id": 24,
-        "content": "Iterating through the dictionary mymap, setting label for directories in the tree based on their presence in cached_verified or selected_dirs, calculating selected size and total size of files, estimating processing time from lines, and storing it all in dictionaries for printing.",
+        "file_id": 26,
+        "content": "The code imports OllamaEmbeddings from Langchain and initializes an embedding model. The comments indicate that the model is used for querying and document embedding, but LlamaIndex with its cache could be a potential alternative. The code then embeds a query and some documents using the initialized model and prints the types and shapes of the resulting embeddings.",
         "type": "comment"
     },
     "288": {
-        "file_id": 24,
-        "content": "filecount_by_suffix = defaultdict(int)\nfor k, v in size_map.items():\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    total_size_by_suffix[suffix] += v\n    filecount_by_suffix[suffix] += 1\nlines_by_suffix = defaultdict(int)\nselected_filecount_by_suffix = defaultdict(int)\nfor k in selected_keys:\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    selected_filecount_by_suffix[suffix] += 1\n    v = line_map[k]\n    lines_by_suffix[suffix] += v\nprint(\n    dict(\n        total={k: size_to_readable_string(v) for k, v in total_size_by_suffix.items()},\n        # total=set(os.path.split(it)[1].split(\".\")[-1] for it in size_map.keys()),\n        selected={\n            k: humanize.intword(v) + \" lines\" for k, v in lines_by_suffix.items()\n        },\n    )\n)\nprint(dict(total=filecount_by_suffix, selected=selected_filecount_by_suffix))\nprint(\"error:\", {k: len(v) for k, v in error_map.items()})\nprint(\"error map:\", error_map)\n# print(mymap)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:301-329"
-    },
-    "289": {
-        "file_id": 24,
-        "content": "The code calculates and prints the total file count and line count by file suffix for all files (total) and selected files (selected). It also prints the number of errors encountered.",
-        "type": "comment"
-    },
-    "290": {
-        "file_id": 25,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
+        "file_id": 27,
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py",
         "type": "filepath"
     },
-    "291": {
-        "file_id": 25,
-        "content": "The code processes command line arguments, generates file lists using fd, iterates over paths to copy files into a target directory. It uses argparse for args handling, os and shutil for operations, subprocess for shell commands, and assertions for checking absolute paths. The process checks if the file exists and is a file, gets relative path, joins with target directory, creates new directories as needed, and copies using shutil.copy2().",
+    "289": {
+        "file_id": 27,
+        "content": "The code imports hnswlib, initializes an HNSW index with L2 space and specified dimension, adds random embeddings to the index, saves it as \"hnsw_index.bin\", performs k-nearest neighbor search using two random queries, and prints the shapes of the results.",
         "type": "summary"
     },
-    "292": {
-        "file_id": 25,
-        "content": "import os\nimport shutil\nimport argparse\nparser = argparse.ArgumentParser()\n# parser.add_argument(\n#     \"-f\", \"--filelist\", help=\"path to filelist, generated by fd\", type=str, required=True\n# )\nparser.add_argument(\n    \"-b\", \"--basedir\", help=\"common prefix of filepaths\", type=str, required=True\n)\nparser.add_argument(\n    \"-t\",\n    \"--targetdir\",\n    help=\"target directory to copy files into\",\n    type=str,\n    required=True,\n)\nargs = parser.parse_args()\n# filelist = args.filelist\n# filepaths = open(filelist).read().split(\"\\n\")\nbasedir = args.basedir  # common prefix of filepaths\ncommand = [\"bash\", \"-c\", f\"cd '{basedir}' && fd -S '+1b'\"]\nassert os.path.isabs(basedir)\ntargetdir = args.targetdir  # target directory to copy files into\nassert os.path.isabs(targetdir)\nimport subprocess\nmoutput = subprocess.check_output(command, encoding='utf-8')\nfilepaths = moutput.split(\"\\n\")\nfor fp0 in filepaths:\n    fp0 = fp0.strip()\n    if fp0:\n        if fp0.endswith(\"/\"): continue\n        fp = os.path.join(basedir, fp0)\n        assert os.path.isabs(fp)",
+    "290": {
+        "file_id": 27,
+        "content": "import hnswlib\ndim = 128  # Example dimension of the embeddings\nnum_elements = 10000  # Example number of elements\np = hnswlib.Index(space=\"l2\", dim=dim)  # L2 space with the specified dimension\np.init_index(\n    max_elements=num_elements, ef_construction=200, M=16\n)  # Initialize the index\nimport numpy as np\nembeddings = np.random.rand(\n    num_elements, dim\n)  # Example embeddings, replace with your actual embeddings\np.add_items(embeddings)\np.save_index(\"hnsw_index.bin\")\nindices, distances = p.knn_query(np.random.rand(2, dim), k=3)\nimport rich\nrich.print(indices.shape, distances.shape)\n# (2, 3)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:1-41"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py:1-24"
     },
-    "293": {
-        "file_id": 25,
-        "content": "The code is parsing command line arguments, generating a file list using fd command, and then iterating over the file paths to copy them into a target directory. It uses argparse for handling command-line arguments, os and shutil libraries for file operations, subprocess for running shell commands, and assertions for checking file paths are absolute.",
+    "291": {
+        "file_id": 27,
+        "content": "The code imports hnswlib, initializes an HNSW index with L2 space and specified dimension, adds random embeddings to the index, saves it as \"hnsw_index.bin\", performs k-nearest neighbor search using two random queries, and prints the shapes of the results.",
         "type": "comment"
     },
+    "292": {
+        "file_id": 28,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
+        "type": "filepath"
+    },
+    "293": {
+        "file_id": 28,
+        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+        "type": "summary"
+    },
     "294": {
-        "file_id": 25,
-        "content": "        assert os.path.exists(fp)\n        assert os.path.isfile(fp)\n        rel = os.path.relpath(fp, basedir)\n        new_path = os.path.join(targetdir, rel)\n        new_dir = os.path.dirname(new_path)\n        if not os.path.exists(new_dir):\n            os.makedirs(new_dir)\n        print(fp,\"->\", new_path)\n        # exit()\n        # breakpoint()\n        shutil.copy2(fp, new_path)",
+        "file_id": 28,
+        "content": "import asyncio\nasync def read_lines(stream:asyncio.StreamReader):\n    while True:\n        line = await stream.readline()\n        # print(\"line\")\n        if not line:\n            break\n        else: \n            yield line\nasync def run_command(command:list[str]):\n    process = await asyncio.create_subprocess_exec(\n        *command,\n        stdout=asyncio.subprocess.PIPE,\n        # stderr=asyncio.subprocess.PIPE\n    )\n    f = [it for it in read_lines(process.stdout)]\n    # stderr_reader = asyncio.StreamReader()\n    # Read lines from stdout and stderr concurrently\n    # await asyncio.gather(\n    #     read_lines(stdout_reader),\n    #     read_lines(stderr_reader)\n    # )\n    # Wait for the process to complete\n    await process.wait()\nasync def main():\n    command = [\"ls\", \"-l\"]\n    # Run the command asynchronously\n    await run_command(command)\nif __name__ == \"__main__\":\n    # Run the event loop\n    asyncio.run(main())",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:42-52"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py:1-37"
     },
     "295": {
-        "file_id": 25,
-        "content": "Checking if file exists and is a file, getting relative path, joining with target directory, creating new directory if needed, and copying the file using shutil.copy2().",
+        "file_id": 28,
+        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
         "type": "comment"
     },
     "296": {
-        "file_id": 26,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
+        "file_id": 29,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
         "type": "filepath"
     },
     "297": {
-        "file_id": 26,
-        "content": "The code creates a command-line tool for comparing files using the \"tree\" command, asynchronously runs commands, includes visualization for ignored files, features a progress bar and GUI updates, and manages UI elements while processing data or files. The code also contains two functions: one to toggle dark mode and another to exit the application.",
+        "file_id": 29,
+        "content": "The script uses the \"rich\" library to display tree structures and handles command line arguments, file/directory operations. The function recursively traverses a dictionary, managing directories and updating counts. It labels tree structures with size, line count, estimates time from lines, reads file names, and yields line counts for non-error files. The code iterates through the dictionary, calculating sizes and processing time, and prints total and selected file counts, line counts by suffix, and error count.",
         "type": "summary"
     },
     "298": {
-        "file_id": 26,
-        "content": "from textual.app import App, ComposeResult\nfrom textual.widgets import Header, Footer, RichLog, Label\nfrom rich.text import Text\nfrom textual.timer import Timer\nfrom threading import Lock\nimport subprocess\n# from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nfrom datetime import datetime\n# import os\nINTERVAL = 5\nimport asyncio\nasync def run_command(command:str):\n    process = await asyncio.create_subprocess_shell(\n        command,\n        stdout=subprocess.PIPE,\n        stderr=subprocess.PIPE\n    )\n    stdout, stderr = await process.communicate()\n    return stdout.decode().strip(), stderr.decode().strip()\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile > \"{{tempdir}}/all_tree.txt\"\nfd | tree --fromfile > \"{{tempdir}}/selected_tree.txt\"\ndiff -y \"{{tempdir}}/all_tree.txt\" \"{{tempdir}}/selected_tree.txt\" > \"{{tempdir}}/diff_tree.txt\"\ncat \"{{tempdir}}/diff_tree.txt\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties",
+        "file_id": 29,
+        "content": "from rich.text import Text\nfrom rich.console import Console\nimport datetime\n# color from:\nfrom rich.color import ANSI_COLOR_NAMES\nfrom collections import defaultdict\nconsole = Console()\nfrom rich.tree import Tree\nfrom rich import print\nimport json\nimport os\nimport humanize\nerror_map = defaultdict(list)\ncached_verified = []\ndef patch_missing_files(path, basemap, color, processor=lambda x: x):\n    subpath, filename = dirsplit(path)\n    # breakpoint()\n    if basemap.get(path) is None:\n        subtree = patch_missing_files(subpath + \"/\", basemap, color)\n        subsubtree = subtree.add(processor(filename), style=color, guide_style=color)\n        # print(filename)\n        basemap[path] = subsubtree\n        return subsubtree\n    else:\n        return basemap.get(path)\ndef size_to_readable_string(size: int):\n    return humanize.naturalsize(size)\nGREY = \"bright_black\"\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"--full\", help=\"full tree\", type=str, required=True)\nparser.add_argument(\"--selected\", help=\"selected tree\", type=str, required=True)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:1-36"
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:1-44"
     },
     "299": {
-        "file_id": 26,
-        "content": "Code imports necessary modules and defines variables for a command-line tool that generates differences between selected and all files in a directory using the \"tree\" command. It also includes functions to run commands asynchronously and define a script template for generating the diff report.",
+        "file_id": 29,
+        "content": "This code is a Python script that uses the \"rich\" library for creating and displaying a tree structure. It allows you to patch missing files, convert file sizes to readable strings, and handle command line arguments using \"argparse\". The script takes two input parameters: \"--full\" for the full tree and \"--selected\" for the selected tree.",
         "type": "comment"
     }
 }

@@ -1,0 +1,10 @@
+{
+    "summary": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
+    "details": [
+        {
+            "comment": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py\":0-15",
+            "content": "from llama_index import VectorStoreIndex, LLMPredictor\nfrom llama_index import Document\nfrom llama_index.llms import Ollama\nfrom llama_index.embeddings import OllamaEmbedding\nfrom llama_index import ServiceContext\nembed = OllamaEmbedding(model_name=\"openhermes2.5-mistral:latest\")\nllm = Ollama(model=\"openhermes2.5-mistral:latest\")\nserv_cont = ServiceContext.from_defaults(\n    llm_predictor=LLMPredictor(llm),\n    embed_model=embed,\n)\ndocuments = [Document.example()]\n# print(documents)\nindex = VectorStoreIndex.from_documents(documents, service_context=serv_cont)"
+        }
+    ]
+}

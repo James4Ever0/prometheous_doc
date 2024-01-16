@@ -1,0 +1,10 @@
+{
+    "summary": "The code imports hnswlib, initializes an HNSW index with L2 space and specified dimension, adds random embeddings to the index, saves it as \"hnsw_index.bin\", performs k-nearest neighbor search using two random queries, and prints the shapes of the results.",
+    "details": [
+        {
+            "comment": "The code imports hnswlib, initializes an HNSW index with L2 space and specified dimension, adds random embeddings to the index, saves it as \"hnsw_index.bin\", performs k-nearest neighbor search using two random queries, and prints the shapes of the results.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py\":0-23",
+            "content": "import hnswlib\ndim = 128  # Example dimension of the embeddings\nnum_elements = 10000  # Example number of elements\np = hnswlib.Index(space=\"l2\", dim=dim)  # L2 space with the specified dimension\np.init_index(\n    max_elements=num_elements, ef_construction=200, M=16\n)  # Initialize the index\nimport numpy as np\nembeddings = np.random.rand(\n    num_elements, dim\n)  # Example embeddings, replace with your actual embeddings\np.add_items(embeddings)\np.save_index(\"hnsw_index.bin\")\nindices, distances = p.knn_query(np.random.rand(2, dim), k=3)\nimport rich\nrich.print(indices.shape, distances.shape)\n# (2, 3)"
+        }
+    ]
+}
