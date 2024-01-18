@@ -121,92 +121,92 @@
         },
         "23": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/chat.py",
-            "entry_id": 264,
+            "entry_id": 266,
             "language_id": "python"
         },
         "24": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py",
-            "entry_id": 268,
+            "entry_id": 270,
             "language_id": "python"
         },
         "25": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py",
-            "entry_id": 276,
+            "entry_id": 278,
             "language_id": "python"
         },
         "26": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py",
-            "entry_id": 284,
+            "entry_id": 286,
             "language_id": "python"
         },
         "27": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py",
-            "entry_id": 288,
+            "entry_id": 290,
             "language_id": "python"
         },
         "28": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py",
-            "entry_id": 296,
+            "entry_id": 298,
             "language_id": "python"
         },
         "29": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py",
-            "entry_id": 316,
+            "entry_id": 318,
             "language_id": "python"
         },
         "30": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py",
-            "entry_id": 320,
+            "entry_id": 322,
             "language_id": "python"
         },
         "31": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py",
-            "entry_id": 324,
+            "entry_id": 326,
             "language_id": "python"
         },
         "32": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
-            "entry_id": 342,
+            "entry_id": 344,
             "language_id": "python"
         },
         "33": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
-            "entry_id": 346,
+            "entry_id": 348,
             "language_id": "python"
         },
         "34": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
-            "entry_id": 368,
+            "entry_id": 370,
             "language_id": "python"
         },
         "35": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
-            "entry_id": 374,
+            "entry_id": 376,
             "language_id": "python"
         },
         "36": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py",
-            "entry_id": 386,
+            "entry_id": 388,
             "language_id": "python"
         },
         "37": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py",
-            "entry_id": 434,
+            "entry_id": 436,
             "language_id": "python"
         },
         "38": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py",
-            "entry_id": 440,
+            "entry_id": 442,
             "language_id": "python"
         },
         "39": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/tree_utils.py",
-            "entry_id": 450,
+            "entry_id": 452,
             "language_id": "python"
         },
         "40": {
             "filepath": "/search_filepath_by_name/search_filepath.sh",
-            "entry_id": 472,
+            "entry_id": 474,
             "language_id": "shell"
         }
     },
