@@ -178,7 +178,7 @@ folder_document_index = HnswDocumentIndex[FolderDocumentChunk](
 )
 
 comment_index_ids = []
-import progressbar
+import progressbar, random, time
 
 for it in progressbar.progressbar(code_and_comment_list, prefix="code and comments:"):
     chunk_hash = hash_doc(it["code"])
@@ -195,7 +195,7 @@ for it in progressbar.progressbar(code_and_comment_list, prefix="code and commen
                 comment_index_ids.append(doc_id)
                 break
         if cached:
-            print("document cached:", str(it)[:50]+ '...}')
+            print("document cached:", str(it)[:50] + "...}")
             continue
 
     code_and_comment = f"""Code:
@@ -206,8 +206,19 @@ Comment:
 
 {it['comment']}
 """
+    while True:
+        embed_list = ollama_emb.embed_query(code_and_comment)
+        if embed_list is not None:
+            break
+        else:
+            print("waiting for ollama service to be idle")
+            time.sleep(random.random())
 
-    embed = np.array(ollama_emb.embed_query(code_and_comment))
+    embed = np.array(embed_list)  # it returns None. how comes?
+    # during LLM completion api?
+    # print(code_and_comment)
+    # print(embed.shape)
+    # breakpoint()
     docObject = CodeCommentChunk(
         **it, chunk_hash=chunk_hash, embedding=embed
     )  # type:ignore
@@ -262,7 +273,7 @@ Do not include information that is not directly relevant to the question, even i
             context += print_and_return(it.comment)
             context += print_and_return("Code:")
             context += print_and_return(it.code)
-    
+
         with llm_context(init_prompt, temperature=0.2) as model:
             model.run(
                 f"Context:\n{context}\nUser query: {query}\nRespond in Markdown format:\n"

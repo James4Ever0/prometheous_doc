@@ -136,7 +136,7 @@
     },
     "325": {
         "file_id": 31,
-        "content": "This code initializes indexing and caching components for documents, sets up metadata for vector cache using HnswDocumentIndex and OllamaEmbeddings, updates comment index, searches comments/code with query and embedding, filters results, generates Markdown response, and repeats until interrupted.",
+        "content": "This code initializes a document index, checks for hash matches, embeds documents if needed, and uses embeddings to search comments. It retrieves relevant results based on user queries and constructs context variable for response generation using llm_context function.",
         "type": "summary"
     },
     "326": {
@@ -147,7 +147,7 @@
     },
     "327": {
         "file_id": 31,
-        "content": "This code sets up the necessary components for indexing and caching documents. It uses a RecursiveCharacterTextSplitter to split text into chunks, an argument parser to handle input directories, and defines FileSummary and FolderSummary classes for storing file and folder information. The code also imports modules from langchain, pydantic, and tinydb libraries.",
+        "content": "This code initializes a RecursiveCharacterTextSplitter with specified chunk size and overlap, parses arguments from the command line using argparse, and sets source_dir as required input. This code is responsible for turning everything into embeddings by splitting text into chunks and generating file and folder summaries. It also handles caching, index wiring, and stores document chunks in folders and files.",
         "type": "comment"
     },
     "328": {
@@ -158,7 +158,7 @@
     },
     "329": {
         "file_id": 31,
-        "content": "This code sets up directories, databases and loads metadata for vector cache initialization. It ensures required directories exist before creating them, loads file mapping from 'metadata.json' and split count, then loads project name and title split count from 'metadata_title.json'. Finally, it initializes empty dictionaries for data and title_data for later processing.",
+        "content": "This code sets up the necessary paths and databases for vector indexing. It checks if directories exist, creates them if not, loads metadata from files, and initializes file and title data dictionaries. The file summary indices are populated while potentially skipping a title-based approach.",
         "type": "comment"
     },
     "330": {
@@ -169,7 +169,7 @@
     },
     "331": {
         "file_id": 31,
-        "content": "The code reads JSON files and updates data dictionaries for code and title information. It strips quotes and calculates file hashes using MD5. The code then creates a list of code content, comments, and their locations.",
+        "content": "The code reads JSON files, updates data and title_data dictionaries accordingly, and defines a function to strip quotes from strings. It also calculates hash values for documents, and initializes empty dictionaries for file summaries, hashes, chunk comments, and code. Then it iterates through the data dictionary, appending code elements along with their corresponding comments and locations into a list called 'code_and_comment_list'.",
         "type": "comment"
     },
     "332": {
@@ -180,51 +180,51 @@
     },
     "333": {
         "file_id": 31,
-        "content": "Code snippet contains the implementation of a document index using HnswDocumentIndex for CodeCommentChunk, FileDocumentChunk, and FolderDocumentChunk. It imports necessary libraries, creates instances of HnswDocumentIndex for each type of document chunk, and sets the work directory paths. The code also initializes OllamaEmbeddings to extract embeddings from textual data and uses Python implementation for Protocol Buffers.",
+        "content": "This code is creating a Document Index using HnswDocumentIndex for CodeCommentChunk, FileDocumentChunk, and FolderDocumentChunk types. It uses OllamaEmbeddings with \"openhermes2.5-mistral:latest\" model to get the document embeddings. The indexes are saved in respective directories under cache_path_base and document_cache_path_bash for future retrieval and search operations.",
         "type": "comment"
     },
     "334": {
         "file_id": 31,
-        "content": ")\nfolder_document_index = HnswDocumentIndex[FolderDocumentChunk](\n    work_dir=os.path.join(document_cache_path_bash, \"folder\")\n)\ncomment_index_ids = []\nimport progressbar\nfor it in progressbar.progressbar(code_and_comment_list, prefix=\"code and comments:\"):\n    chunk_hash = hash_doc(it[\"code\"])\n    comment_index._sqlite_cursor.execute(\n        \"SELECT location, doc_id FROM docs WHERE chunk_hash = ?\", (chunk_hash,)\n    )\n    rows = comment_index._sqlite_cursor.fetchall()\n    if len(rows) > 0:\n        cached = False\n        for row in rows:\n            if row[0] == it[\"location\"]:\n                cached = True\n                doc_id = row[1]\n                comment_index_ids.append(doc_id)\n                break\n        if cached:\n            print(\"document cached:\", str(it)[:50]+ '...}')\n            continue\n    code_and_comment = f\"\"\"Code:\n{it['code']}\nComment:\n{it['comment']}\n\"\"\"\n    embed = np.array(ollama_emb.embed_query(code_and_comment))\n    docObject = CodeCommentChunk(\n        **it, chunk_hash=chunk_hash, embedding=embed",
+        "content": ")\nfolder_document_index = HnswDocumentIndex[FolderDocumentChunk](\n    work_dir=os.path.join(document_cache_path_bash, \"folder\")\n)\ncomment_index_ids = []\nimport progressbar, random, time\nfor it in progressbar.progressbar(code_and_comment_list, prefix=\"code and comments:\"):\n    chunk_hash = hash_doc(it[\"code\"])\n    comment_index._sqlite_cursor.execute(\n        \"SELECT location, doc_id FROM docs WHERE chunk_hash = ?\", (chunk_hash,)\n    )\n    rows = comment_index._sqlite_cursor.fetchall()\n    if len(rows) > 0:\n        cached = False\n        for row in rows:\n            if row[0] == it[\"location\"]:\n                cached = True\n                doc_id = row[1]\n                comment_index_ids.append(doc_id)\n                break\n        if cached:\n            print(\"document cached:\", str(it)[:50] + \"...}\")\n            continue\n    code_and_comment = f\"\"\"Code:\n{it['code']}\nComment:\n{it['comment']}\n\"\"\"\n    while True:\n        embed_list = ollama_emb.embed_query(code_and_comment)\n        if embed_list is not None:\n            break",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:175-212"
     },
     "335": {
         "file_id": 31,
-        "content": "This code snippet creates a `FolderDocumentChunk` instance from the `HnswDocumentIndex` class, using a specified work directory path. It then iterates over each item in the `code_and_comment_list` progress bar and performs the following operations: \n1. Computes the chunk hash of the code snippet.\n2. Retrieves corresponding location and doc ID from the database if the chunk hash is found.\n3. If a match is found, the document is cached and the iteration continues to the next item.\n4. If no match is found, it generates an embed representation for the code and comment combination.\n5. Creates a `CodeCommentChunk` instance with necessary information and embedding vector.",
+        "content": "This code chunk is initializing a folder document index using the HnswDocumentIndex class and connecting to a SQLite database. It then iterates through a list of code and comment pairs, checking if each document's hash exists in the database. If it does, the corresponding document ID is stored and the document is considered cached. Otherwise, it embeds the code and comment pair using the Ollama embedder.",
         "type": "comment"
     },
     "336": {
         "file_id": 31,
-        "content": "    )  # type:ignore\n    doc_id = comment_index._to_hashed_id(docObject.id)\n    comment_index_ids.append(doc_id)\n    comment_index.index(docObject)\n# comment_index._sqlite_cursor.execute(\"SELECT doc_id FROM docs WHERE text LIKE 'hello%'\")\n# rows = comment_index._sqlite_cursor.fetchall()\n# # print(rows)\n# hashed_ids = set(it[0] for it in rows)\n# # hashed_ids = set(str(it[0]) for it in rows)\n# print(hashed_ids)\ndef print_and_return(content: str):\n    return content + \"\\n\"\nif __name__ == \"__main__\":\n    # query for code & embedding index\n    init_prompt = \"\"\"You are a helpful assistant who can answer questions based on relevant context about a specific code project. Please answer the user query according to the context.\nAssume the reader does not know anything about how the project is strucuted or which folders/files are provided in the context.\nDo not reference the context in your answer. Instead use the context to inform your answer.\nIf you don't know the answer, just say \"Hmm, I'm not sure.\" Don't try to make up an answer.",
+        "content": "        else:\n            print(\"waiting for ollama service to be idle\")\n            time.sleep(random.random())\n    embed = np.array(embed_list)  # it returns None. how comes?\n    # during LLM completion api?\n    # print(code_and_comment)\n    # print(embed.shape)\n    # breakpoint()\n    docObject = CodeCommentChunk(\n        **it, chunk_hash=chunk_hash, embedding=embed\n    )  # type:ignore\n    doc_id = comment_index._to_hashed_id(docObject.id)\n    comment_index_ids.append(doc_id)\n    comment_index.index(docObject)\n# comment_index._sqlite_cursor.execute(\"SELECT doc_id FROM docs WHERE text LIKE 'hello%'\")\n# rows = comment_index._sqlite_cursor.fetchall()\n# # print(rows)\n# hashed_ids = set(it[0] for it in rows)\n# # hashed_ids = set(str(it[0]) for it in rows)\n# print(hashed_ids)\ndef print_and_return(content: str):\n    return content + \"\\n\"\nif __name__ == \"__main__\":\n    # query for code & embedding index\n    init_prompt = \"\"\"You are a helpful assistant who can answer questions based on relevant context about a specific code project. Please answer the user query according to the context.",
         "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:213-236"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:213-244"
     },
     "337": {
         "file_id": 31,
-        "content": "This code segment is updating the comment index with a new document and retrieving hashed IDs for documents containing the text \"hello\" from a SQLite database. It then calls a function called \"print_and_return\" passing it a string content, which returns the same string with an additional newline character appended. The code is part of a Python program likely working on a specific project and its related context.",
+        "content": "The code is initializing a print statement with the text \"waiting for ollama service to be idle\" and then entering a sleep state for a random duration. It then converts a list of embeddings into a numpy array and creates a CodeCommentChunk object, assigning it an ID and embedding value. The function appends the hashed ID to the comment_index_ids list and indexes the CodeCommentChunk object in the comment_index. Finally, it prints the rows of documents where the text column matches 'hello%' from the SQLite cursor and returns a content string for printing and returning.",
         "type": "comment"
     },
     "338": {
         "file_id": 31,
-        "content": "Your answer should be at least 100 words and no more than 300 words.\nDo not include information that is not directly relevant to the question, even if the context includes it.\n\"\"\"\n    while True:\n        query = input(\"query for code & embedding index:\\n\")\n        ans = comment_index._search_and_filter(\n            np.array(ollama_emb.embed_query(query)).reshape(1, -1),\n            limit=3,\n            # limit=10,\n            search_field=\"embedding\",\n            hashed_ids=set(comment_index_ids),\n        )\n        print(\"ans:\", ans)\n        context = \"\"\n        for it in ans.documents[0]:\n            location = it.location\n            file_location = location.split(\":\")[0]\n            context += print_and_return(\"-\" * 10)\n            context += print_and_return(\"Location:\")\n            context += print_and_return(location)\n            # context += print_and_return(\"Title:\")\n            # context += print_and_return(title_data.get(location, title_data[file_location]))\n            context += print_and_return(\"Comment:\")",
+        "content": "Assume the reader does not know anything about how the project is strucuted or which folders/files are provided in the context.\nDo not reference the context in your answer. Instead use the context to inform your answer.\nIf you don't know the answer, just say \"Hmm, I'm not sure.\" Don't try to make up an answer.\nYour answer should be at least 100 words and no more than 300 words.\nDo not include information that is not directly relevant to the question, even if the context includes it.\n\"\"\"\n    while True:\n        query = input(\"query for code & embedding index:\\n\")\n        ans = comment_index._search_and_filter(\n            np.array(ollama_emb.embed_query(query)).reshape(1, -1),\n            limit=3,\n            # limit=10,\n            search_field=\"embedding\",\n            hashed_ids=set(comment_index_ids),\n        )\n        print(\"ans:\", ans)\n        context = \"\"\n        for it in ans.documents[0]:\n            location = it.location\n            file_location = location.split(\":\")[0]\n            context += print_and_return(\"-\" * 10)",
         "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:237-261"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:245-267"
     },
     "339": {
         "file_id": 31,
-        "content": "This code repeatedly takes user input for a query, searches the comment index using both the query and its embedding, filters results to three documents, prints their details, and repeats until interrupted.",
+        "content": "This code appears to be a part of an interactive application that allows the user to input queries and retrieve relevant documents based on their similarity in an embedding index. The embedded query is used to search for matches in the comment index, with a limit of 3 results (originally set to 10). The code then prints the answers and context by accessing the location information from the returned documents.",
         "type": "comment"
     },
     "340": {
         "file_id": 31,
-        "content": "            context += print_and_return(it.comment)\n            context += print_and_return(\"Code:\")\n            context += print_and_return(it.code)\n        with llm_context(init_prompt, temperature=0.2) as model:\n            model.run(\n                f\"Context:\\n{context}\\nUser query: {query}\\nRespond in Markdown format:\\n\"\n            )",
+        "content": "            context += print_and_return(\"Location:\")\n            context += print_and_return(location)\n            # context += print_and_return(\"Title:\")\n            # context += print_and_return(title_data.get(location, title_data[file_location]))\n            context += print_and_return(\"Comment:\")\n            context += print_and_return(it.comment)\n            context += print_and_return(\"Code:\")\n            context += print_and_return(it.code)\n        with llm_context(init_prompt, temperature=0.2) as model:\n            model.run(\n                f\"Context:\\n{context}\\nUser query: {query}\\nRespond in Markdown format:\\n\"\n            )",
         "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:262-269"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:268-280"
     },
     "341": {
         "file_id": 31,
-        "content": "This code retrieves the comment and code from an iterator (it) and appends them to the context. It then utilizes a language model (llm_context) with a specific prompt, temperature value of 0.2, and runs it on the constructed context and user query, asking for a response in Markdown format.",
+        "content": "This code constructs a context variable by appending different prompts and their corresponding data, such as location, title, comment, and code. Then it uses the llm_context function with an init_prompt and a temperature of 0.2 to generate a response in Markdown format based on the constructed context and a user query.",
         "type": "comment"
     },
     "342": {
