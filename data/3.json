@@ -1,547 +1,544 @@
 {
     "300": {
-        "file_id": 29,
-        "content": "parser.add_argument(\"--basepath\", help=\"path to the base\", type=str, required=True)\nargs = parser.parse_args()\nfull_json = args.full\nselected_json = args.selected\nbasepath = args.basepath\nassert os.path.isabs(basepath)\nbasepath = os.path.abspath(basepath)\ntree_data = json.load(open(full_json))\nselected_json = json.load(open(selected_json))  # could be different.\n# cached_paths = [\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/recursive_document_writer.py\",\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/code_view_with_path_argument_and_anchor/code_view_demo.py\",\n# ]\ncached_paths = []\nfor p in cached_paths:\n    assert os.path.isabs(p)\ncached_paths = [os.path.abspath(p) for p in cached_paths]\nfor p in cached_paths:\n    assert os.path.commonprefix([p, basepath]) == basepath\nsize_map = {}\nselected_keys = []\nexisting_keys = []\n# Add the tree contents recursively\ndef add_tree_contents(parent, contents, basedir=\".\", basemap={}):\n    for item in contents:",
+        "file_id": 28,
+        "content": "\"\"\",\n)\nTARGET_AUDIENCE = \"smart developer\"\ndef generateFileSummaryContextQueriesPrompt(\n    schema: str,\n    contentType: str,\n    projectName: str,\n    filePath: str,\n    summary: str,\n    fileRetrieverObjectivePrompt=FILE_RETRIEVER_OBJECTIVE_PROMPT,\n):\n    prompt = f\"\"\"You are acting as a {contentType} documentation expert for a project called {projectName}.\nBelow is the summary from a file located at `{filePath}`. \nYour objective is:\n{fileRetrieverObjectivePrompt}\nFile summary:\n{summary}\nGenerate 3 to 5 queries (NO MORE THAN FIVE) to help you retrieve relevant content to achieve your objective.\nResponse pydantic schema:\n{schema}\nRespond the context queries strictly to the schema, in JSON format:\n\"\"\"\n    return prompt\ndef generateFileSummaryPrompt(\n    contentType: str,\n    projectName: str,\n    filePath: str,\n    summary: str,\n    contextQAPairs: list[tuple[str, str]],\n    filePrompt=FILE_PROMPT,\n):\n    context = \"\\n\".join(\n        [f\"Context to query '{query}':\\n{answer}\\n\" for query, answer in contextQAPairs]\n    )",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:45-78"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py:24-70"
     },
     "301": {
-        "file_id": 29,
-        "content": "This code is parsing command-line arguments, loading JSON files, ensuring paths are absolute, and checking common prefixes. It then defines a function to recursively add tree contents and initializes variables for selected keys and existing keys.",
+        "file_id": 28,
+        "content": "This code defines two functions, `generateFileSummaryContextQueriesPrompt` and `generateFileSummaryPrompt`, which generate prompts for generating queries based on a given file summary. The prompts include the file's context and schema information, instructing users to generate 3-5 relevant queries within the specified schema format.",
         "type": "comment"
     },
     "302": {
-        "file_id": 29,
-        "content": "        if item[\"type\"] == \"directory\":\n            # subtree = parent.add(f\"[bold]{item['name']}\")\n            # subtree = parent.add(\n            #     Text.assemble((item[\"name\"], \"bold\")),\n            #     style=GREY,\n            #     guide_style=GREY,\n            # )\n            subtree = patch_missing_files(\n                os.path.join(basedir, item[\"name\"] + \"/\"),\n                basemap,\n                GREY,\n                lambda x: Text.assemble((x, \"bold\")),\n            )\n            existing_keys.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n            # basemap[os.path.join(basedir, item[\"name\"] + \"/\")] = subtree\n            dirfs = 0\n            for fs in add_tree_contents(\n                subtree,\n                item.get(\"contents\", []),\n                os.path.join(basedir, item[\"name\"]),\n                basemap,\n            ):\n                dirfs += fs\n                yield fs\n            size_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirfs\n        else:  # file\n            # subtree = parent.add(item['name'])",
+        "file_id": 28,
+        "content": "    prompt = f\"\"\"You are acting as a {contentType} documentation expert for a project called {projectName}.\nBelow is the summary and relevant context of {contentType} from a file located at `{filePath}`. \n{filePrompt}\nDo not say \"this file is a part of the {projectName} project\".\nFile summary:\n{summary}\n{context}\nResponse the document in Markdown:\n\"\"\"\n    return prompt\ndef generateFileQuestionsPrompt(\n    schema: str,\n    contentType: str,\n    projectName: str,\n    filePath: str,\n    summary: str,\n    targetAudience: str = TARGET_AUDIENCE,\n):\n    prompt = f\"\"\"You are acting as a {contentType} documentation expert for a project called {projectName}.\nBelow is the {contentType} from a file located at `{filePath}`. \nWhat are 3 questions that a {targetAudience} might have about this {contentType}?\nFile summary:\n{summary}\nResponse pydantic schema:\n{schema}\nRespond the reader questions strictly to the schema, in JSON format:\n\"\"\"\n    return prompt\ndef generateFileAnswerPrompt(\n    contentType: str,\n    projectName: str,\n    filePath: str,",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:79-105"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py:71-115"
     },
     "303": {
-        "file_id": 29,
-        "content": "If item type is directory:\n- Create a subtree for the directory name.\n- Add missing files to the subtree.\n- Append the directory path to existing keys.\n- Add the subtree to the base map.\n- Count and yield the number of files in the subtree.\n- Store the total file size in size_map.\nElse if item type is file:\n- Add the file name as a subtree.\n- Append the file path to existing keys.\n- Yield 1 (as there's only one file).",
+        "file_id": 28,
+        "content": "This code generates prompts for a documentation expert to answer questions about a specific file content. The first function, `generateFileQuestionsPrompt`, asks the user to provide 3 questions that a target audience might have about the given content type from a file. The second function, `generateFileAnswerPrompt`, prompts the user to respond to these reader questions strictly within a provided Pydantic schema and in JSON format.",
         "type": "comment"
     },
     "304": {
-        "file_id": 29,
-        "content": "            # if item['name'] == \"devcontainer.json\": breakpoint()\n            existing_keys.append(os.path.join(basedir, item[\"name\"]))\n            filesize = os.path.getsize(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            size_map[os.path.join(basedir, item[\"name\"])] = filesize\n            filesize_human = size_to_readable_string(filesize)\n            # subtree = patch_missing_files(os.path.join(basedir, item[\"name\"]),basemap, GREY, lambda x: f\"[{filesize_human}] \" + x)\n            subtree = parent.add(f\"x <{filesize_human}> \" + item[\"name\"], style=GREY)\n            basemap[os.path.join(basedir, item[\"name\"])] = subtree\n            yield filesize\ndef dirsplit(path):\n    if path.endswith(\"/\"):\n        path = path[:-1]\n    return os.path.split(path)\ndef set_path_to_white(path, basemap):\n    subtree = patch_missing_files(path, basemap, \"white\")\n    subtree.style = \"white\"\n    subtree.guide_style = \"white\"\n    return subtree\nselected_dirs = []\nline_map = {}",
+        "file_id": 28,
+        "content": "    summary: str,\n    question: str,\n    context: str,\n    targetAudience: str = TARGET_AUDIENCE,\n):\n    prompt = f\"\"\"You are acting as a {contentType} documentation expert for a project called {projectName}.\nBelow is the {contentType} from a file located at `{filePath}`.\nFile summary:\n{summary}\nThis is a question that a {targetAudience} might have about this {contentType}:\n{question}\nContext about the question:\n{context}\nAnswer the question in 1-2 sentences. Output should be in markdown format.\nRespond the answer to the question in markdown format:\n\"\"\"\n    return prompt\ndef generateFolderSummaryContextQueriesPrompt(\n    schema: str,\n    contentType: str,\n    projectName: str,\n    folderPath: str,\n    summary: str,\n    folderRetrieverObjectivePrompt=FOLDER_RETRIEVER_OBJECTIVE_PROMPT,\n):\n    prompt = f\"\"\"You are acting as a {contentType} documentation expert for a project called {projectName}.\nYou are currently documenting the folder located at `{folderPath}`. \nYour objective is:\n{folderRetrieverObjectivePrompt}\nFolder summary:",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:106-134"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py:116-158"
     },
     "305": {
-        "file_id": 29,
-        "content": "This code is creating a visual file selector by ignoring specific rules. It breaks when it encounters the \"devcontainer.json\" file, appends existing file paths to a list, calculates their sizes and converts them to readable strings, adds subtrees to a tree structure with gray color and file size information, and handles directories by setting their style to white. It also maintains two dictionaries: one for storing file sizes and another for mapping file paths to their corresponding subtrees in the tree structure.",
+        "file_id": 28,
+        "content": "Function generates a prompt for documentation experts to describe a folder's content and answer related questions in markdown format. The function takes parameters such as schema, content type, project name, folder path, summary, and optional folder retriever objective prompt.",
         "type": "comment"
     },
     "306": {
-        "file_id": 29,
-        "content": "# can have missing files.\ndef iterate_all_keys(contents, basemap, basedir=\".\"):\n    for item in contents:\n        if item[\"type\"] == \"directory\":\n            subpaths = item.get(\"contents\", [])\n            if subpaths:\n                dirlc = 0\n                cached_count = 0\n                # total_lc = 0\n                for lc in iterate_all_keys(\n                    subpaths, basemap, os.path.join(basedir, item[\"name\"])\n                ):\n                    # total_lc +=1\n                    if lc == -3:\n                        cached_count += 1\n                        continue\n                    dirlc += lc\n                    yield lc\n                if dirlc != 0:\n                    selected_dirs.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n                    set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    line_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirlc\n                elif len(subpaths) == cached_count:",
+        "file_id": 28,
+        "content": "{summary}\nGenerate 3 to 5 queries (NO MORE THAN FIVE) to help you retrieve relevant content to achieve your objective.\nResponse pydantic schema:\n{schema}\nRespond the context queries strictly to the schema, in JSON format:\n\"\"\"\n    return prompt\ndef generateFolderSummaryPrompt(\n    contentType: str,\n    projectName: str,\n    filePath: str,\n    summary: str,\n    contextQAPairs: list[tuple[str, str]],\n    folderPrompt=FOLDER_PROMPT,\n):\n    context = \"\\n\".join(\n        [f\"Context to query '{query}':\\n{answer}\\n\" for query, answer in contextQAPairs]\n    )\n    prompt = f\"\"\"You are acting as a {contentType} documentation expert for a project called {projectName}.\nBelow is the summary and relevant context of {contentType} from a folder located at `{filePath}`. \n{folderPrompt}\nDo not say \"this file is a part of the {projectName} project\".\nFolder summary:\n{summary}\n{context}\nResponse the document in Markdown:\n\"\"\"\n    return prompt\ndef generateCondensePrompt(\n    chat_history: str, question: str\n):  # in order to query context for next question, we generate another query'",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:137-161"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py:160-202"
     },
     "307": {
-        "file_id": 29,
-        "content": "This function iterates through all keys in the \"contents\" dictionary, checking for directories and recursively calling itself to handle their contents. It keeps track of the total count of files and directories (lc) and yields each file or directory encountered. If a directory is found, it adds it to the selected_dirs list and updates the line_map with the count of files in that directory.",
+        "file_id": 28,
+        "content": "The code defines two functions: `generateFolderSummaryPrompt` and `generateCondensePrompt`. The first function takes parameters such as content type, project name, file path, summary, context pairs, and a folder prompt. It generates a prompt by joining the context queries, summary, and relevant context for a document in Markdown format. The second function takes a chat history and a question as input and generates a prompt to query context for the next question.",
         "type": "comment"
     },
     "308": {
-        "file_id": 29,
-        "content": "                    # elif total_lc == cached_count:\n                    subtree = set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    subtree.label = f\"[Cached] \" + item[\"name\"]\n                    cached_verified.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n        else:  # file\n            # breakpoint()\n            selected_keys.append(os.path.join(basedir, item[\"name\"]))\n            linecount = read_file_and_get_line_count(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            line_map[os.path.join(basedir, item[\"name\"])] = linecount\n            subtree = set_path_to_white(os.path.join(basedir, item[\"name\"]), basemap)\n            error = True\n            if linecount == 0:\n                label = \"Empty\"\n            elif linecount == -1:\n                label = \"Missing\"\n            elif linecount == -2:\n                label = \"Error\"\n            elif linecount == -3:",
+        "file_id": 28,
+        "content": "    prompt = f\"\"\"Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.\nChat History:\n{chat_history}\nFollow Up Input: {question}\nRespond the standalone question:\n\"\"\"\n    return prompt\ndef generateQAPrompt(\n    contentType: str,\n    projectName: str,\n    question: str,\n    context: str,\n    targetAudience: str = TARGET_AUDIENCE,\n):\n    prompt = f\"\"\"You are an AI assistant for a software project called {projectName}. You are trained on all the {contentType} that makes up this project.\nYou are given the following extracted parts of a technical summary of files in a {contentType} and a question. \nProvide a conversational answer with hyperlinks back to GitHub.\nYou should only use hyperlinks that are explicitly listed in the context. Do NOT make up a hyperlink that is not listed.\nInclude lots of {contentType} examples and links to the {contentType} examples, where appropriate.\nAssume the reader is a {targetAudience} but is not deeply familiar with {projectName}.",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:162-184"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py:203-225"
     },
     "309": {
-        "file_id": 29,
-        "content": "The code is checking the line count of a file and assigning a corresponding label to its tree structure representation. If the line count is 0, it's marked as \"Empty\", if it's -1, it's marked as \"Missing\", if it's -2, it's marked as \"Error\", and any other value is ignored. It also keeps track of cached directories and appends selected file paths to the `selected_keys` list.",
+        "file_id": 28,
+        "content": "This code defines a function `generateQAPrompt` that generates a prompt for an AI assistant to answer questions related to a software project. The prompt specifies the content type, project name, and target audience, and instructs the assistant to provide conversational answers with GitHub hyperlinks, using only explicitly listed links.",
         "type": "comment"
     },
     "310": {
-        "file_id": 29,
-        "content": "                label = \"Cached\"\n                error = False\n                cached_verified.append(os.path.join(basedir, item[\"name\"]))\n            else:\n                label = f\"{linecount} L\"\n                error = False\n            if error:\n                error_map[label].append(os.path.join(basedir, item[\"name\"]))\n            else:\n                yield linecount\n            subtree.label = f\"[{label}] \" + item[\"name\"]\ndef read_file_and_get_line_count(filepath: str):\n    filepath = os.path.abspath(filepath)\n    if not os.path.exists(filepath):\n        return -1\n    if filepath in cached_paths:\n        return -3\n    try:\n        with open(filepath, \"r\") as f:\n            lines = f.readlines()\n            return len(lines)\n    except:\n        return -2\nselected_keys = []\ndef get_selected_keys(tree_data, basemap):\n    iterate_all_keys(tree_data[0].get(\"contents\", []), basemap)\n    return selected_keys\ntree = Tree(\".\")\n# tree = Tree(\"agi_computer_control\", style=GREY, guide_style=GREY)\nroot = tree_data[0]  # Assuming the first item in the JSON is the root directory",
+        "file_id": 28,
+        "content": "Assume the reader does not know anything about how the project is strucuted or which folders/files are provided in the context.\nDo not reference the context in your answer. Instead use the context to inform your answer.\nIf you don't know the answer, just say \"Hmm, I'm not sure.\" Don't try to make up an answer.\nIf the question is not about the {projectName}, politely inform them that you are tuned to only answer questions about the {projectName}.\nYour answer should be at least 100 words and no more than 300 words.\nDo not include information that is not directly relevant to the question, even if the context includes it.\nAlways include a list of reference links from the context. Links should ONLY come from the context.\nQuestion: {question}\nContext:\n{context}\nAnswer the document in Markdown:\n\"\"\"\n    return prompt\ndef generateRecentChatHistorySummaryPrompt(query, answer):\n    prompt = f\"\"\"You are a professional chat history summarizer. You will produce a chat history summary in 50 words, that both focus ",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:185-222"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py:226-245"
     },
     "311": {
-        "file_id": 29,
-        "content": "Line 184-221: Reads file names from the tree structure and verifies if they are cached or not. If not cached, it reads the line count of each file using the read_file_and_get_line_count function and appends to either cache list or error list. The yield statement returns line counts for non-error files.\nLine 185: Adds \"Cached\" label if item is in cached_paths, sets error flag as False, and appends file path to cached_verified list.\nLine 193: Adds the linecount label if it's not already an error file, sets error flag as False, and yields the linecount.\nLines 204-217: Reads the line count of the given filepath, handles non-existent files and cached files. Returns -1 for non-existing files, -3 for cached files.\nLine 219: Initializes selected_keys list, to be used in get_selected_keys function.\nLines 220-221: Recursively iterates through all keys in the tree structure and appends unique keys to selected_keys list.",
+        "file_id": 28,
+        "content": "This function generates a summary prompt for recent chat history, taking query and answer as input. It returns the generated prompt.",
         "type": "comment"
     },
     "312": {
-        "file_id": 29,
-        "content": "mymap = {\"./\": tree}\nexisting_keys.append(\"./\")\ntotal_size = sum(add_tree_contents(tree, root.get(\"contents\", []), basemap=mymap))\nnonexist_keys = [k for k in mymap.keys() if k not in existing_keys]\nfor key in nonexist_keys:\n    it = mymap.get(key, None)\n    if it is not None:\n        parent, child = dirsplit(key)\n        parent_it = mymap.get(parent + \"/\", None)\n        if parent_it is not None:\n            parent_it.children.remove(it)\n        del mymap[key]\ntotal_lines = sum(iterate_all_keys(selected_json[0].get(\"contents\", []), mymap))\n# Print the tree\nsize_map[\"./\"] = total_size\nif total_lines != 0:\n    selected_dirs.append(\"./\")\n    line_map[\"./\"] = total_lines\ntree.label = Text.assemble(\n    (\n        (\n            f\"[{total_lines} L] \"\n            if total_lines != 0\n            else f\"x <{size_to_readable_string(total_size)}> \"\n        )\n        + tree.label,\n        \"magenta\",\n    )\n)\ndef estimate_time_from_lines(line_count: int):\n    seconds = (line_count / 10) * 100\n    return humanize.naturaltime(datetime.timedelta(seconds=seconds)).split(\" ago\")[0]",
+        "file_id": 28,
+        "content": "on the user prompt and the bot response. DO NOT include bloat words such as 'Both the prompt and the response include'. Capture key details and factors, be insightful. Make your response fluent and coherent, just like a comprehensive summary over the whole chat.\nUser:\n{query}\nBot:\n{answer}\nRespond a chat history summary in 50 words:\n\"\"\"\n    return prompt\ndef generateChatHistorySummaryPrompt(last_chat_history: str, recent_chat_history: str):\n    prompt = f\"\"\"You are a professional chat history summarizer. You will produce a chat history summary in 50 words, that both focus on the last chat history and the recent chat history. DO NOT include bloat words such as 'Both history include'. Capture key details and factors, be insightful. Make your response fluent and coherent, just like a comprehensive summary over the whole chat.\nLast chat history:\n{last_chat_history}\nRecent chat history:\n{recent_chat_history}\nRespond a chat history summary in 50 words:\n\"\"\"\n    return prompt\ndef generateFolderSummaryPrompt():\n    prompt = \"\"\"\"\"\"",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:223-261"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py:245-276"
     },
     "313": {
-        "file_id": 29,
-        "content": "This code updates the map with the tree structure and its contents, removes nonexistent keys, calculates the total size and lines for existing directories, labels the tree with size and line count, and estimates time from lines.",
+        "file_id": 28,
+        "content": "This code defines a function generateChatHistorySummaryPrompt, which creates a prompt for summarizing chat history in 50 words. The prompt emphasizes capturing key details and factors while being insightful and coherent without using bloat words. It takes two parameters - last_chat_history and recent_chat_history - to focus on the summary.",
         "type": "comment"
     },
     "314": {
-        "file_id": 29,
-        "content": "for k, v in mymap.items():\n    if k.endswith(\"/\"):\n        _, name = dirsplit(k)\n        if k in cached_verified:\n            continue\n        elif k in selected_dirs:\n            v.label = f\"[{line_map[k]} L] \" + name\n            # v.label = f\"[{estimate_time_from_lines(line_map[k])}] \"+ name\n        else:\n            v.label = f\"x <{size_to_readable_string(size_map[k])}> \" + name\nconsole = Console()\nconsole.print(tree)\n# total_size = sum(size_map.values())\nselected_size  = 0\nfor k in selected_keys:\n    # try:\n    s =  size_map[k] \n    selected_size +=s\n    # except KeyError:\n    #     print(\"key\", k ,\"not found\")\n    #     breakpoint()\n# make mapping between displayed tree and actual tree\nprint(\n    dict(\n        total=size_to_readable_string(total_size),\n        selected=size_to_readable_string(selected_size),\n    )\n)\n# total_lines = sum(line_map.values())\nprocessing_time = estimate_time_from_lines(total_lines)\nprint(dict(selected_lines=humanize.intword(total_lines) + \" lines\", processing_time=processing_time))\ntotal_size_by_suffix = defaultdict(int)",
+        "file_id": 28,
+        "content": "    return prompt",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:264-300"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py:277-277"
     },
     "315": {
-        "file_id": 29,
-        "content": "Iterating through the dictionary mymap, setting label for directories in the tree based on their presence in cached_verified or selected_dirs, calculating selected size and total size of files, estimating processing time from lines, and storing it all in dictionaries for printing.",
+        "file_id": 28,
+        "content": "This line of code returns the prompt that was previously defined or inputted, allowing for its usage in further stages of the program.",
         "type": "comment"
     },
     "316": {
         "file_id": 29,
-        "content": "filecount_by_suffix = defaultdict(int)\nfor k, v in size_map.items():\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    total_size_by_suffix[suffix] += v\n    filecount_by_suffix[suffix] += 1\nlines_by_suffix = defaultdict(int)\nselected_filecount_by_suffix = defaultdict(int)\nfor k in selected_keys:\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    selected_filecount_by_suffix[suffix] += 1\n    v = line_map[k]\n    lines_by_suffix[suffix] += v\nprint(\n    dict(\n        total={k: size_to_readable_string(v) for k, v in total_size_by_suffix.items()},\n        # total=set(os.path.split(it)[1].split(\".\")[-1] for it in size_map.keys()),\n        selected={\n            k: humanize.intword(v) + \" lines\" for k, v in lines_by_suffix.items()\n        },\n    )\n)\nprint(dict(total=filecount_by_suffix, selected=selected_filecount_by_suffix))\nprint(\"error:\", {k: len(v) for k, v in error_map.items()})\nprint(\"error map:\", error_map)\n# print(mymap)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:301-329"
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py",
+        "type": "filepath"
     },
     "317": {
         "file_id": 29,
-        "content": "The code calculates and prints the total file count and line count by file suffix for all files (total) and selected files (selected). It also prints the number of errors encountered.",
-        "type": "comment"
+        "content": "The code imports OllamaEmbeddings from Langchain and initializes an embedding model. The comments indicate that the model is used for querying and document embedding, but LlamaIndex with its cache could be a potential alternative. The code then embeds a query and some documents using the initialized model and prints the types and shapes of the resulting embeddings.",
+        "type": "summary"
     },
     "318": {
-        "file_id": 30,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
-        "type": "filepath"
+        "file_id": 29,
+        "content": "# create embedding with ollama\n# or use llamaindex instead? it has cache.\n# since small local index is enough, we do not need huge vector search database engine.\n# if that is the case, we just swap the adapter.\nimport rich\nfrom langchain.embeddings import OllamaEmbeddings\nollama_emb = OllamaEmbeddings(\n    model=\"openhermes2.5-mistral:latest\",\n    # model=\"llama:7b\",\n)\nquery = \"hello world\"\ndocuments = [\"hello again\", \"bye world\"]\nq_emb = ollama_emb.embed_query(query)\nd_emb = ollama_emb.embed_documents(documents)\nimport numpy as np\nrich.print(type(q_emb), np.array(q_emb).shape)  # list\nrich.print(type(d_emb), np.array(d_emb).shape)\n# <class 'list'>\n# (4096,)\n# <class 'list'>\n# (2, 4096)",
+        "type": "code",
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py:1-26"
     },
     "319": {
-        "file_id": 30,
-        "content": "The code processes command line arguments, generates file lists using fd, iterates over paths to copy files into a target directory. It uses argparse for args handling, os and shutil for operations, subprocess for shell commands, and assertions for checking absolute paths. The process checks if the file exists and is a file, gets relative path, joins with target directory, creates new directories as needed, and copies using shutil.copy2().",
-        "type": "summary"
+        "file_id": 29,
+        "content": "The code imports OllamaEmbeddings from Langchain and initializes an embedding model. The comments indicate that the model is used for querying and document embedding, but LlamaIndex with its cache could be a potential alternative. The code then embeds a query and some documents using the initialized model and prints the types and shapes of the resulting embeddings.",
+        "type": "comment"
     },
     "320": {
         "file_id": 30,
-        "content": "import os\nimport shutil\nimport argparse\nparser = argparse.ArgumentParser()\n# parser.add_argument(\n#     \"-f\", \"--filelist\", help=\"path to filelist, generated by fd\", type=str, required=True\n# )\nparser.add_argument(\n    \"-b\", \"--basedir\", help=\"common prefix of filepaths\", type=str, required=True\n)\nparser.add_argument(\n    \"-t\",\n    \"--targetdir\",\n    help=\"target directory to copy files into\",\n    type=str,\n    required=True,\n)\nargs = parser.parse_args()\n# filelist = args.filelist\n# filepaths = open(filelist).read().split(\"\\n\")\nbasedir = args.basedir  # common prefix of filepaths\ncommand = [\"bash\", \"-c\", f\"cd '{basedir}' && fd -S '+1b'\"]\nassert os.path.isabs(basedir)\ntargetdir = args.targetdir  # target directory to copy files into\nassert os.path.isabs(targetdir)\nimport subprocess\nmoutput = subprocess.check_output(command, encoding='utf-8')\nfilepaths = moutput.split(\"\\n\")\nfor fp0 in filepaths:\n    fp0 = fp0.strip()\n    if fp0:\n        if fp0.endswith(\"/\"): continue\n        fp = os.path.join(basedir, fp0)\n        assert os.path.isabs(fp)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:1-41"
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py",
+        "type": "filepath"
     },
     "321": {
         "file_id": 30,
-        "content": "The code is parsing command line arguments, generating a file list using fd command, and then iterating over the file paths to copy them into a target directory. It uses argparse for handling command-line arguments, os and shutil libraries for file operations, subprocess for running shell commands, and assertions for checking file paths are absolute.",
-        "type": "comment"
+        "content": "The code imports hnswlib, initializes an HNSW index with L2 space and specified dimension, adds random embeddings to the index, saves it as \"hnsw_index.bin\", performs k-nearest neighbor search using two random queries, and prints the shapes of the results.",
+        "type": "summary"
     },
     "322": {
         "file_id": 30,
-        "content": "        assert os.path.exists(fp)\n        assert os.path.isfile(fp)\n        rel = os.path.relpath(fp, basedir)\n        new_path = os.path.join(targetdir, rel)\n        new_dir = os.path.dirname(new_path)\n        if not os.path.exists(new_dir):\n            os.makedirs(new_dir)\n        print(fp,\"->\", new_path)\n        # exit()\n        # breakpoint()\n        shutil.copy2(fp, new_path)",
+        "content": "import hnswlib\ndim = 128  # Example dimension of the embeddings\nnum_elements = 10000  # Example number of elements\np = hnswlib.Index(space=\"l2\", dim=dim)  # L2 space with the specified dimension\np.init_index(\n    max_elements=num_elements, ef_construction=200, M=16\n)  # Initialize the index\nimport numpy as np\nembeddings = np.random.rand(\n    num_elements, dim\n)  # Example embeddings, replace with your actual embeddings\np.add_items(embeddings)\np.save_index(\"hnsw_index.bin\")\nindices, distances = p.knn_query(np.random.rand(2, dim), k=3)\nimport rich\nrich.print(indices.shape, distances.shape)\n# (2, 3)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:42-52"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py:1-24"
     },
     "323": {
         "file_id": 30,
-        "content": "Checking if file exists and is a file, getting relative path, joining with target directory, creating new directory if needed, and copying the file using shutil.copy2().",
+        "content": "The code imports hnswlib, initializes an HNSW index with L2 space and specified dimension, adds random embeddings to the index, saves it as \"hnsw_index.bin\", performs k-nearest neighbor search using two random queries, and prints the shapes of the results.",
         "type": "comment"
     },
     "324": {
         "file_id": 31,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py",
         "type": "filepath"
     },
     "325": {
         "file_id": 31,
-        "content": "The code creates a command-line tool for comparing files using the \"tree\" command, asynchronously runs commands, includes visualization for ignored files, features a progress bar and GUI updates, and manages UI elements while processing data or files. The code also contains two functions: one to toggle dark mode and another to exit the application.",
+        "content": "This code initializes indexing and caching components for documents, sets up metadata for vector cache using HnswDocumentIndex and OllamaEmbeddings, updates comment index, searches comments/code with query and embedding, filters results, generates Markdown response, and repeats until interrupted.",
         "type": "summary"
     },
     "326": {
         "file_id": 31,
-        "content": "from textual.app import App, ComposeResult\nfrom textual.widgets import Header, Footer, RichLog, Label\nfrom rich.text import Text\nfrom textual.timer import Timer\nfrom threading import Lock\nimport subprocess\n# from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nfrom datetime import datetime\n# import os\nINTERVAL = 5\nimport asyncio\nasync def run_command(command:str):\n    process = await asyncio.create_subprocess_shell(\n        command,\n        stdout=subprocess.PIPE,\n        stderr=subprocess.PIPE\n    )\n    stdout, stderr = await process.communicate()\n    return stdout.decode().strip(), stderr.decode().strip()\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile > \"{{tempdir}}/all_tree.txt\"\nfd | tree --fromfile > \"{{tempdir}}/selected_tree.txt\"\ndiff -y \"{{tempdir}}/all_tree.txt\" \"{{tempdir}}/selected_tree.txt\" > \"{{tempdir}}/diff_tree.txt\"\ncat \"{{tempdir}}/diff_tree.txt\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties",
+        "content": "# responsible for turning everything into embeddings.\n# responsible for caching, index wirings.\n# code chunk with title, chunk description with title\n# code document chunks, folder document chunks\n# latest code chunks -> embeddings\n# folder/file summary hash -> latest document chunks -> document chunk hash -> embeddings\nimport os\nimport argparse\nos.environ[\"OPENAI_API_KEY\"] = \"any\"\nos.environ[\"OPENAI_API_BASE\"] = \"http://0.0.0.0:8000\"\nos.environ[\"BETTER_EXCEPTIONS\"] = \"1\"\nfrom langchain.text_splitter import RecursiveCharacterTextSplitter\nfrom pydantic import BaseModel\nfrom tinydb import TinyDB\nclass FileSummary(BaseModel):\n    file_hash: str\n    summary: str\nclass FolderSummary(BaseModel):  # this is not generated. do it now.\n    folder_hash: str\n    summary: str\ntextSpliter = RecursiveCharacterTextSplitter(\n    chunk_size=1000,\n    chunk_overlap=100,\n)\nparser = argparse.ArgumentParser()\nparser.add_argument(\"-s\", \"--source_dir\", type=str, required=True)\nargs = parser.parse_args()\n# the only parameter.\nsource_dir = args.source_dir",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:1-36"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:1-44"
     },
     "327": {
         "file_id": 31,
-        "content": "Code imports necessary modules and defines variables for a command-line tool that generates differences between selected and all files in a directory using the \"tree\" command. It also includes functions to run commands asynchronously and define a script template for generating the diff report.",
+        "content": "This code sets up the necessary components for indexing and caching documents. It uses a RecursiveCharacterTextSplitter to split text into chunks, an argument parser to handle input directories, and defines FileSummary and FolderSummary classes for storing file and folder information. The code also imports modules from langchain, pydantic, and tinydb libraries.",
         "type": "comment"
     },
     "328": {
         "file_id": 31,
-        "content": "# count file size\n# render tree json\nscript_template = Template(script_template_str)\nRELATIVE_TEMP_DIR_SCRIPT_PATH = \"script.sh\"\ndef parse_args():\n    parser = ArgumentParser()\n    parser.add_argument(\"-d\", \"--diffpath\", help=\"Path to visualize ignored files\")\n    args = parser.parse_args()\n    return args.diffpath\n@beartype\ndef render_script_template(diffpath: str, tempdir: str) -> str:\n    return script_template.render(diffpath=diffpath, tempdir=tempdir)\nprocessingLock = Lock()\nclass VisualIgnoreApp(App):\n    \"\"\"A Textual app to visualize ignore files.\"\"\"\n    BINDINGS = [(\"d\", \"toggle_dark\", \"Toggle dark mode\"), (\"e\", \"exit\", \"Exit\")]\n    timer: Timer\n    def __init__(self, diffpath, *args, **kwargs):\n        super().__init__(*args, **kwargs)\n        self.header = Header()\n        self.diffpath = diffpath\n        self.treeview = RichLog(auto_scroll=False)\n        self.footer = Footer()\n        # self.counter = 0\n        self.label = Label(Text.assemble((\"ETA:\", \"bold\")), expand=True)\n        self.label.styles.background = \"red\"",
+        "content": "assert os.path.exists(source_dir)\nassert os.path.isdir(source_dir)\nassert os.path.isabs(source_dir)\nimport json\nimport sys\nsys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), \"../\"))\nfrom llm import llm_context\ncache_path_base = os.path.join(source_dir, \"vector_cache\")\ndocument_cache_path_bash = os.path.join(cache_path_base, \"document\")\nif not os.path.exists(cache_path_base):\n    os.mkdir(cache_path_base)\nif not os.path.exists(document_cache_path_bash):\n    os.mkdir(document_cache_path_bash)\nfolder_summary_db = TinyDB(os.path.join(cache_path_base, \"folder_summaries.json\"))\nmetadata = json.loads(open(os.path.join(source_dir, \"metadata.json\"), \"r\").read())\ntitle_metadata = json.loads(\n    open(os.path.join(source_dir, \"metadata_title.json\"), \"r\").read()\n)\nfile_mapping = metadata[\"file_mapping\"]\nsplit_count = metadata[\"split_count\"]\nproject_name = metadata[\"project_name\"]\ntitle_split_count = title_metadata[\"split_count\"]\ndata = {}\ntitle_data = {}\n# file_title_indices = []\nfile_summary_indices = [v[\"entry_id\"] + 1 for v in file_mapping.values()]",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:37-74"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:46-82"
     },
     "329": {
         "file_id": 31,
-        "content": "This code defines a class `VisualIgnoreApp` that visualizes ignored files. It takes a `diffpath` as input and renders a script template using the `render_script_template` function. The class also has a header, treeview, footer, and a label for displaying progress. A lock `processingLock` is used for synchronization.",
+        "content": "This code sets up directories, databases and loads metadata for vector cache initialization. It ensures required directories exist before creating them, loads file mapping from 'metadata.json' and split count, then loads project name and title split count from 'metadata_title.json'. Finally, it initializes empty dictionaries for data and title_data for later processing.",
         "type": "comment"
     },
     "330": {
         "file_id": 31,
-        "content": "        # self.label.styles.border = ('solid','red')\n        # self.label.styles.height = 3\n        self.label.styles.height = 1\n        # self.label.styles.dock = 'bottom'\n    async def progress(self):\n        locked = processingLock.acquire(blocking=False)\n        if locked: # taking forever. bad.\n            cont, _= await run_command(\n            # diff_content = subprocess.check_output(\n                f'python3 run_simple.py -d \"{self.diffpath}\"'\n                # [\"python3\", \"run_simple.py\", \"-d\", self.diffpath]\n            )\n            # cont = diff_content.decode()\n            has_error = False\n            # TODO: you may outsource this part to external process as well, emit as last line.\n            for it in cont.split(\"\\n\"):\n                if it.startswith(\"{\"):\n                    if \"processing_time\" in it and \"selected_lines\" in it:\n                        self.label.renderable = \"ETA: \"+it + \" \"+ datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n                    if it.endswith(\"}\"):\n                        if \"Error\" in it or \"Empty\" in it or \"Missing\" in it:",
+        "content": "for i in range(split_count):\n    new_data = json.loads(open(os.path.join(source_dir, f\"data/{i}.json\"), \"r\").read())\n    data.update(new_data)\nfor i in range(title_split_count):\n    new_data = json.loads(\n        open(os.path.join(source_dir, f\"data/titles/{i}.json\"), \"r\").read()\n    )\n    title_data.update(new_data)\n# breakpoint()\ndef strip_quote(s: str):\n    if s[0] == s[-1]:\n        if s[0] in ['\"', \"'\"]:\n            return s[1:-1].strip()\n    return s.strip().strip(\".\")\nfile_summary_dict = {}\nfile_hash_dict = {}\nfile_chunk_comment_dict = {}\nfile_chunk_code_dict = {}\nimport hashlib\ndef hash_doc(enc: str):\n    hash_object = hashlib.md5(enc.encode())\n    return hash_object.hexdigest()\ncode_and_comment_list = []\nfor k, v in data.items():\n    if v[\"type\"] == \"code\":\n        code_elem = v\n        comment_elem = data[str(int(k) + 1)]\n        code_content = v[\"content\"]\n        comment_content = comment_elem[\"content\"]\n        location = v[\"location\"]\n        code_and_comment_list.append(\n            dict(code=code_content, comment=comment_content, location=location)",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:75-96"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:84-128"
     },
     "331": {
         "file_id": 31,
-        "content": "Creating a progress bar for the file processing task by running external Python script and updating label with ETA information.",
+        "content": "The code reads JSON files and updates data dictionaries for code and title information. It strips quotes and calculates file hashes using MD5. The code then creates a list of code content, comments, and their locations.",
         "type": "comment"
     },
     "332": {
         "file_id": 31,
-        "content": "                            has_error  = True\n            if has_error:\n                self.label.renderable += \" [Error]\"\n            self.label.refresh()\n            # with TemporaryDirectory() as tempdir:\n            #     content = render_script_template(self.diffpath, tempdir)\n            #     script_path = os.path.join(tempdir, RELATIVE_TEMP_DIR_SCRIPT_PATH)\n            #     with open(script_path, \"w+\") as f:\n            #         f.write(content)\n            #     diff_content = subprocess.check_output(['bash', script_path])\n            # self.treeview.call_later\n            self.treeview.clear()\n            self.treeview.write(cont)  # newline by default.\n            processingLock.release()\n        # self.counter += 1\n    def compose(self) -> ComposeResult:\n        \"\"\"Create child widgets for the app.\"\"\"\n        return [self.header, self.treeview, self.label, self.footer]\n    def on_mount(self) -> None:\n        self.timer = self.set_interval(INTERVAL, self.progress)\n    def action_toggle_dark(self) -> None:",
+        "content": "        )\n        # chunk_hash = hash_doc(code_content)\nos.environ[\"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION\"] = \"python\"\nfrom langchain.embeddings import OllamaEmbeddings\nollama_emb = OllamaEmbeddings(\n    model=\"openhermes2.5-mistral:latest\",\n    # model=\"llama:7b\",\n)\nfrom docarray import BaseDoc\nfrom docarray.index import HnswDocumentIndex  # type: ignore\nimport numpy as np\nfrom docarray.typing import NdArray\nclass CodeCommentChunk(BaseDoc):\n    code: str\n    comment: str\n    location: str\n    chunk_hash: str\n    embedding: NdArray[4096]  # type:ignore\nclass FileDocumentChunk(BaseDoc):\n    file_hash: str\n    chunk: str\n    embedding: NdArray[4096]  # type:ignore\nclass FolderDocumentChunk(BaseDoc):\n    folder_hash: str\n    chunk: str\n    embedding: NdArray[4096]  # type:ignore\n# create a Document Index\ncomment_index = HnswDocumentIndex[CodeCommentChunk](\n    work_dir=os.path.join(cache_path_base, \"comment\")\n)\nfile_document_index = HnswDocumentIndex[FileDocumentChunk](\n    work_dir=os.path.join(document_cache_path_bash, \"file\")",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:97-124"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:129-174"
     },
     "333": {
         "file_id": 31,
-        "content": "This code appears to be part of a larger application with multiple classes and methods. It defines a class, presumably for a GUI-based user interface, with methods like \"compose,\" \"on_mount,\" and \"action_toggle_dark.\" \n\nThe code block seems to handle an error condition, update the GUI label, clear the treeview and write new content, and potentially execute a script. It also has methods that define child widgets for the app, start an interval timer, and toggle dark mode. \n\nOverall, this code appears to be part of a more complex program with interactive user interface elements and functionality to process data or files.",
+        "content": "Code snippet contains the implementation of a document index using HnswDocumentIndex for CodeCommentChunk, FileDocumentChunk, and FolderDocumentChunk. It imports necessary libraries, creates instances of HnswDocumentIndex for each type of document chunk, and sets the work directory paths. The code also initializes OllamaEmbeddings to extract embeddings from textual data and uses Python implementation for Protocol Buffers.",
         "type": "comment"
     },
     "334": {
         "file_id": 31,
-        "content": "        \"\"\"An action to toggle dark mode.\"\"\"\n        self.dark = not self.dark\n    def action_exit(self):\n        \"\"\"An action to exit the app.\"\"\"\n        self.exit()\ndef main():\n    diffpath = parse_args()\n    app = VisualIgnoreApp(diffpath)\n    app.run()\nif __name__ == \"__main__\":\n    main()",
+        "content": ")\nfolder_document_index = HnswDocumentIndex[FolderDocumentChunk](\n    work_dir=os.path.join(document_cache_path_bash, \"folder\")\n)\ncomment_index_ids = []\nimport progressbar\nfor it in progressbar.progressbar(code_and_comment_list, prefix=\"code and comments:\"):\n    chunk_hash = hash_doc(it[\"code\"])\n    comment_index._sqlite_cursor.execute(\n        \"SELECT location, doc_id FROM docs WHERE chunk_hash = ?\", (chunk_hash,)\n    )\n    rows = comment_index._sqlite_cursor.fetchall()\n    if len(rows) > 0:\n        cached = False\n        for row in rows:\n            if row[0] == it[\"location\"]:\n                cached = True\n                doc_id = row[1]\n                comment_index_ids.append(doc_id)\n                break\n        if cached:\n            print(\"document cached:\", str(it)[:50]+ '...}')\n            continue\n    code_and_comment = f\"\"\"Code:\n{it['code']}\nComment:\n{it['comment']}\n\"\"\"\n    embed = np.array(ollama_emb.embed_query(code_and_comment))\n    docObject = CodeCommentChunk(\n        **it, chunk_hash=chunk_hash, embedding=embed",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:125-140"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:175-212"
     },
     "335": {
         "file_id": 31,
-        "content": "The code contains two functions: \"action_toggle_darkmode\" and \"action_exit\". The first function toggles the dark mode on or off, while the second one exits the application. The main function is responsible for parsing arguments, creating an instance of the VisualIgnoreApp class, and running the app.",
+        "content": "This code snippet creates a `FolderDocumentChunk` instance from the `HnswDocumentIndex` class, using a specified work directory path. It then iterates over each item in the `code_and_comment_list` progress bar and performs the following operations: \n1. Computes the chunk hash of the code snippet.\n2. Retrieves corresponding location and doc ID from the database if the chunk hash is found.\n3. If a match is found, the document is cached and the iteration continues to the next item.\n4. If no match is found, it generates an embed representation for the code and comment combination.\n5. Creates a `CodeCommentChunk` instance with necessary information and embedding vector.",
         "type": "comment"
     },
     "336": {
-        "file_id": 32,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py",
-        "type": "filepath"
+        "file_id": 31,
+        "content": "    )  # type:ignore\n    doc_id = comment_index._to_hashed_id(docObject.id)\n    comment_index_ids.append(doc_id)\n    comment_index.index(docObject)\n# comment_index._sqlite_cursor.execute(\"SELECT doc_id FROM docs WHERE text LIKE 'hello%'\")\n# rows = comment_index._sqlite_cursor.fetchall()\n# # print(rows)\n# hashed_ids = set(it[0] for it in rows)\n# # hashed_ids = set(str(it[0]) for it in rows)\n# print(hashed_ids)\ndef print_and_return(content: str):\n    return content + \"\\n\"\nif __name__ == \"__main__\":\n    # query for code & embedding index\n    init_prompt = \"\"\"You are a helpful assistant who can answer questions based on relevant context about a specific code project. Please answer the user query according to the context.\nAssume the reader does not know anything about how the project is strucuted or which folders/files are provided in the context.\nDo not reference the context in your answer. Instead use the context to inform your answer.\nIf you don't know the answer, just say \"Hmm, I'm not sure.\" Don't try to make up an answer.",
+        "type": "code",
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:213-236"
     },
     "337": {
-        "file_id": 32,
-        "content": "The code handles file operations, utilizes Tree widgets and UTF-8 encoding, manages errors, performs asynchronous reads and updates labels, calculates processing time, refreshes UI controls, compares selections, stops processes when needed, manages non-selected paths, performs file/directory checks, error handling, statistics updating, debug writing, monitors changes, handles GUI state & widgets, sets progress intervals, enables dark mode and exits the application.",
-        "type": "summary"
+        "file_id": 31,
+        "content": "This code segment is updating the comment index with a new document and retrieving hashed IDs for documents containing the text \"hello\" from a SQLite database. It then calls a function called \"print_and_return\" passing it a string content, which returns the same string with an additional newline character appended. The code is part of a Python program likely working on a specific project and its related context.",
+        "type": "comment"
     },
     "338": {
-        "file_id": 32,
-        "content": "# this version is for pyjom, our ultimate challenge.\n# TODO: show file extension counts \n# TODO: click extension name or error count for iteratively jumping to the next file with extension or error\n# TODO: type \"R\" to refresh the tree\n# TODO: filter empty files using fd\n# TODO: visualize unselected files by calling fd -u\n# TODO: add visualization of tree files.\n# TODO: add action to restart the processing thread\n# TODO: mark if file is not utf-8 encoded (as binary?) even if not selected\n# TODO: exit with error if previous error counters are not zeros.\n# to find empty files:\n# fd -S \"-1b\"\n# import sys\n# filter out empty files:\n# fd -S \"+1b\"\nimport humanize\nimport numpy\nfrom textual.app import App, ComposeResult\nfrom textual.widgets import Header, Footer, Tree, Label\nfrom rich.text import Text\nfrom textual.timer import Timer\nfrom threading import Lock\n# from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nfrom datetime import datetime, timedelta",
+        "file_id": 31,
+        "content": "Your answer should be at least 100 words and no more than 300 words.\nDo not include information that is not directly relevant to the question, even if the context includes it.\n\"\"\"\n    while True:\n        query = input(\"query for code & embedding index:\\n\")\n        ans = comment_index._search_and_filter(\n            np.array(ollama_emb.embed_query(query)).reshape(1, -1),\n            limit=3,\n            # limit=10,\n            search_field=\"embedding\",\n            hashed_ids=set(comment_index_ids),\n        )\n        print(\"ans:\", ans)\n        context = \"\"\n        for it in ans.documents[0]:\n            location = it.location\n            file_location = location.split(\":\")[0]\n            context += print_and_return(\"-\" * 10)\n            context += print_and_return(\"Location:\")\n            context += print_and_return(location)\n            # context += print_and_return(\"Title:\")\n            # context += print_and_return(title_data.get(location, title_data[file_location]))\n            context += print_and_return(\"Comment:\")",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:1-35"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:237-261"
     },
     "339": {
-        "file_id": 32,
-        "content": "This code is for a pyjom application, which seems to involve file management and visualization using Tree widgets. The TODO list suggests additional features like showing extension counts, filtering empty files, and adding actions for restarting processing. It also handles UTF-8 encoding and error counters.",
+        "file_id": 31,
+        "content": "This code repeatedly takes user input for a query, searches the comment index using both the query and its embedding, filters results to three documents, prints their details, and repeats until interrupted.",
         "type": "comment"
     },
     "340": {
-        "file_id": 32,
-        "content": "import os\ncached_paths = []\nIGNORE_RULE_FILES = (\".gitignore\", \".fdignore\", \".ignore\") # TODO: set fd to respect .gitignore even if without .git folders\nDOCS_FOLDER_NAME = \"docs\"\nINTERVAL = 0.1\nSLEEP=7\nimport asyncio\ndef format_timedelta(td):\n    hours, remainder = divmod(td.seconds, 3600)\n    minutes, seconds = divmod(remainder, 60)\n    return f\"{hours}:{minutes}:{seconds}\"\ndef estimate_time_from_lines(line_count: int):\n    seconds = (line_count / 35) * 60\n    return seconds\ndef naturaltime(seconds):\n    return humanize.naturaltime(timedelta(seconds=seconds)).split(\" ago\")[0]\ndef estimate_time_from_filesize(filesize: int):\n    seconds = (filesize / 1000) * 60\n    return seconds\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile > \"{{tempdir}}/all_tree.txt\"\nfd | tree --fromfile > \"{{tempdir}}/selected_tree.txt\"\ndiff -y \"{{tempdir}}/all_tree.txt\" \"{{tempdir}}/selected_tree.txt\" > \"{{tempdir}}/diff_tree.txt\"\ncat \"{{tempdir}}/diff_tree.txt\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties",
+        "file_id": 31,
+        "content": "            context += print_and_return(it.comment)\n            context += print_and_return(\"Code:\")\n            context += print_and_return(it.code)\n        with llm_context(init_prompt, temperature=0.2) as model:\n            model.run(\n                f\"Context:\\n{context}\\nUser query: {query}\\nRespond in Markdown format:\\n\"\n            )",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:36-71"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py:262-269"
     },
     "341": {
-        "file_id": 32,
-        "content": "This code defines functions for estimating time based on line count or file size, and includes a script template for comparing a selected folder with all files using the fd command. It also utilizes the humanize module to convert time values into natural language strings.",
+        "file_id": 31,
+        "content": "This code retrieves the comment and code from an iterator (it) and appends them to the context. It then utilizes a language model (llm_context) with a specific prompt, temperature value of 0.2, and runs it on the constructed context and user query, asking for a response in Markdown format.",
         "type": "comment"
     },
     "342": {
         "file_id": 32,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
+        "type": "filepath"
+    },
+    "343": {
+        "file_id": 32,
+        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+        "type": "summary"
+    },
+    "344": {
+        "file_id": 32,
+        "content": "import asyncio\nasync def read_lines(stream:asyncio.StreamReader):\n    while True:\n        line = await stream.readline()\n        # print(\"line\")\n        if not line:\n            break\n        else: \n            yield line\nasync def run_command(command:list[str]):\n    process = await asyncio.create_subprocess_exec(\n        *command,\n        stdout=asyncio.subprocess.PIPE,\n        # stderr=asyncio.subprocess.PIPE\n    )\n    f = [it for it in read_lines(process.stdout)]\n    # stderr_reader = asyncio.StreamReader()\n    # Read lines from stdout and stderr concurrently\n    # await asyncio.gather(\n    #     read_lines(stdout_reader),\n    #     read_lines(stderr_reader)\n    # )\n    # Wait for the process to complete\n    await process.wait()\nasync def main():\n    command = [\"ls\", \"-l\"]\n    # Run the command asynchronously\n    await run_command(command)\nif __name__ == \"__main__\":\n    # Run the event loop\n    asyncio.run(main())",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py:1-37"
+    },
+    "345": {
+        "file_id": 32,
+        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+        "type": "comment"
+    },
+    "346": {
+        "file_id": 33,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
+        "type": "filepath"
+    },
+    "347": {
+        "file_id": 33,
+        "content": "The script uses the \"rich\" library to display tree structures and handles command line arguments, file/directory operations. The function recursively traverses a dictionary, managing directories and updating counts. It labels tree structures with size, line count, estimates time from lines, reads file names, and yields line counts for non-error files. The code iterates through the dictionary, calculating sizes and processing time, and prints total and selected file counts, line counts by suffix, and error count.",
+        "type": "summary"
+    },
+    "348": {
+        "file_id": 33,
+        "content": "from rich.text import Text\nfrom rich.console import Console\nimport datetime\n# color from:\nfrom rich.color import ANSI_COLOR_NAMES\nfrom collections import defaultdict\nconsole = Console()\nfrom rich.tree import Tree\nfrom rich import print\nimport json\nimport os\nimport humanize\nerror_map = defaultdict(list)\ncached_verified = []\ndef patch_missing_files(path, basemap, color, processor=lambda x: x):\n    subpath, filename = dirsplit(path)\n    # breakpoint()\n    if basemap.get(path) is None:\n        subtree = patch_missing_files(subpath + \"/\", basemap, color)\n        subsubtree = subtree.add(processor(filename), style=color, guide_style=color)\n        # print(filename)\n        basemap[path] = subsubtree\n        return subsubtree\n    else:\n        return basemap.get(path)\ndef size_to_readable_string(size: int):\n    return humanize.naturalsize(size)\nGREY = \"bright_black\"\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"--full\", help=\"full tree\", type=str, required=True)\nparser.add_argument(\"--selected\", help=\"selected tree\", type=str, required=True)",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:1-44"
+    },
+    "349": {
+        "file_id": 33,
+        "content": "This code is a Python script that uses the \"rich\" library for creating and displaying a tree structure. It allows you to patch missing files, convert file sizes to readable strings, and handle command line arguments using \"argparse\". The script takes two input parameters: \"--full\" for the full tree and \"--selected\" for the selected tree.",
+        "type": "comment"
+    },
+    "350": {
+        "file_id": 33,
+        "content": "parser.add_argument(\"--basepath\", help=\"path to the base\", type=str, required=True)\nargs = parser.parse_args()\nfull_json = args.full\nselected_json = args.selected\nbasepath = args.basepath\nassert os.path.isabs(basepath)\nbasepath = os.path.abspath(basepath)\ntree_data = json.load(open(full_json))\nselected_json = json.load(open(selected_json))  # could be different.\n# cached_paths = [\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/recursive_document_writer.py\",\n#     \"/media/root/Toshiba XG3/works/prometheous/document_agi_computer_control/code_view_with_path_argument_and_anchor/code_view_demo.py\",\n# ]\ncached_paths = []\nfor p in cached_paths:\n    assert os.path.isabs(p)\ncached_paths = [os.path.abspath(p) for p in cached_paths]\nfor p in cached_paths:\n    assert os.path.commonprefix([p, basepath]) == basepath\nsize_map = {}\nselected_keys = []\nexisting_keys = []\n# Add the tree contents recursively\ndef add_tree_contents(parent, contents, basedir=\".\", basemap={}):\n    for item in contents:",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:45-78"
+    },
+    "351": {
+        "file_id": 33,
+        "content": "This code is parsing command-line arguments, loading JSON files, ensuring paths are absolute, and checking common prefixes. It then defines a function to recursively add tree contents and initializes variables for selected keys and existing keys.",
+        "type": "comment"
+    },
+    "352": {
+        "file_id": 33,
+        "content": "        if item[\"type\"] == \"directory\":\n            # subtree = parent.add(f\"[bold]{item['name']}\")\n            # subtree = parent.add(\n            #     Text.assemble((item[\"name\"], \"bold\")),\n            #     style=GREY,\n            #     guide_style=GREY,\n            # )\n            subtree = patch_missing_files(\n                os.path.join(basedir, item[\"name\"] + \"/\"),\n                basemap,\n                GREY,\n                lambda x: Text.assemble((x, \"bold\")),\n            )\n            existing_keys.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n            # basemap[os.path.join(basedir, item[\"name\"] + \"/\")] = subtree\n            dirfs = 0\n            for fs in add_tree_contents(\n                subtree,\n                item.get(\"contents\", []),\n                os.path.join(basedir, item[\"name\"]),\n                basemap,\n            ):\n                dirfs += fs\n                yield fs\n            size_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirfs\n        else:  # file\n            # subtree = parent.add(item['name'])",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:79-105"
+    },
+    "353": {
+        "file_id": 33,
+        "content": "If item type is directory:\n- Create a subtree for the directory name.\n- Add missing files to the subtree.\n- Append the directory path to existing keys.\n- Add the subtree to the base map.\n- Count and yield the number of files in the subtree.\n- Store the total file size in size_map.\nElse if item type is file:\n- Add the file name as a subtree.\n- Append the file path to existing keys.\n- Yield 1 (as there's only one file).",
+        "type": "comment"
+    },
+    "354": {
+        "file_id": 33,
+        "content": "            # if item['name'] == \"devcontainer.json\": breakpoint()\n            existing_keys.append(os.path.join(basedir, item[\"name\"]))\n            filesize = os.path.getsize(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            size_map[os.path.join(basedir, item[\"name\"])] = filesize\n            filesize_human = size_to_readable_string(filesize)\n            # subtree = patch_missing_files(os.path.join(basedir, item[\"name\"]),basemap, GREY, lambda x: f\"[{filesize_human}] \" + x)\n            subtree = parent.add(f\"x <{filesize_human}> \" + item[\"name\"], style=GREY)\n            basemap[os.path.join(basedir, item[\"name\"])] = subtree\n            yield filesize\ndef dirsplit(path):\n    if path.endswith(\"/\"):\n        path = path[:-1]\n    return os.path.split(path)\ndef set_path_to_white(path, basemap):\n    subtree = patch_missing_files(path, basemap, \"white\")\n    subtree.style = \"white\"\n    subtree.guide_style = \"white\"\n    return subtree\nselected_dirs = []\nline_map = {}",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:106-134"
+    },
+    "355": {
+        "file_id": 33,
+        "content": "This code is creating a visual file selector by ignoring specific rules. It breaks when it encounters the \"devcontainer.json\" file, appends existing file paths to a list, calculates their sizes and converts them to readable strings, adds subtrees to a tree structure with gray color and file size information, and handles directories by setting their style to white. It also maintains two dictionaries: one for storing file sizes and another for mapping file paths to their corresponding subtrees in the tree structure.",
+        "type": "comment"
+    },
+    "356": {
+        "file_id": 33,
+        "content": "# can have missing files.\ndef iterate_all_keys(contents, basemap, basedir=\".\"):\n    for item in contents:\n        if item[\"type\"] == \"directory\":\n            subpaths = item.get(\"contents\", [])\n            if subpaths:\n                dirlc = 0\n                cached_count = 0\n                # total_lc = 0\n                for lc in iterate_all_keys(\n                    subpaths, basemap, os.path.join(basedir, item[\"name\"])\n                ):\n                    # total_lc +=1\n                    if lc == -3:\n                        cached_count += 1\n                        continue\n                    dirlc += lc\n                    yield lc\n                if dirlc != 0:\n                    selected_dirs.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n                    set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    line_map[os.path.join(basedir, item[\"name\"] + \"/\")] = dirlc\n                elif len(subpaths) == cached_count:",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:137-161"
+    },
+    "357": {
+        "file_id": 33,
+        "content": "This function iterates through all keys in the \"contents\" dictionary, checking for directories and recursively calling itself to handle their contents. It keeps track of the total count of files and directories (lc) and yields each file or directory encountered. If a directory is found, it adds it to the selected_dirs list and updates the line_map with the count of files in that directory.",
+        "type": "comment"
+    },
+    "358": {
+        "file_id": 33,
+        "content": "                    # elif total_lc == cached_count:\n                    subtree = set_path_to_white(\n                        os.path.join(basedir, item[\"name\"] + \"/\"), basemap\n                    )\n                    subtree.label = f\"[Cached] \" + item[\"name\"]\n                    cached_verified.append(os.path.join(basedir, item[\"name\"] + \"/\"))\n        else:  # file\n            # breakpoint()\n            selected_keys.append(os.path.join(basedir, item[\"name\"]))\n            linecount = read_file_and_get_line_count(\n                os.path.join(basepath, os.path.join(basedir, item[\"name\"]))\n            )\n            line_map[os.path.join(basedir, item[\"name\"])] = linecount\n            subtree = set_path_to_white(os.path.join(basedir, item[\"name\"]), basemap)\n            error = True\n            if linecount == 0:\n                label = \"Empty\"\n            elif linecount == -1:\n                label = \"Missing\"\n            elif linecount == -2:\n                label = \"Error\"\n            elif linecount == -3:",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:162-184"
+    },
+    "359": {
+        "file_id": 33,
+        "content": "The code is checking the line count of a file and assigning a corresponding label to its tree structure representation. If the line count is 0, it's marked as \"Empty\", if it's -1, it's marked as \"Missing\", if it's -2, it's marked as \"Error\", and any other value is ignored. It also keeps track of cached directories and appends selected file paths to the `selected_keys` list.",
+        "type": "comment"
+    },
+    "360": {
+        "file_id": 33,
+        "content": "                label = \"Cached\"\n                error = False\n                cached_verified.append(os.path.join(basedir, item[\"name\"]))\n            else:\n                label = f\"{linecount} L\"\n                error = False\n            if error:\n                error_map[label].append(os.path.join(basedir, item[\"name\"]))\n            else:\n                yield linecount\n            subtree.label = f\"[{label}] \" + item[\"name\"]\ndef read_file_and_get_line_count(filepath: str):\n    filepath = os.path.abspath(filepath)\n    if not os.path.exists(filepath):\n        return -1\n    if filepath in cached_paths:\n        return -3\n    try:\n        with open(filepath, \"r\") as f:\n            lines = f.readlines()\n            return len(lines)\n    except:\n        return -2\nselected_keys = []\ndef get_selected_keys(tree_data, basemap):\n    iterate_all_keys(tree_data[0].get(\"contents\", []), basemap)\n    return selected_keys\ntree = Tree(\".\")\n# tree = Tree(\"agi_computer_control\", style=GREY, guide_style=GREY)\nroot = tree_data[0]  # Assuming the first item in the JSON is the root directory",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:185-222"
+    },
+    "361": {
+        "file_id": 33,
+        "content": "Line 184-221: Reads file names from the tree structure and verifies if they are cached or not. If not cached, it reads the line count of each file using the read_file_and_get_line_count function and appends to either cache list or error list. The yield statement returns line counts for non-error files.\nLine 185: Adds \"Cached\" label if item is in cached_paths, sets error flag as False, and appends file path to cached_verified list.\nLine 193: Adds the linecount label if it's not already an error file, sets error flag as False, and yields the linecount.\nLines 204-217: Reads the line count of the given filepath, handles non-existent files and cached files. Returns -1 for non-existing files, -3 for cached files.\nLine 219: Initializes selected_keys list, to be used in get_selected_keys function.\nLines 220-221: Recursively iterates through all keys in the tree structure and appends unique keys to selected_keys list.",
+        "type": "comment"
+    },
+    "362": {
+        "file_id": 33,
+        "content": "mymap = {\"./\": tree}\nexisting_keys.append(\"./\")\ntotal_size = sum(add_tree_contents(tree, root.get(\"contents\", []), basemap=mymap))\nnonexist_keys = [k for k in mymap.keys() if k not in existing_keys]\nfor key in nonexist_keys:\n    it = mymap.get(key, None)\n    if it is not None:\n        parent, child = dirsplit(key)\n        parent_it = mymap.get(parent + \"/\", None)\n        if parent_it is not None:\n            parent_it.children.remove(it)\n        del mymap[key]\ntotal_lines = sum(iterate_all_keys(selected_json[0].get(\"contents\", []), mymap))\n# Print the tree\nsize_map[\"./\"] = total_size\nif total_lines != 0:\n    selected_dirs.append(\"./\")\n    line_map[\"./\"] = total_lines\ntree.label = Text.assemble(\n    (\n        (\n            f\"[{total_lines} L] \"\n            if total_lines != 0\n            else f\"x <{size_to_readable_string(total_size)}> \"\n        )\n        + tree.label,\n        \"magenta\",\n    )\n)\ndef estimate_time_from_lines(line_count: int):\n    seconds = (line_count / 10) * 100\n    return humanize.naturaltime(datetime.timedelta(seconds=seconds)).split(\" ago\")[0]",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:223-261"
+    },
+    "363": {
+        "file_id": 33,
+        "content": "This code updates the map with the tree structure and its contents, removes nonexistent keys, calculates the total size and lines for existing directories, labels the tree with size and line count, and estimates time from lines.",
+        "type": "comment"
+    },
+    "364": {
+        "file_id": 33,
+        "content": "for k, v in mymap.items():\n    if k.endswith(\"/\"):\n        _, name = dirsplit(k)\n        if k in cached_verified:\n            continue\n        elif k in selected_dirs:\n            v.label = f\"[{line_map[k]} L] \" + name\n            # v.label = f\"[{estimate_time_from_lines(line_map[k])}] \"+ name\n        else:\n            v.label = f\"x <{size_to_readable_string(size_map[k])}> \" + name\nconsole = Console()\nconsole.print(tree)\n# total_size = sum(size_map.values())\nselected_size  = 0\nfor k in selected_keys:\n    # try:\n    s =  size_map[k] \n    selected_size +=s\n    # except KeyError:\n    #     print(\"key\", k ,\"not found\")\n    #     breakpoint()\n# make mapping between displayed tree and actual tree\nprint(\n    dict(\n        total=size_to_readable_string(total_size),\n        selected=size_to_readable_string(selected_size),\n    )\n)\n# total_lines = sum(line_map.values())\nprocessing_time = estimate_time_from_lines(total_lines)\nprint(dict(selected_lines=humanize.intword(total_lines) + \" lines\", processing_time=processing_time))\ntotal_size_by_suffix = defaultdict(int)",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:264-300"
+    },
+    "365": {
+        "file_id": 33,
+        "content": "Iterating through the dictionary mymap, setting label for directories in the tree based on their presence in cached_verified or selected_dirs, calculating selected size and total size of files, estimating processing time from lines, and storing it all in dictionaries for printing.",
+        "type": "comment"
+    },
+    "366": {
+        "file_id": 33,
+        "content": "filecount_by_suffix = defaultdict(int)\nfor k, v in size_map.items():\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    total_size_by_suffix[suffix] += v\n    filecount_by_suffix[suffix] += 1\nlines_by_suffix = defaultdict(int)\nselected_filecount_by_suffix = defaultdict(int)\nfor k in selected_keys:\n    suffix = os.path.split(k)[1].split(\".\")[-1]\n    if suffix == \"\":\n        suffix = \"<no suffix>\"\n    selected_filecount_by_suffix[suffix] += 1\n    v = line_map[k]\n    lines_by_suffix[suffix] += v\nprint(\n    dict(\n        total={k: size_to_readable_string(v) for k, v in total_size_by_suffix.items()},\n        # total=set(os.path.split(it)[1].split(\".\")[-1] for it in size_map.keys()),\n        selected={\n            k: humanize.intword(v) + \" lines\" for k, v in lines_by_suffix.items()\n        },\n    )\n)\nprint(dict(total=filecount_by_suffix, selected=selected_filecount_by_suffix))\nprint(\"error:\", {k: len(v) for k, v in error_map.items()})\nprint(\"error map:\", error_map)\n# print(mymap)",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:301-329"
+    },
+    "367": {
+        "file_id": 33,
+        "content": "The code calculates and prints the total file count and line count by file suffix for all files (total) and selected files (selected). It also prints the number of errors encountered.",
+        "type": "comment"
+    },
+    "368": {
+        "file_id": 34,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
+        "type": "filepath"
+    },
+    "369": {
+        "file_id": 34,
+        "content": "The code processes command line arguments, generates file lists using fd, iterates over paths to copy files into a target directory. It uses argparse for args handling, os and shutil for operations, subprocess for shell commands, and assertions for checking absolute paths. The process checks if the file exists and is a file, gets relative path, joins with target directory, creates new directories as needed, and copies using shutil.copy2().",
+        "type": "summary"
+    },
+    "370": {
+        "file_id": 34,
+        "content": "import os\nimport shutil\nimport argparse\nparser = argparse.ArgumentParser()\n# parser.add_argument(\n#     \"-f\", \"--filelist\", help=\"path to filelist, generated by fd\", type=str, required=True\n# )\nparser.add_argument(\n    \"-b\", \"--basedir\", help=\"common prefix of filepaths\", type=str, required=True\n)\nparser.add_argument(\n    \"-t\",\n    \"--targetdir\",\n    help=\"target directory to copy files into\",\n    type=str,\n    required=True,\n)\nargs = parser.parse_args()\n# filelist = args.filelist\n# filepaths = open(filelist).read().split(\"\\n\")\nbasedir = args.basedir  # common prefix of filepaths\ncommand = [\"bash\", \"-c\", f\"cd '{basedir}' && fd -S '+1b'\"]\nassert os.path.isabs(basedir)\ntargetdir = args.targetdir  # target directory to copy files into\nassert os.path.isabs(targetdir)\nimport subprocess\nmoutput = subprocess.check_output(command, encoding='utf-8')\nfilepaths = moutput.split(\"\\n\")\nfor fp0 in filepaths:\n    fp0 = fp0.strip()\n    if fp0:\n        if fp0.endswith(\"/\"): continue\n        fp = os.path.join(basedir, fp0)\n        assert os.path.isabs(fp)",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:1-41"
+    },
+    "371": {
+        "file_id": 34,
+        "content": "The code is parsing command line arguments, generating a file list using fd command, and then iterating over the file paths to copy them into a target directory. It uses argparse for handling command-line arguments, os and shutil libraries for file operations, subprocess for running shell commands, and assertions for checking file paths are absolute.",
+        "type": "comment"
+    },
+    "372": {
+        "file_id": 34,
+        "content": "        assert os.path.exists(fp)\n        assert os.path.isfile(fp)\n        rel = os.path.relpath(fp, basedir)\n        new_path = os.path.join(targetdir, rel)\n        new_dir = os.path.dirname(new_path)\n        if not os.path.exists(new_dir):\n            os.makedirs(new_dir)\n        print(fp,\"->\", new_path)\n        # exit()\n        # breakpoint()\n        shutil.copy2(fp, new_path)",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py:42-52"
+    },
+    "373": {
+        "file_id": 34,
+        "content": "Checking if file exists and is a file, getting relative path, joining with target directory, creating new directory if needed, and copying the file using shutil.copy2().",
+        "type": "comment"
+    },
+    "374": {
+        "file_id": 35,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
+        "type": "filepath"
+    },
+    "375": {
+        "file_id": 35,
+        "content": "The code creates a command-line tool for comparing files using the \"tree\" command, asynchronously runs commands, includes visualization for ignored files, features a progress bar and GUI updates, and manages UI elements while processing data or files. The code also contains two functions: one to toggle dark mode and another to exit the application.",
+        "type": "summary"
+    },
+    "376": {
+        "file_id": 35,
+        "content": "from textual.app import App, ComposeResult\nfrom textual.widgets import Header, Footer, RichLog, Label\nfrom rich.text import Text\nfrom textual.timer import Timer\nfrom threading import Lock\nimport subprocess\n# from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nfrom datetime import datetime\n# import os\nINTERVAL = 5\nimport asyncio\nasync def run_command(command:str):\n    process = await asyncio.create_subprocess_shell(\n        command,\n        stdout=subprocess.PIPE,\n        stderr=subprocess.PIPE\n    )\n    stdout, stderr = await process.communicate()\n    return stdout.decode().strip(), stderr.decode().strip()\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile > \"{{tempdir}}/all_tree.txt\"\nfd | tree --fromfile > \"{{tempdir}}/selected_tree.txt\"\ndiff -y \"{{tempdir}}/all_tree.txt\" \"{{tempdir}}/selected_tree.txt\" > \"{{tempdir}}/diff_tree.txt\"\ncat \"{{tempdir}}/diff_tree.txt\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:1-36"
+    },
+    "377": {
+        "file_id": 35,
+        "content": "Code imports necessary modules and defines variables for a command-line tool that generates differences between selected and all files in a directory using the \"tree\" command. It also includes functions to run commands asynchronously and define a script template for generating the diff report.",
+        "type": "comment"
+    },
+    "378": {
+        "file_id": 35,
+        "content": "# count file size\n# render tree json\nscript_template = Template(script_template_str)\nRELATIVE_TEMP_DIR_SCRIPT_PATH = \"script.sh\"\ndef parse_args():\n    parser = ArgumentParser()\n    parser.add_argument(\"-d\", \"--diffpath\", help=\"Path to visualize ignored files\")\n    args = parser.parse_args()\n    return args.diffpath\n@beartype\ndef render_script_template(diffpath: str, tempdir: str) -> str:\n    return script_template.render(diffpath=diffpath, tempdir=tempdir)\nprocessingLock = Lock()\nclass VisualIgnoreApp(App):\n    \"\"\"A Textual app to visualize ignore files.\"\"\"\n    BINDINGS = [(\"d\", \"toggle_dark\", \"Toggle dark mode\"), (\"e\", \"exit\", \"Exit\")]\n    timer: Timer\n    def __init__(self, diffpath, *args, **kwargs):\n        super().__init__(*args, **kwargs)\n        self.header = Header()\n        self.diffpath = diffpath\n        self.treeview = RichLog(auto_scroll=False)\n        self.footer = Footer()\n        # self.counter = 0\n        self.label = Label(Text.assemble((\"ETA:\", \"bold\")), expand=True)\n        self.label.styles.background = \"red\"",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:37-74"
+    },
+    "379": {
+        "file_id": 35,
+        "content": "This code defines a class `VisualIgnoreApp` that visualizes ignored files. It takes a `diffpath` as input and renders a script template using the `render_script_template` function. The class also has a header, treeview, footer, and a label for displaying progress. A lock `processingLock` is used for synchronization.",
+        "type": "comment"
+    },
+    "380": {
+        "file_id": 35,
+        "content": "        # self.label.styles.border = ('solid','red')\n        # self.label.styles.height = 3\n        self.label.styles.height = 1\n        # self.label.styles.dock = 'bottom'\n    async def progress(self):\n        locked = processingLock.acquire(blocking=False)\n        if locked: # taking forever. bad.\n            cont, _= await run_command(\n            # diff_content = subprocess.check_output(\n                f'python3 run_simple.py -d \"{self.diffpath}\"'\n                # [\"python3\", \"run_simple.py\", \"-d\", self.diffpath]\n            )\n            # cont = diff_content.decode()\n            has_error = False\n            # TODO: you may outsource this part to external process as well, emit as last line.\n            for it in cont.split(\"\\n\"):\n                if it.startswith(\"{\"):\n                    if \"processing_time\" in it and \"selected_lines\" in it:\n                        self.label.renderable = \"ETA: \"+it + \" \"+ datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n                    if it.endswith(\"}\"):\n                        if \"Error\" in it or \"Empty\" in it or \"Missing\" in it:",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:75-96"
+    },
+    "381": {
+        "file_id": 35,
+        "content": "Creating a progress bar for the file processing task by running external Python script and updating label with ETA information.",
+        "type": "comment"
+    },
+    "382": {
+        "file_id": 35,
+        "content": "                            has_error  = True\n            if has_error:\n                self.label.renderable += \" [Error]\"\n            self.label.refresh()\n            # with TemporaryDirectory() as tempdir:\n            #     content = render_script_template(self.diffpath, tempdir)\n            #     script_path = os.path.join(tempdir, RELATIVE_TEMP_DIR_SCRIPT_PATH)\n            #     with open(script_path, \"w+\") as f:\n            #         f.write(content)\n            #     diff_content = subprocess.check_output(['bash', script_path])\n            # self.treeview.call_later\n            self.treeview.clear()\n            self.treeview.write(cont)  # newline by default.\n            processingLock.release()\n        # self.counter += 1\n    def compose(self) -> ComposeResult:\n        \"\"\"Create child widgets for the app.\"\"\"\n        return [self.header, self.treeview, self.label, self.footer]\n    def on_mount(self) -> None:\n        self.timer = self.set_interval(INTERVAL, self.progress)\n    def action_toggle_dark(self) -> None:",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:97-124"
+    },
+    "383": {
+        "file_id": 35,
+        "content": "This code appears to be part of a larger application with multiple classes and methods. It defines a class, presumably for a GUI-based user interface, with methods like \"compose,\" \"on_mount,\" and \"action_toggle_dark.\" \n\nThe code block seems to handle an error condition, update the GUI label, clear the treeview and write new content, and potentially execute a script. It also has methods that define child widgets for the app, start an interval timer, and toggle dark mode. \n\nOverall, this code appears to be part of a more complex program with interactive user interface elements and functionality to process data or files.",
+        "type": "comment"
+    },
+    "384": {
+        "file_id": 35,
+        "content": "        \"\"\"An action to toggle dark mode.\"\"\"\n        self.dark = not self.dark\n    def action_exit(self):\n        \"\"\"An action to exit the app.\"\"\"\n        self.exit()\ndef main():\n    diffpath = parse_args()\n    app = VisualIgnoreApp(diffpath)\n    app.run()\nif __name__ == \"__main__\":\n    main()",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:125-140"
+    },
+    "385": {
+        "file_id": 35,
+        "content": "The code contains two functions: \"action_toggle_darkmode\" and \"action_exit\". The first function toggles the dark mode on or off, while the second one exits the application. The main function is responsible for parsing arguments, creating an instance of the VisualIgnoreApp class, and running the app.",
+        "type": "comment"
+    },
+    "386": {
+        "file_id": 36,
+        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py",
+        "type": "filepath"
+    },
+    "387": {
+        "file_id": 36,
+        "content": "The code handles file operations, utilizes Tree widgets and UTF-8 encoding, manages errors, performs asynchronous reads and updates labels, calculates processing time, refreshes UI controls, compares selections, stops processes when needed, manages non-selected paths, performs file/directory checks, error handling, statistics updating, debug writing, monitors changes, handles GUI state & widgets, sets progress intervals, enables dark mode and exits the application.",
+        "type": "summary"
+    },
+    "388": {
+        "file_id": 36,
+        "content": "# this version is for pyjom, our ultimate challenge.\n# TODO: show file extension counts \n# TODO: click extension name or error count for iteratively jumping to the next file with extension or error\n# TODO: type \"R\" to refresh the tree\n# TODO: filter empty files using fd\n# TODO: visualize unselected files by calling fd -u\n# TODO: add visualization of tree files.\n# TODO: add action to restart the processing thread\n# TODO: mark if file is not utf-8 encoded (as binary?) even if not selected\n# TODO: exit with error if previous error counters are not zeros.\n# to find empty files:\n# fd -S \"-1b\"\n# import sys\n# filter out empty files:\n# fd -S \"+1b\"\nimport humanize\nimport numpy\nfrom textual.app import App, ComposeResult\nfrom textual.widgets import Header, Footer, Tree, Label\nfrom rich.text import Text\nfrom textual.timer import Timer\nfrom threading import Lock\n# from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nfrom datetime import datetime, timedelta",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:1-35"
+    },
+    "389": {
+        "file_id": 36,
+        "content": "This code is for a pyjom application, which seems to involve file management and visualization using Tree widgets. The TODO list suggests additional features like showing extension counts, filtering empty files, and adding actions for restarting processing. It also handles UTF-8 encoding and error counters.",
+        "type": "comment"
+    },
+    "390": {
+        "file_id": 36,
+        "content": "import os\ncached_paths = []\nIGNORE_RULE_FILES = (\".gitignore\", \".fdignore\", \".ignore\") # TODO: set fd to respect .gitignore even if without .git folders\nDOCS_FOLDER_NAME = \"docs\"\nINTERVAL = 0.1\nSLEEP=7\nimport asyncio\ndef format_timedelta(td):\n    hours, remainder = divmod(td.seconds, 3600)\n    minutes, seconds = divmod(remainder, 60)\n    return f\"{hours}:{minutes}:{seconds}\"\ndef estimate_time_from_lines(line_count: int):\n    seconds = (line_count / 35) * 60\n    return seconds\ndef naturaltime(seconds):\n    return humanize.naturaltime(timedelta(seconds=seconds)).split(\" ago\")[0]\ndef estimate_time_from_filesize(filesize: int):\n    seconds = (filesize / 1000) * 60\n    return seconds\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile > \"{{tempdir}}/all_tree.txt\"\nfd | tree --fromfile > \"{{tempdir}}/selected_tree.txt\"\ndiff -y \"{{tempdir}}/all_tree.txt\" \"{{tempdir}}/selected_tree.txt\" > \"{{tempdir}}/diff_tree.txt\"\ncat \"{{tempdir}}/diff_tree.txt\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties",
+        "type": "code",
+        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:36-71"
+    },
+    "391": {
+        "file_id": 36,
+        "content": "This code defines functions for estimating time based on line count or file size, and includes a script template for comparing a selected folder with all files using the fd command. It also utilizes the humanize module to convert time values into natural language strings.",
+        "type": "comment"
+    },
+    "392": {
+        "file_id": 36,
         "content": "# count file size\n# render tree json\nscript_template = Template(script_template_str)\nRELATIVE_TEMP_DIR_SCRIPT_PATH = \"script.sh\"\nimport aiofiles\ndef expand_parent(elem):\n    elem.expand()\n    if not elem.is_root:\n        expand_parent(elem.parent)\nasync def read_file_and_get_line_count(filepath: str):\n    filepath = os.path.abspath(filepath)\n    if not os.path.exists(filepath):\n        return -1\n    if filepath in cached_paths:\n        return -3\n    try:\n        readable = False\n        async with aiofiles.open(filepath, mode='r', encoding='utf-8') as f:\n            _ = await f.readline()\n            readable = True\n        if readable:\n            lc = 0\n            # use 'cat' & 'wc -l'\n            cmd = ['wc', '-l', filepath]\n            p = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE)\n            line = await p.stdout.read()\n            decline = line.decode().strip()\n            # with open(\"lc.txt\", 'w+') as f:\n            #     f.write(decline)\n            #     exit()\n            #     # sys.exit()",
         "type": "code",
         "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:72-107"
     },
-    "343": {
-        "file_id": 32,
+    "393": {
+        "file_id": 36,
         "content": "This code reads a file and gets its line count. It checks if the file exists and if it is already in the cache to avoid unnecessary operations. If the file exists, it uses the 'cat' and 'wc -l' commands to get the line count. The code also includes error handling for cases where the file doesn't exist or has been cached before.",
         "type": "comment"
     },
-    "344": {
-        "file_id": 32,
+    "394": {
+        "file_id": 36,
         "content": "            lc = decline.split(' ')[0]\n            lc = int(lc)\n            await p.wait()\n            return lc if lc else 1\n    except:\n        return -2\nfrom collections import defaultdict\n# def patch_missing_files(path, basemap, expand=False, ):\ndef patch_missing_files(path, basemap, expand=False, processor=lambda x: x):\n    subpath, filename = dirsplit(path)\n    # breakpoint()\n    if basemap.get(path) is None:\n        subtree, _, _ = patch_missing_files(subpath + \"/\", basemap, processor = processor)\n        # renderable = Text.assemble((processor(filename), color))\n        if path.endswith(\"/\"):\n            subsubtree = subtree.add(processor(filename), expand=expand)\n        else:\n            subsubtree = subtree.add_leaf(processor(filename))\n        # subsubtree = subtree.add(processor(filename), expanded=expanded,style=color, guide_style=color)\n        # print(filename)\n        basemap[path] = subsubtree\n        return subsubtree, filename, False\n    else:\n        return basemap.get(path), filename, True",
         "type": "code",
         "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:108-132"
     },
-    "345": {
-        "file_id": 32,
+    "395": {
+        "file_id": 36,
         "content": "Function `patch_missing_files` recursively searches for missing files in a directory and its subdirectories, creating placeholders if necessary. It takes a path, base map, and processor function as input and returns the updated base map, filename, and a flag indicating whether the file was found or not. If the file is found, it doesn't create a placeholder. The processor function can be used to modify filenames according to specific rules.",
         "type": "comment"
     },
-    "346": {
-        "file_id": 32,
+    "396": {
+        "file_id": 36,
         "content": "async def get_file_size(filename):\n    try:\n        async with aiofiles.open(filename, mode='rb') as file:\n            file_size = os.fstat(file.fileno()).st_size\n            return file_size\n    except:\n        return -1\ndef parse_args():\n    parser = ArgumentParser()\n    parser.add_argument(\"-d\", \"--diffpath\", help=\"Path to visualize ignored files\")\n    parser.add_argument(\"-s\", \"--skip\", help=\"Skip visualization\", action=\"store_true\")\n    args = parser.parse_args()\n    if args.skip: \n        print(\"Skipping visualization\")\n        exit(0)\n    return args.diffpath\ndef dirsplit(path):\n    if path.endswith(\"/\"):\n        path = path[:-1]\n    return os.path.split(path)\ndef iterate_parent_dirs(path):\n    parts = path.split(\"/\")\n    for i in range(1, len(parts)):\n        yield \"/\".join(parts[:i])+\"/\", parts[i-1]\n@beartype\ndef render_script_template(diffpath: str, tempdir: str) -> str:\n    return script_template.render(diffpath=diffpath, tempdir=tempdir)\nprocessingLock = Lock()\nclass VisualIgnoreApp(App):\n    \"\"\"A Textual app to visualize ignore files.\"\"\"",
         "type": "code",
         "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:134-172"
     },
-    "347": {
-        "file_id": 32,
+    "397": {
+        "file_id": 36,
         "content": "The code defines a function `get_file_size` that reads the file size asynchronously. It also includes `parse_args`, which handles command line arguments, and `dirsplit` that splits paths into directories and filenames. The `iterate_parent_dirs` function yields parent directory paths, and there's a lock object `processingLock`. Finally, the `VisualIgnoreApp` class inherits from `Textual App` and is used for visualizing ignore files.",
         "type": "comment"
     },
-    "348": {
-        "file_id": 32,
+    "398": {
+        "file_id": 36,
         "content": "    BINDINGS = [(\"d\", \"toggle_dark\", \"Toggle dark mode\"), \n    (\"e\", \"exit\", \"Exit\"),\n    (\"r\", \"restart\", \"Restart\")\n    ]\n    timer: Timer\n    def action_restart(self):\n        self.loop_break = True\n    def __init__(self, diffpath, *args, **kwargs):\n        super().__init__(*args, **kwargs)\n        self.header = Header()\n        self.diffpath = diffpath\n        self.treeview = Tree(\".\")\n        # do not expand, since this is slow.\n        self.treeview.root.expand()\n        self.footer = Footer()\n        self.mymap = {\"./\":self.treeview.root}\n        # self.counter = 0\n        default_label = \"Processing time: -/- (lines) -/- (size)\\nLines: -/- Size: -/- Count: -/- Errors: -/-\\nLast selection: - Selection: -/-\\nTotal size: -/- Total count: -/- Errors: -/-\\nLast scanning: - Scanning: -/-\"\n        self.label = Label(Text.assemble((default_label, \"bold\")), expand=True)\n        self.label.styles.background = \"red\"\n        # self.label.styles.border = ('solid','red')\n        # self.label.styles.height = 3\n        self.label.styles.height = 5",
         "type": "code",
         "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:174-198"
     },
-    "349": {
-        "file_id": 32,
-        "content": "This code initializes a visual file selector with bindings for dark mode toggle, exit, and restart actions. The class uses a header, footer, treeview, and label components. It sets the default label text and styles for the label component. The code also disables expansion of the treeview root to improve performance.",
-        "type": "comment"
-    },
-    "350": {
-        "file_id": 32,
-        "content": "        # self.label.styles.dock = 'bottom'\n        self.processing_time_by_line = 0\n        self.processing_time_by_size = 0\n        self.previous_processing_time_by_line = \"-\"\n        self.previous_processing_time_by_size = \"-\"\n        self.line_count_map = defaultdict(int)\n        self.size_map = defaultdict(int)\n        self.error_size_map = defaultdict(int)\n        self.line_count = 0\n        self.previous_line_count = \"-\"\n        self.error_count_map = defaultdict(int)\n        self.error_count = 0\n        self.previous_error_count = \"-\"\n        self.previous_time = datetime.now()\n        self.previous_selection_formatted = \"-\"\n        self.previous_scanning_formatted = \"-\"\n        self.previous_selection = \"-\"\n        self.selected_paths = {\"./\"}\n        self.existing_paths = {\"./\"}\n        self.previous_selected_paths = {\"./\"}\n        self.previous_existing_paths = {\"./\"}\n        self.error_size_count = 0\n        self.previous_error_size_count = \"-\"\n        self.previous_scanning = \"-\"\n        self.error_count_type_map = defaultdict(int)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:199-223"
-    },
-    "351": {
-        "file_id": 32,
-        "content": "The code initializes various variables to keep track of processing time, line and size counts, error counts, and path selection. It also sets default values for previous values, using \"-\" for unknown values, and uses defaultdicts for efficient counting and mapping.",
-        "type": "comment"
-    },
-    "352": {
-        "file_id": 32,
-        "content": "        self.filesize = 0\n        self.previous_filesize = \"-\"\n        self.loop_break = False\n        self.selected_size = 0\n        self.previous_selected_size = \"-\"\n        self.selected_count = 0\n        self.previous_selected_count = \"-\"\n        self.total_count = 0\n        self.previous_total_count = \"-\"\n    async def progress(self):\n        locked = processingLock.acquire(blocking=False)\n        if locked: # taking forever. bad.\n            self.processing_time_by_line = 0\n            self.processing_time_by_size = 0\n            self.selected_count = 0\n            # self.previous_selected_count = \"-\"\n            self.total_count = 0\n            # self.previous_total_count = \"-\"\n            self.line_count = 0\n            self.selected_size = 0\n            # self.previous_selected_size = \"-\"\n            self.filesize = 0\n            self.loop_break = False\n            self.selected_paths = {\"./\"}\n            self.existing_paths = {\"./\"}\n            self.line_count_map = defaultdict(int)\n            self.error_count_map = defaultdict(int)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:224-253"
-    },
-    "353": {
-        "file_id": 32,
-        "content": "This code initializes class attributes for progress tracking, including file sizes, selected counts, total counts, processing time by line and size, as well as the paths being monitored. The `progress` method is called within an async function and acquires a lock to ensure safe updates to these variables.",
-        "type": "comment"
-    },
-    "354": {
-        "file_id": 32,
-        "content": "            self.error_count_type_map = defaultdict(int)\n            self.size_map = defaultdict(int)\n            self.error_size_map = defaultdict(int)\n            self.error_count = 0\n            self.error_size_count = 0\n            self.previous_time = datetime.now()\n            command = [\"bash\", \"-c\", f\"cd '{self.diffpath}' && fd -S '+1b'\"]\n            # command = [\"bash\", \"-c\", f\"cd '{self.diffpath}' && fd\"]\n            process = await asyncio.create_subprocess_exec(\n                *command,\n                stdout=asyncio.subprocess.PIPE,\n                # stderr=asyncio.subprocess.PIPE\n            )\n            banner_refresh_counter = 0\n            while not self.loop_break:\n                line = await process.stdout.readline() # type:ignore\n                if not line: break\n                decline = line.decode(\"utf-8\").strip()\n                if decline == \"\": break\n                relpath = \"./\"+decline\n                self.selected_paths.add(relpath)\n                subtree, fname, _ = patch_missing_files(relpath, self.mymap)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:254-275"
-    },
-    "355": {
-        "file_id": 32,
-        "content": "This code initializes various defaultdicts, variables, and a command for running the fd utility in a subprocess. It then reads lines from the subprocess' stdout until a break condition is met, appending selected file paths to the `selected_paths` set.",
-        "type": "comment"
-    },
-    "356": {
-        "file_id": 32,
-        "content": "                if not relpath.endswith(\"/\"):\n                    self.selected_count +=1\n                    linecount = await read_file_and_get_line_count(os.path.join(self.diffpath, relpath))\n                    fs_str = \"error\"\n                    if fname in IGNORE_RULE_FILES:\n                        fs = -2\n                    else:\n                        fs = await get_file_size(os.path.join(self.diffpath, relpath))\n                    if fs != -1:\n                        fs_str = humanize.naturalsize(fs)\n                        self.filesize += fs\n                        self.selected_size += fs\n                    for parent_path, parent_name in iterate_parent_dirs(relpath): # ends with \"/\"\n                        self.selected_paths.add(parent_path)\n                        if fs != -1:\n                            self.size_map[parent_path] += fs\n                    error =True\n                    if linecount == 0:\n                        label = \"Empty\"\n                    elif linecount == -1:",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:276-296"
-    },
-    "357": {
-        "file_id": 32,
-        "content": "This code snippet checks if the file path ends with a slash, increments selected count, reads line count from the file, assigns file size (if not in IGNORE_RULE_FILES), calculates human readable file size, adds parent paths and sizes to map, sets error flag based on linecount, and updates label accordingly.",
-        "type": "comment"
-    },
-    "358": {
-        "file_id": 32,
-        "content": "                        label = \"Missing\"\n                    elif linecount == -2:\n                        label = \"Error\"\n                    elif linecount == -3:\n                        label = \"Cached\"\n                        error = False\n                    else:\n                        label = f\"{linecount} L\"\n                        self.line_count += linecount\n                        self.line_count_map[relpath] = linecount\n                        for parent_path, parent_name in iterate_parent_dirs(relpath): # ends with \"/\"\n                            self.line_count_map[parent_path] += linecount\n                            # self.selected_paths.add(parent_path)\n                            if parent_path not in self.error_count_map.keys():\n                                lb = Text.assemble((f\"[{self.line_count_map[parent_path]} L, {humanize.naturalsize(self.size_map[parent_path])}] \", \"\"), (parent_name,\"\" if parent_name != DOCS_FOLDER_NAME else \"bold magenta\"))\n                                pn = self.mymap.get(parent_path, None)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:297-312"
-    },
-    "359": {
-        "file_id": 32,
-        "content": "Sets label for different line counts, updates line count and line count map accordingly, and optionally adds parent path to error count map and assembles text with parent paths.",
-        "type": "comment"
-    },
-    "360": {
-        "file_id": 32,
-        "content": "                                # if pn is None:\n                                    # breakpoint()\n                                    # with open(\"error.txt\", \"w+\") as f:\n                                        # f.write(parent_path+\" should in \"+str(self.mymap.keys()))\n                                #     self.exit()\n                                # else:\n                                pn.set_label(lb)\n                        error = False\n                    color = 'white'\n                    if error:\n                        color = \"bold red\"\n                        expand_parent(subtree)\n                        self.error_count += 1\n                        self.error_count_type_map[label] += 1\n                        for parent_path, parent_name in iterate_parent_dirs(relpath): # ends with \"/\"\n                            self.error_count_map[parent_path] += 1\n                            # self.selected_paths.add(parent_path)\n                            self.mymap[parent_path].set_label(Text.",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:313-331"
-    },
-    "361": {
-        "file_id": 32,
-        "content": "This code checks if 'pn' is None, and if so, breaks with a debug message. If not, it sets the label of 'pn'. It also handles errors by setting a bold red label, expands the parent node, increments error counters, and potentially adds the parent path to a set or dictionary.",
-        "type": "comment"
-    },
-    "362": {
-        "file_id": 32,
-        "content": "assemble((f\"<{self.error_count_map[parent_path]} E> \", \"bold red\"), (parent_name, \"bold red\" if parent_name!= DOCS_FOLDER_NAME else \"bold magenta\")))\n                    subtree.set_label(Text.assemble(((f\"[{label}, {fs_str}]\" if not error else f\"<{label}>\") +\" \", color), (fname, color)))\n                banner_refresh_counter += 1\n                if banner_refresh_counter > 1:\n                # if banner_refresh_counter > 10000:\n                    banner_refresh_counter = 0\n                    running = format_timedelta(datetime.now() - self.previous_time)\n                    self.processing_time_by_line = naturaltime(estimate_time_from_lines(self.line_count))\n                    self.processing_time_by_size = naturaltime(estimate_time_from_filesize(self.selected_size))\n                    self.label.renderable = Text.assemble((f\"Processing time: {self.processing_time_by_line}/{self.previous_processing_time_by_line} (lines) {self.processing_time_by_size}/{self.previous_processing_time_by_size",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:331-341"
-    },
-    "363": {
-        "file_id": 32,
-        "content": "This code updates the label with the file name, applies color and formatting if there's an error or not, then calculates and displays processing time by lines and size. It also refreshes a counter to control when this information is updated, likely to prevent overloading the UI.",
-        "type": "comment"
-    },
-    "364": {
-        "file_id": 32,
-        "content": "} (size)\\nLines: {self.line_count}/{self.previous_line_count} Size: {humanize.naturalsize(self.selected_size)}/{self.previous_selected_size} Count: {self.selected_count}/{self.previous_selected_count} Errors: {self.error_count}/{self.previous_error_count}\\nLast selection: {self.previous_selection_formatted} Selection: {running}/{self.previous_selection}\\nTotal size: -/{self.previous_filesize} Total count: -/{self.previous_total_count} Errors: -/{self.previous_error_size_count}\\nLast scanning: {self.previous_scanning_formatted} Scanning: -/{self.previous_scanning}\", \"bold\"))\n                    self.label.refresh()\n            # not_selected = 0\n            if self.loop_break:\n                try:\n                    process.terminate()\n                except:\n                    pass\n            else:\n                map_keys = numpy.array(list(self.mymap.keys()))\n                # map_keys = set(self.mymap.keys())\n                not_selected_paths =numpy.setdiff1d(map_keys,numpy.array(list(self.selected_paths)))",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:341-352"
-    },
-    "365": {
-        "file_id": 32,
-        "content": "Updates labels with stats comparing current and previous selection, stops process if loop_break is true, finds paths not in selected_paths from mymap keys.",
-        "type": "comment"
-    },
-    "366": {
-        "file_id": 32,
-        "content": "                not_selected_paths_real = numpy.setdiff1d(not_selected_paths,numpy.array(list(self.previous_selected_paths)))\n                # with open(\"not_selected.txt\", \"w+\") as f:\n                #     f.write(str(not_selected_paths_real))\n                #     self.exit()\n                for k in not_selected_paths_real:\n                    _, fname = dirsplit(k)\n                    self.mymap[k].set_label(Text.assemble((fname, \"bright_black\")))\n                # breakpoint()\n                self.previous_selected_paths = self.selected_paths\n                self.previous_processing_time_by_line = self.processing_time_by_line\n                self.previous_processing_time_by_size = self.processing_time_by_size\n                self.previous_line_count = self.line_count\n                self.previous_selected_count = self.selected_count\n                self.previous_selected_size = humanize.naturalsize(self.selected_size)\n                self.previous_error_count = self.error_count\n                self.previous_selection = format_timedelta(datetime.now() - self.previous_time)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:353-368"
-    },
-    "367": {
-        "file_id": 32,
-        "content": "This code calculates the difference between two lists of file paths and updates the label colors on the visual file selector interface. It also stores previous states for later reference before saving the current selection information.",
-        "type": "comment"
-    },
-    "368": {
-        "file_id": 32,
-        "content": "                self.previous_time = datetime.now()\n                self.previous_selection_formatted = self.previous_time.strftime(\"%Y-%m-%d %H:%M:%S\")\n                await process.wait()\n                # clear those nonselected paths, mark as grey\n                # now for another step\n                command2 = ['bash','-c',f\"cd '{self.diffpath}' && fd -u -S '+1b'\"]\n                process2 = await asyncio.create_subprocess_exec(*command2, stdout = asyncio.subprocess.PIPE)\n                banner_refresh_counter = 0\n                while not self.loop_break:\n                    line = await process2.stdout.readline() # type:ignore\n                    if not line: break\n                    decline = line.decode('utf-8').strip()\n                    if decline == \"\": break\n                    banner_refresh_counter += 1\n                    relpath = \"./\"+decline\n                    self.existing_paths.add(relpath)\n                    # subtree, fname = patch_missing_files(relpath, self.mymap)\n        ",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:369-386"
-    },
-    "369": {
-        "file_id": 32,
-        "content": "This code is clearing non-selected paths and marking them as grey. It uses a subprocess to execute a command that filters out the selected files or folders and updates the existing_paths set. The while loop reads the output of the subprocess, breaks when there are no more lines, and increments a counter for refreshing the banner.",
-        "type": "comment"
-    },
-    "370": {
-        "file_id": 32,
-        "content": "            subtree, fname, _ = patch_missing_files(relpath, self.mymap, processor = lambda x: Text.assemble((x, \"bright_black\")))\n                    if not relpath.endswith(\"/\"):\n                        self.total_count +=1\n                        for parent_path, parent_name in iterate_parent_dirs(relpath): # ends with \"/\"\n                            self.existing_paths.add(parent_path)\n                        if relpath not in self.selected_paths:\n                            if os.path.join(self.diffpath, relpath) not in self.size_map.keys():\n                                filesize = await get_file_size(os.path.join(self.diffpath, relpath))\n                                if filesize != -1:\n                                    self.filesize +=filesize\n                            else:\n                                filesize = self.size_map[os.path.join(self.diffpath, relpath)]\n                            if filesize != -1:\n                                filesize_str = humanize.naturalsize(filesize)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:386-400"
-    },
-    "371": {
-        "file_id": 32,
-        "content": "This code is checking if a file exists in the directory, and if not, it adds the parent directories to the existing_paths list. It also calculates the total count of files, adds new paths to the selected_paths list, and retrieves the file size before adding it to the filesize variable.",
-        "type": "comment"
-    },
-    "372": {
-        "file_id": 32,
-        "content": "                                subtree.set_label(Text.assemble((f\"({filesize_str}) \", 'bright_black'), (fname, \"bright_black\" if fname not in IGNORE_RULE_FILES else \"green_yellow\")))\n                                for parent_path, parent_name in reversed(list(iterate_parent_dirs(relpath))):\n                                    # self.existing_paths.add(parent_path)\n                                    # if \"0.json\" in relpath:\n                                    #     with open('debug.txt', 'w+') as f:\n                                    #         f.write(str(self.selected_paths)+\"\\n\")\n                                    #         f.write(parent_path+\" \"+parent_name+\"\\n\")\n                                    #         f.write(str(relpath)+\"\\n\")\n                                    #         self.exit()\n                                    if parent_path not in self.selected_paths:\n                                        self.size_map[parent_path] += filesize\n                                        if parent_path not in self.error_size_map.keys():",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:401-412"
-    },
-    "373": {
-        "file_id": 32,
-        "content": "This code iterates through parent directories of a selected file or folder, updates the size map if the parent directory is not already in the selected paths list and hasn't been added before. The code also checks if the file \"0.json\" exists in the relpath (relative path), and if so, writes some information to the debug.txt file before exiting the program.",
-        "type": "comment"
-    },
-    "374": {
-        "file_id": 32,
-        "content": "                                            self.mymap[parent_path].set_label(Text.assemble((f\"({humanize.naturalsize(self.size_map[parent_path])}) {parent_name}\", 'bright_black')))\n                                    else:\n                                        break\n                            else: # propagate error?\n                                subtree.set_label(Text.assemble((\"(error)\", \"bold red\"),(f\"{fname}\", 'bright_black' if fname not in IGNORE_RULE_FILES else \"green_yellow\")))\n                                self.error_size_count +=1\n                                for parent_path, parent_name in reversed(list(iterate_parent_dirs(relpath))): # ends with \"/\"\n                                    # self.existing_paths.add(parent_path)\n                                    if parent_path not in self.selected_paths:\n                                        self.error_size_map[parent_path] += 1\n                                        self.mymap[parent_path].set_label(Text.assemble((f\"({self.error_size_map[parent_path]} errors) \", \"bold red\"),(parent_name,'bright_black')))",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:413-424"
-    },
-    "375": {
-        "file_id": 32,
-        "content": "Code snippet handles error propagation in a directory tree by setting labels to indicate errors and the number of errors for each directory. If an error is encountered, it sets the label to display the error count and indicates the presence of error(s) in the directory. The code also counts the total number of error directories encountered during this process.",
-        "type": "comment"
-    },
-    "376": {
-        "file_id": 32,
-        "content": "                                    else:\n                                        break\n                    banner_refresh_counter += 1\n                    if banner_refresh_counter > 1:\n                    # if banner_refresh_counter > 10000:\n                        banner_refresh_counter = 0\n                        running = format_timedelta(datetime.now() - self.previous_time)\n                        self.label.renderable = Text.assemble((f\"Processing time: -/{self.previous_processing_time_by_line} (lines) -/{self.previous_processing_time_by_size} (size)\\nLines: -/{self.previous_line_count} Size: -/{self.previous_selected_size} Count: -/{self.previous_selected_count} Errors: -/{self.previous_error_count}\\nLast selection: {self.previous_selection_formatted} Selection: -/{self.previous_selection}\\nTotal size: {humanize.naturalsize(self.filesize)}/{self.previous_filesize} Total count: {self.total_count}/{self.previous_total_count} Errors: {self.error_size_count}/{self.previous_error_size_coun",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:425-433"
-    },
-    "377": {
-        "file_id": 32,
-        "content": "This code monitors the banner refresh counter and if it exceeds a certain threshold, it updates the display with various statistics such as processing time, lines, size, count, last selection, total size, and total count. The previous values are also displayed for comparison purposes, along with error counts related to size.",
-        "type": "comment"
-    },
-    "378": {
-        "file_id": 32,
-        "content": "t}\\nLast scanning: {self.previous_scanning_formatted} Scanning: {running}/{self.previous_scanning}\", \"bold\"))\n                        self.label.refresh()\n                if self.loop_break:\n                    try:\n                        process2.terminate()\n                    except:\n                        pass\n                else:\n                    map_keys = numpy.array(list(self.mymap.keys()))\n                    remove_keys = numpy.setdiff1d(map_keys, numpy.array(list(self.existing_paths)))\n                    # breakpoint()\n                    # with open('remove_keys.txt', 'w+') as f:\n                    #     f.write(str(remove_keys))\n                    #     self.exit()\n                    for k in remove_keys:\n                        try:\n                            self.mymap[k].remove()\n                        except:\n                            pass\n                        finally:\n                            del self.mymap[k]\n                    self.previous_existing_paths = self.existing_paths",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:433-455"
-    },
-    "379": {
-        "file_id": 32,
-        "content": "This code snippet is part of a loop that monitors changes in files and directories. If there are any keys in the map (self.mymap) that do not exist in the existing_paths list, it removes them from the map. The previous_existing_paths variable stores the existing paths before this loop iteration. This code also terminates a process named \"process2\" if a loop break condition is met.",
-        "type": "comment"
-    },
-    "380": {
-        "file_id": 32,
-        "content": "                    self.previous_total_count = self.total_count\n                    self.previous_filesize = humanize.naturalsize(self.filesize)\n                    self.previous_error_size_count = self.error_size_count\n                    self.previous_scanning = format_timedelta(datetime.now() - self.previous_time)\n                    self.previous_scanning_formatted = datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n                    self.previous_time = datetime.now()\n                await process2.wait()\n                # clear nonexisting paths\n                await asyncio.sleep(SLEEP)\n            processingLock.release()\n        # self.counter += 1\n    def compose(self) -> ComposeResult:\n        \"\"\"Create child widgets for the app.\"\"\"\n        return [self.header, self.treeview, self.label, self.footer]\n    def on_mount(self) -> None:\n        self.timer = self.set_interval(INTERVAL, self.progress)\n    def action_toggle_dark(self) -> None:\n        \"\"\"An action to toggle dark mode.\"\"\"\n        self.dark = not self.dark",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:456-479"
-    },
-    "381": {
-        "file_id": 32,
-        "content": "Code snippet from main_pyjom.py: This code appears to be handling the state changes of a GUI application by updating variables and waiting for background processes to finish before clearing any nonexisting paths. The `compose` method seems to create child widgets for the app, while `on_mount` sets an interval for the progress function to run. The `action_toggle_dark` method toggles dark mode when invoked.",
-        "type": "comment"
-    },
-    "382": {
-        "file_id": 32,
-        "content": "    def action_exit(self):\n        \"\"\"An action to exit the app.\"\"\"\n        self.exit()\ndef main():\n    diffpath = parse_args()\n    app = VisualIgnoreApp(diffpath)\n    app.run()\nif __name__ == \"__main__\":\n    main()",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py:481-493"
-    },
-    "383": {
-        "file_id": 32,
-        "content": "This code defines an action to exit the app and includes a main function that initializes an instance of VisualIgnoreApp with the specified diffpath, runs it, and handles command-line arguments.",
-        "type": "comment"
-    },
-    "384": {
-        "file_id": 33,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py",
-        "type": "filepath"
-    },
-    "385": {
-        "file_id": 33,
-        "content": "The code imports libraries, defines a script template for comparing file trees with and without ignore rules, parses command-line arguments, renders the script, writes to a temporary file, and runs the bash script, creating JSON files and calling display_tree_structure.py.",
-        "type": "summary"
-    },
-    "386": {
-        "file_id": 33,
-        "content": "from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nimport os\nimport subprocess\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile -J > \"{{tempdir}}/all_tree.json\"\nfd | tree --fromfile -J > \"{{tempdir}}/selected_tree.json\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties\n# count file size\n# render tree json\nscript_template = Template(script_template_str)\nRELATIVE_TEMP_DIR_SCRIPT_PATH = \"script.sh\"\ndef parse_args():\n    parser = ArgumentParser()\n    parser.add_argument(\"-d\", \"--diffpath\", help=\"Path to visualize ignored files\")\n    args = parser.parse_args()\n    return args.diffpath\n@beartype\ndef render_script_template(diffpath: str, tempdir: str) -> str:\n    return script_template.render(diffpath=diffpath, tempdir=tempdir)\nwith TemporaryDirectory() as tempdir:\n    diffpath = parse_args()\n    script_str = render_script_template(diffpath, tempdir)\n    with open(os.path.join(tempdir, RELATIVE_TEMP_DIR_SCRIPT_PATH), \"w\") as f:",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py:1-39"
-    },
-    "387": {
-        "file_id": 33,
-        "content": "This code imports necessary libraries, defines a script template for comparing file trees with and without ignore rules, parses command-line arguments, renders the script template, and writes the resulting script to a temporary file.",
-        "type": "comment"
-    },
-    "388": {
-        "file_id": 33,
-        "content": "        f.write(script_str)\n    subprocess.run([\"bash\", os.path.join(tempdir, RELATIVE_TEMP_DIR_SCRIPT_PATH)])\n    full = f\"{tempdir}/all_tree.json\"\n    selected = f\"{tempdir}/selected_tree.json\"\n    basepath = os.path.abspath(diffpath)\n    subprocess.run(\n        [\n            \"python3\",\n            \"display_tree_structure.py\",\n            \"--full\",\n            full,\n            \"--selected\",\n            selected,\n            \"--basepath\",\n            basepath,\n        ]\n    )",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py:40-56"
-    },
-    "389": {
-        "file_id": 33,
-        "content": "Writing script to file, running bash script in tempdir, creating full and selected JSON files, then calling display_tree_structure.py with arguments.",
-        "type": "comment"
-    },
-    "390": {
-        "file_id": 34,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py",
-        "type": "filepath"
-    },
-    "391": {
-        "file_id": 34,
-        "content": "The code imports modules, defines functions for asynchronous execution and comparison, and sets up a user interface with label widgets, progress function, dark mode toggle, and application exit. The main function initializes VisualIgnoreApp and runs the application.",
-        "type": "summary"
-    },
-    "392": {
-        "file_id": 34,
-        "content": "# from rich.tree import Tree\nfrom textual.app import App, ComposeResult\nfrom textual.widgets import Header, Footer, Label, Tree\nfrom rich.text import Text\nfrom textual.timer import Timer\nfrom threading import Lock\nimport subprocess\n# from tempfile import TemporaryDirectory\nfrom jinja2 import Template\nfrom argparse import ArgumentParser\nfrom beartype import beartype\nINTERVAL = 3\nimport asyncio\nasync def run_command(command:str):\n    process = await asyncio.create_subprocess_shell(\n        command,\n        stdout=subprocess.PIPE,\n        stderr=subprocess.PIPE\n    )\n    stdout, stderr = await process.communicate()\n    return stdout.decode().strip(), stderr.decode().strip()\nscript_template_str = \"\"\"\ncd \"{{diffpath}}\"\nfd --no-ignore --hidden | tree --fromfile > \"{{tempdir}}/all_tree.txt\"\nfd | tree --fromfile > \"{{tempdir}}/selected_tree.txt\"\ndiff -y \"{{tempdir}}/all_tree.txt\" \"{{tempdir}}/selected_tree.txt\" > \"{{tempdir}}/diff_tree.txt\"\ncat \"{{tempdir}}/diff_tree.txt\"\n\"\"\"\n# tree output in json\n# load tree json, set selected & unselected properties",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py:1-35"
-    },
-    "393": {
-        "file_id": 34,
-        "content": "This code imports necessary modules and defines a function to execute commands asynchronously. It also contains a template string for generating a script to compare two directories using the 'fd' and 'tree' commands, and then diffing their output. The purpose is to generate JSON representation of file trees and compare selected and unselected properties.",
-        "type": "comment"
-    },
-    "394": {
-        "file_id": 34,
-        "content": "# count file size\n# render tree json\nscript_template = Template(script_template_str)\nRELATIVE_TEMP_DIR_SCRIPT_PATH = \"script.sh\"\ndef parse_args():\n    parser = ArgumentParser()\n    parser.add_argument(\"-d\", \"--diffpath\", help=\"Path to visualize ignored files\")\n    args = parser.parse_args()\n    return args.diffpath\n@beartype\ndef render_script_template(diffpath: str, tempdir: str) -> str:\n    return script_template.render(diffpath=diffpath, tempdir=tempdir)\nprocessingLock = Lock()\nclass VisualIgnoreApp(App):\n    \"\"\"A Textual app to visualize ignore files.\"\"\"\n    BINDINGS = [(\"d\", \"toggle_dark\", \"Toggle dark mode\"), (\"e\", \"exit\", \"Exit\")]\n    timer: Timer\n    def __init__(self, diffpath, *args, **kwargs):\n        super().__init__(*args, **kwargs)\n        self.i = 0\n        self.header = Header()\n        self.diffpath = diffpath\n        self.treeview = Tree(\".\")\n        self.treeview.root.expand()\n        # self.treeview = RichLog(auto_scroll=False)\n        self.footer = Footer()\n        # self.mytree = Tree(\".\")\n        self.label = Label(Text.assemble((\"ETA:\", \"bold\")), expand=True)",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py:36-75"
-    },
-    "395": {
-        "file_id": 34,
-        "content": "This code sets up an application for visualizing ignored files. It defines a template to generate a script, parses command-line arguments, and initializes the VisualIgnoreApp class with necessary attributes such as treeview and footer. The app has bindings for toggling dark mode and exiting.",
-        "type": "comment"
-    },
-    "396": {
-        "file_id": 34,
-        "content": "        self.label.styles.background = \"red\"\n        # self.label.styles.border = ('solid','red')\n        # self.label.styles.height = 3\n        self.label.styles.height = 1\n        # self.label.styles.dock = 'bottom'\n    async def progress(self):\n        locked = processingLock.acquire(blocking=False)\n        if locked: # taking forever. bad.\n            self.treeview.root.set_label(str(self.i))\n            self.i+=1\n            self.treeview.root.add(\"item\", expand=True)\n            # self.treeview.refresh()\n            processingLock.release()\n        # self.counter += 1\n    def compose(self) -> ComposeResult:\n        \"\"\"Create child widgets for the app.\"\"\"\n        return [self.header, self.treeview, self.label, self.footer]\n    def on_mount(self) -> None:\n        self.timer = self.set_interval(INTERVAL, self.progress)\n    def action_toggle_dark(self) -> None:\n        \"\"\"An action to toggle dark mode.\"\"\"\n        self.dark = not self.dark\n    def action_exit(self):\n        \"\"\"An action to exit the app.\"\"\"\n        self.exit()",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py:76-107"
-    },
-    "397": {
-        "file_id": 34,
-        "content": "This code is creating a user interface for an application. It sets the background color, height, and other styles for a label widget. The code also defines a progress function that updates a treeview with new items at regular intervals until it's locked by processingLock. It creates child widgets in the compose method, starts a timer to call the progress function, and provides actions to toggle dark mode and exit the application.",
-        "type": "comment"
-    },
-    "398": {
-        "file_id": 34,
-        "content": "def main():\n    diffpath = parse_args()\n    app = VisualIgnoreApp(diffpath)\n    app.run()\nif __name__ == \"__main__\":\n    main()",
-        "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py:110-117"
-    },
     "399": {
-        "file_id": 34,
-        "content": "Main function sets parse_args, creates VisualIgnoreApp instance with argument and runs the application.",
+        "file_id": 36,
+        "content": "This code initializes a visual file selector with bindings for dark mode toggle, exit, and restart actions. The class uses a header, footer, treeview, and label components. It sets the default label text and styles for the label component. The code also disables expansion of the treeview root to improve performance.",
         "type": "comment"
     }
 }

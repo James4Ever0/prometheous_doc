@@ -120,73 +120,93 @@
             "language_id": "python"
         },
         "23": {
-            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py",
+            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/chat.py",
             "entry_id": 264,
             "language_id": "python"
         },
         "24": {
-            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py",
-            "entry_id": 272,
+            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py",
+            "entry_id": 268,
             "language_id": "python"
         },
         "25": {
-            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py",
-            "entry_id": 280,
+            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py",
+            "entry_id": 276,
             "language_id": "python"
         },
         "26": {
-            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py",
+            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py",
             "entry_id": 284,
             "language_id": "python"
         },
         "27": {
-            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py",
+            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py",
             "entry_id": 288,
             "language_id": "python"
         },
         "28": {
-            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
-            "entry_id": 292,
-            "language_id": "python"
-        },
-        "29": {
-            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
+            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py",
             "entry_id": 296,
             "language_id": "python"
         },
+        "29": {
+            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py",
+            "entry_id": 316,
+            "language_id": "python"
+        },
         "30": {
-            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
-            "entry_id": 318,
+            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py",
+            "entry_id": 320,
             "language_id": "python"
         },
         "31": {
-            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
+            "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py",
             "entry_id": 324,
             "language_id": "python"
         },
         "32": {
-            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py",
-            "entry_id": 336,
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
+            "entry_id": 342,
             "language_id": "python"
         },
         "33": {
-            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py",
-            "entry_id": 384,
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
+            "entry_id": 346,
             "language_id": "python"
         },
         "34": {
-            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py",
-            "entry_id": 390,
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
+            "entry_id": 368,
             "language_id": "python"
         },
         "35": {
-            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/tree_utils.py",
-            "entry_id": 400,
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
+            "entry_id": 374,
             "language_id": "python"
         },
         "36": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py",
+            "entry_id": 386,
+            "language_id": "python"
+        },
+        "37": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py",
+            "entry_id": 434,
+            "language_id": "python"
+        },
+        "38": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py",
+            "entry_id": 440,
+            "language_id": "python"
+        },
+        "39": {
+            "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/tree_utils.py",
+            "entry_id": 450,
+            "language_id": "python"
+        },
+        "40": {
             "filepath": "/search_filepath_by_name/search_filepath.sh",
-            "entry_id": 422,
+            "entry_id": 472,
             "language_id": "shell"
         }
     },

@@ -1,0 +1,10 @@
+{
+    "summary": "This code imports necessary modules and appends the directory of the current file to the system path, allowing it to access and interact with the \"main\" module for document-based chat functionality.",
+    "details": [
+        {
+            "comment": "This code imports necessary modules and appends the directory of the current file to the system path, allowing it to access and interact with the \"main\" module for document-based chat functionality.",
+            "location": "\"/media/root/Toshiba XG3/works/prometheous_doc/src/document_agi_computer_control/vectorstore_embedding_chat_rag/chat.py\":0-4",
+            "content": "# chat with the document.\nimport sys, os\nsys.path.append(os.path.dirname(__file__))\nimport main"
+        }
+    ]
+}

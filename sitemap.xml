@@ -146,6 +146,12 @@
 </url>
 
 <url>
+  <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/chat.py</loc>
+  <lastmod>2023-12-28T09:21:02+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+
+<url>
   <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py</loc>
   <lastmod>2023-12-28T09:21:02+00:00</lastmod>
   <priority>1.00</priority>
@@ -164,6 +170,18 @@
 </url>
 
 <url>
+  <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py</loc>
+  <lastmod>2023-12-28T09:21:02+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+
+<url>
+  <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py</loc>
+  <lastmod>2023-12-28T09:21:02+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+
+<url>
   <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py</loc>
   <lastmod>2023-12-28T09:21:02+00:00</lastmod>
   <priority>1.00</priority>
@@ -171,6 +189,12 @@
 
 <url>
   <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py</loc>
+  <lastmod>2023-12-28T09:21:02+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+
+<url>
+  <loc>https://james4ever0.github.io/prometheous_doc?q=/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py</loc>
   <lastmod>2023-12-28T09:21:02+00:00</lastmod>
   <priority>1.00</priority>
 </url>

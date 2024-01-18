@@ -1,46 +1,46 @@
 {
     "200": {
         "file_id": 19,
-        "content": "    new_data = json.loads(open(os.path.join(source_dir, f\"data/{i}.json\"), \"r\").read())\n    data.update(new_data)\ndef strip_quote(s: str):\n    if s[0] == s[-1]:\n        if s[0] in ['\"', \"'\"]:\n            return s[1:-1].strip()\n    return s.strip().strip(\".\")\nfrom tinydb import TinyDB, Query\ncache_title = TinyDB(os.path.join(source_dir, \"cache_title.json\"))\ntitle_split_dir = os.path.join(source_dir, \"data/titles\")\nmetadata_title_path = os.path.join(source_dir, \"metadata_title.json\")\nimport shutil\nif not os.path.exists(title_split_dir):\n    os.makedirs(title_split_dir)\nelse:\n    shutil.rmtree(title_split_dir)\n    os.makedirs(title_split_dir)\nif not os.path.isdir(title_split_dir):\n    raise Exception(\n        f\"'{title_split_dir}' (where splited titles stored) must be a directory\"\n    )\n# structure:\n# [filepath] [summary] [code] [comment] ...\ntitle_data = {}\nfile_mapping_detail = {}\ndata_count = len(data.keys())\nimport hashlib\ndef hash_key(summary: str):\n    enc = summary.strip()\n    if enc:\n        # Generate a hash for the given summary",
+        "content": "    data.update(new_data)\ndef strip_quote(s: str):\n    if s[0] == s[-1]:\n        if s[0] in ['\"', \"'\"]:\n            return s[1:-1].strip()\n    return s.strip().strip(\".\")\nfrom tinydb import TinyDB, Query\ncache_title = TinyDB(os.path.join(source_dir, \"cache_title.json\"))\ntitle_split_dir = os.path.join(source_dir, \"data/titles\")\nmetadata_title_path = os.path.join(source_dir, \"metadata_title.json\")\nimport shutil\nif not os.path.exists(title_split_dir):\n    os.makedirs(title_split_dir)\nelse:\n    shutil.rmtree(title_split_dir)\n    os.makedirs(title_split_dir)\nif not os.path.isdir(title_split_dir):\n    raise Exception(\n        f\"'{title_split_dir}' (where splited titles stored) must be a directory\"\n    )\n# structure:\n# [filepath] [summary] [code] [comment] ...\ntitle_data = {}\nfile_mapping_detail = {}\ndata_count = len(data.keys())\nimport hashlib\ndef hash_key(summary: str):\n    enc = summary.strip()\n    if enc:\n        # Generate a hash for the given summary\n        hash_object = hashlib.md5(enc.encode())\n        return hash_object.hexdigest()",
         "type": "code",
-        "location": "/document_agi_computer_control/title_generator/main.py:42-86"
+        "location": "/document_agi_computer_control/title_generator/main.py:42-87"
     },
     "201": {
         "file_id": 19,
-        "content": "This code loads data from a JSON file, updates existing data, provides a function to strip quotes, sets up a TinyDB database and directory paths, ensures the necessary directories exist, initializes an empty dictionary for title data, defines a function to hash a summary, and checks if the required directory exists.",
+        "content": "The code initializes a TinyDB for storing cache data, checks and creates the title_split directory if it does not exist, defines a function to strip quotes, and then hashes a given summary using MD5.",
         "type": "comment"
     },
     "202": {
         "file_id": 19,
-        "content": "        hash_object = hashlib.md5(enc.encode())\n        return hash_object.hexdigest()\ndef ask_llm_for_title(path: str, comment: str):\n    init_prompt = \"\"\"You are a professional title writer. You can write a concise, conclusive and meaningful title within 3 to 7 words. You will be given a piece of content, a path that refers to the content and produce a single title.\n\"\"\"\n    with llm_context(init_prompt) as model:\n        prompt = f\"\"\"Content:\n{comment}\nPath of the content: {path}\nTitle within 3 to 7 words (do not quote the title, just write it out):\n\"\"\"\n        ret = model.run(prompt).strip()\n        ret = strip_quote(ret)\n    return ret\ndef generate_title_and_update_to_result(\n    path: str, comment: str, result_dict: dict[str, str]\n):\n    comment_hash = hash_key(comment)\n    doc = cache_title.get((Query().hash == comment_hash) and (Query().path == path))\n    if doc:\n        mtitle = doc[\"title\"]\n    else:\n        mtitle = ask_llm_for_title(path, comment)\n        cache_title.upsert(\n            dict(path=path, hash=comment_hash, title=mtitle), cond=Query().path == path",
+        "content": "def ask_llm_for_title(path: str, comment: str):\n    init_prompt = \"\"\"You are a professional title writer. You can write a concise, conclusive and meaningful title within 3 to 7 words. You will be given a piece of content, a path that refers to the content and produce a single title.\n\"\"\"\n    with llm_context(init_prompt) as model:\n        prompt = f\"\"\"Content:\n{comment}\nPath of the content: {path}\nTitle within 3 to 7 words (do not quote the title, just write it out):\n\"\"\"\n        ret = model.run(prompt).strip()\n        ret = strip_quote(ret)\n    return ret\ndef generate_title_and_update_to_result(\n    path: str, comment: str, result_dict: dict[str, str]\n):\n    comment_hash = hash_key(comment)\n    doc = cache_title.get((Query().hash == comment_hash) and (Query().path == path))\n    if doc:\n        mtitle = doc[\"title\"]\n    else:\n        mtitle = ask_llm_for_title(path, comment)\n        cache_title.upsert(\n            dict(path=path, hash=comment_hash, title=mtitle), cond=Query().path == path\n        )\n    result_dict[path] = mtitle",
         "type": "code",
-        "location": "/document_agi_computer_control/title_generator/main.py:87-117"
+        "location": "/document_agi_computer_control/title_generator/main.py:90-118"
     },
     "203": {
         "file_id": 19,
-        "content": "This code is responsible for generating titles based on a given piece of content and its path, using a Language Model (LLM). It hashes the input comment, checks if there's an existing title in cache for that path and comment hash, and if not, it asks the LLM to generate a title. The generated or cached title is returned by the function.",
+        "content": "The code defines a function `ask_llm_for_title` that utilizes LLM (Language Model) to generate titles for given content and its path. It also includes the `generate_title_and_update_to_result` function, which retrieves an existing title from the cache or generates a new one using `ask_llm_for_title`, and updates it in the result dictionary.",
         "type": "comment"
     },
     "204": {
         "file_id": 19,
-        "content": "        )\n    result_dict[path] = mtitle\nfor k, v in file_mapping.items():\n    # end_id is exclusive.\n    if str(int(k) + 1) in file_mapping.keys():\n        end_id = int(file_mapping[str(int(k) + 1)][\"entry_id\"])\n    else:\n        end_id = data_count\n    file_mapping_detail[k] = {\n        \"filepath\": v[\"filepath\"],\n        \"span\": {\"start\": int(v[\"entry_id\"]), \"end\": end_id},\n    }\nfile_count = len(file_mapping.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{file_count}\")\nfor i in range(file_count):\n    try:\n        it = file_mapping_detail[str(i)]\n        start, end = it[\"span\"][\"start\"], it[\"span\"][\"end\"]\n        split_count = (end - start - 2) / 2\n        split_count = int(split_count)\n        # generate for file summary title first.\n        generate_title_and_update_to_result(\n            data[str(start)][\"content\"], data[str(start + 1)][\"content\"], title_data\n        )\n        if split_count == 1:  # only generate for file summary\n            continue\n        else:\n            # generate for splits\n            for j in range(split_count):",
+        "content": "for k, v in file_mapping.items():\n    # end_id is exclusive.\n    if str(int(k) + 1) in file_mapping.keys():\n        end_id = int(file_mapping[str(int(k) + 1)][\"entry_id\"])\n    else:\n        end_id = data_count\n    file_mapping_detail[k] = {\n        \"filepath\": v[\"filepath\"],\n        \"span\": {\"start\": int(v[\"entry_id\"]), \"end\": end_id},\n    }\nfile_count = len(file_mapping.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{file_count}\")\nfor i in range(file_count):\n    try:\n        it = file_mapping_detail[str(i)]\n        start, end = it[\"span\"][\"start\"], it[\"span\"][\"end\"]\n        split_count = (end - start - 2) / 2\n        split_count = int(split_count)\n        # generate for file summary title first.\n        generate_title_and_update_to_result(\n            data[str(start)][\"content\"], data[str(start + 1)][\"content\"], title_data\n        )\n        if split_count == 1:  # only generate for file summary\n            continue\n        else:\n            # generate for splits\n            for j in range(split_count):\n                generate_title_and_update_to_result(",
         "type": "code",
-        "location": "/document_agi_computer_control/title_generator/main.py:118-149"
+        "location": "/document_agi_computer_control/title_generator/main.py:121-149"
     },
     "205": {
         "file_id": 19,
-        "content": "This code is iterating over a set of files, tracking the file path and span of each file's content. It calculates the number of splits needed based on the end id minus start id, excluding one. The code generates titles for the file summary and additional splits if there are more than one split required.",
+        "content": "The code iterates through a file_mapping dictionary, creates a file_mapping_detail dictionary with start and end IDs for each file, calculates the number of splits needed based on end - start - 2, generates a title for the first entry and updates the result, and if there is only one split, it continues to the next iteration. Otherwise, it generates titles for all splits.",
         "type": "comment"
     },
     "206": {
         "file_id": 19,
-        "content": "                generate_title_and_update_to_result(\n                    data[str(start + 2 + j * 2)][\"location\"],\n                    data[str(start + 3 + j * 2)][\"content\"],\n                    title_data,\n                )\n    finally:\n        print(f\"\\n>>>> PROCESSING PROGRESS: {i+1}/{file_count}\")\n# split and store file summaries.\nprint(\"Spliting and storing titles...\")\ntitle_split_count = 0\nimport json\nfor i, chunk in enumerate(split_dict_into_chunks(title_data, 300)):\n    title_split_count += 1\n    with open(os.path.join(title_split_dir, f\"{i}.json\"), \"w+\") as f:\n        f.write(json.dumps(chunk, indent=4, ensure_ascii=False))\nprint(\"Storing title metadata...\")\nwith open(metadata_title_path, \"w+\") as f:\n    f.write(json.dumps(dict(split_count=title_split_count)))\nprint(\"Finished title generation.\")",
+        "content": "                    data[str(start + 2 + j * 2)][\"location\"],\n                    data[str(start + 3 + j * 2)][\"content\"],\n                    title_data,\n                )\n    finally:\n        print(f\"\\n>>>> PROCESSING PROGRESS: {i+1}/{file_count}\")\n# split and store file summaries.\nprint(\"Spliting and storing titles...\")\ntitle_split_count = 0\nimport json\nfor i, chunk in enumerate(split_dict_into_chunks(title_data, 300)):\n    title_split_count += 1\n    with open(os.path.join(title_split_dir, f\"{i}.json\"), \"w+\") as f:\n        f.write(json.dumps(chunk, indent=4, ensure_ascii=False))\nprint(\"Storing title metadata...\")\nwith open(metadata_title_path, \"w+\") as f:\n    f.write(json.dumps(dict(split_count=title_split_count)))\nprint(\"Finished title generation.\")",
         "type": "code",
-        "location": "/document_agi_computer_control/title_generator/main.py:150-171"
+        "location": "/document_agi_computer_control/title_generator/main.py:150-170"
     },
     "207": {
         "file_id": 19,
-        "content": "Code processes a data title, generates a new title, and updates the result. It then prints progress for each file being processed. The code splits and stores file summaries by creating chunks of 300 elements, writing them to JSON files with indices, storing the count of split titles in a metadata file, and finally printing that generation process is finished.",
+        "content": "This code processes and stores file summaries, splits them into chunks of 300, and writes each chunk to a separate JSON file. It also keeps track of the total split count in a metadata file. The progress is printed at regular intervals.",
         "type": "comment"
     },
     "208": {
@@ -350,193 +350,194 @@
     },
     "264": {
         "file_id": 23,
-        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py",
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/chat.py",
         "type": "filepath"
     },
     "265": {
         "file_id": 23,
-        "content": "The code utilizes Ollama embeddings and sets up an HnswDocumentIndex for document storage, indexing, and nearest neighbor search using the provided embedding vector.",
+        "content": "This code imports necessary modules and appends the directory of the current file to the system path, allowing it to access and interact with the \"main\" module for document-based chat functionality.",
         "type": "summary"
     },
     "266": {
         "file_id": 23,
-        "content": "import hashlib\nimport os\nos.environ[\"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION\"] = \"python\"\nfrom langchain.embeddings import OllamaEmbeddings\nollama_emb = OllamaEmbeddings(\n    model=\"openhermes2.5-mistral:latest\",\n    # model=\"llama:7b\",\n)\ndef hash_doc(enc: str):\n    hash_object = hashlib.md5(enc.encode())\n    return hash_object.hexdigest()\ncache_path = \"./docarray_cache\"\nfrom docarray import BaseDoc\nfrom docarray.index import HnswDocumentIndex\nimport numpy as np\nfrom docarray.typing import NdArray\nclass TextDoc(BaseDoc):\n    text: str\n    text_hash: str\n    embedding: NdArray[4096]\nimport rich\n# create a Document Index\nindex = HnswDocumentIndex[TextDoc](work_dir=cache_path)\n# index your data\ndocs = [\"hello again\", \"bye world\"]\nquery = \"hello world\"\n# find similar Documents\nfor it in docs:\n    docHash = hash_doc(it)\n    index._sqlite_cursor.execute(\n        \"SELECT text FROM docs WHERE text_hash = ?\", (docHash,)\n    )\n    rows = index._sqlite_cursor.fetchall()\n    if len(rows) > 0:\n        cached = False\n        for row in rows:",
+        "content": "# chat with the document.\nimport sys, os\nsys.path.append(os.path.dirname(__file__))\nimport main",
         "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:1-51"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/chat.py:1-5"
     },
     "267": {
         "file_id": 23,
-        "content": "This code imports necessary libraries, sets up Ollama embeddings, and defines a TextDoc class for document storage. It also creates an HnswDocumentIndex object for indexing documents and searching for similar ones. The code then demonstrates how to insert, retrieve, and search for documents using the provided example data.",
+        "content": "This code imports necessary modules and appends the directory of the current file to the system path, allowing it to access and interact with the \"main\" module for document-based chat functionality.",
         "type": "comment"
     },
     "268": {
-        "file_id": 23,
-        "content": "            if row[0] == it:\n                cached = True\n                break\n        if cached:\n            print(\"document cached:\", it)\n            continue\n    # result = index.text_search(docHash, search_field=\"text_hash\", limit=1)\n    # if result.count == 1:\n    #     if result.documents[0].text_hash == docHash:\n    #         print(\"document cached:\", it)\n    #         continue\n    embed = np.array(ollama_emb.embed_query(it))\n    docObject = TextDoc(text=it, text_hash=docHash, embedding=embed)\n    index.index(docObject)\n# breakpoint()\nindex._sqlite_cursor.execute(\"SELECT doc_id FROM docs WHERE text LIKE 'hello%'\")\n# index._sqlite_cursor.execute(\"SELECT doc_id FROM docs\")\n# [(423764937781332251,), (955323081996155123,)]\n# index._sqlite_cursor.execute(\"SELECT * FROM docs\") # field: doc_id\nrows = index._sqlite_cursor.fetchall()\n# print(rows)\nhashed_ids = set(it[0] for it in rows)\n# hashed_ids = set(str(it[0]) for it in rows)\n# print(hashed_ids)\nans = index._search_and_filter(\n    np.array(ollama_emb.embed_query(query)).reshape(1, -1),",
-        "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:52-81"
+        "file_id": 24,
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py",
+        "type": "filepath"
     },
     "269": {
-        "file_id": 23,
-        "content": "Checking if the document is cached by iterating through a list and comparing the first element of each row to the current item. If it matches, the document is considered cached and skipped; otherwise, the document's embedding is calculated using Ollama and added to the index.",
-        "type": "comment"
+        "file_id": 24,
+        "content": "This code initializes a document index and performs text search for similar documents using HnswLibrary. It also includes functions for text hashing and creating TextDoc objects to represent document structure, searches for nearest neighbors with 10 result limit, and prints results/scores.",
+        "type": "summary"
     },
     "270": {
-        "file_id": 23,
-        "content": "    limit=10,\n    search_field=\"embedding\",\n    hashed_ids=hashed_ids,\n)\nrich.print(\"ans:\", ans)\n# breakpoint()\n# hnswlib ids: [955323081996155123, 423764937781332251]\nresults, scores = index.find(\n    ollama_emb.embed_query(query), limit=10, search_field=\"embedding\"\n)\nrich.print(results, scores)",
+        "file_id": 24,
+        "content": "import os\nimport hashlib\nos.environ[\"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION\"] = \"python\"\nfrom langchain.embeddings import OllamaEmbeddings\nollama_emb = OllamaEmbeddings(\n    model=\"openhermes2.5-mistral:latest\",\n    # model=\"llama:7b\",\n)\ndef hash_doc(enc: str):\n    hash_object = hashlib.md5(enc.encode())\n    return hash_object.hexdigest()\ncache_path = \"./docarray_cache\"\nfrom docarray import BaseDoc\nfrom docarray.index import HnswDocumentIndex\nimport numpy as np\nfrom docarray.typing import NdArray\nclass TextDoc(BaseDoc):\n    text: str\n    text_hash: str\n    embedding: NdArray[4096]\nimport rich\n# create a Document Index\nindex = HnswDocumentIndex[TextDoc](work_dir=cache_path)\n# index your data\ndocs = [\"hello again\", \"bye world\"]\nquery = \"hello world\"\n# find similar Documents\nfor it in docs:\n    docHash = hash_doc(it)\n    index._sqlite_cursor.execute(\n        \"SELECT text FROM docs WHERE text_hash = ?\", (docHash,)\n    )\n    rows = index._sqlite_cursor.fetchall()\n    if len(rows) > 0:\n        cached = False\n        for row in rows:",
         "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:82-94"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:1-51"
     },
     "271": {
-        "file_id": 23,
-        "content": "The code is searching for the nearest neighbors of a query in an HNSWlib index using the provided embedding vector, and it returns the results and scores.",
+        "file_id": 24,
+        "content": "This code imports necessary libraries and initializes a document index using an HnswDocumentIndex from the docarray library. It then indexes data, in this case, a list of strings, and allows for finding similar documents based on a query. The code also includes functions for hashing text and creating a TextDoc class representing the structure of each document.",
         "type": "comment"
     },
     "272": {
         "file_id": 24,
-        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py",
-        "type": "filepath"
+        "content": "            if row[0] == it:\n                cached = True\n                break\n        if cached:\n            print(\"document cached:\", it)\n            continue\n    # result = index.text_search(docHash, search_field=\"text_hash\", limit=1)\n    # if result.count == 1:\n    #     if result.documents[0].text_hash == docHash:\n    #         print(\"document cached:\", it)\n    #         continue\n    embed = np.array(ollama_emb.embed_query(it))\n    docObject = TextDoc(text=it, text_hash=docHash, embedding=embed)\n    index.index(docObject)\n# breakpoint()\nindex._sqlite_cursor.execute(\"SELECT doc_id FROM docs WHERE text LIKE 'hello%'\")\n# index._sqlite_cursor.execute(\"SELECT doc_id FROM docs\")\n# [(423764937781332251,), (955323081996155123,)]\n# index._sqlite_cursor.execute(\"SELECT * FROM docs\") # field: doc_id\nrows = index._sqlite_cursor.fetchall()\n# print(rows)\nhashed_ids = set(it[0] for it in rows)\n# hashed_ids = set(str(it[0]) for it in rows)\n# print(hashed_ids)\nans = index._search_and_filter(\n    np.array(ollama_emb.embed_query(query)).reshape(1, -1),",
+        "type": "code",
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:52-81"
     },
     "273": {
         "file_id": 24,
-        "content": "The code imports necessary libraries, sets up a vector store index and embeddings model, initializes an OpenLM model, and constructs a VectorStoreIndex using either the vector store or docstore. The vector store index is used as a retriever to retrieve \"hello\" and print the answer in a rich format.",
-        "type": "summary"
+        "content": "The code is performing text search and indexing operations on a document store. It first checks if the document is cached, and if so, it continues without further processing. If not, it embeds the query and creates a TextDoc object with the embedded representation of the document's text. The document is then indexed in the document store using the provided index object. Next, the code executes SQLite queries to fetch doc_ids from the database. It converts these doc_ids into a set and then performs a search and filter operation on the index using an embedded representation of the query.",
+        "type": "comment"
     },
     "274": {
         "file_id": 24,
+        "content": "    limit=10,\n    search_field=\"embedding\",\n    hashed_ids=hashed_ids,\n)\nrich.print(\"ans:\", ans)\n# breakpoint()\n# hnswlib ids: [955323081996155123, 423764937781332251]\nresults, scores = index.find(\n    ollama_emb.embed_query(query), limit=10, search_field=\"embedding\"\n)\nrich.print(results, scores)",
+        "type": "code",
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:82-94"
+    },
+    "275": {
+        "file_id": 24,
+        "content": "This code is searching for the nearest neighbors using HnswLibrary in the index, passing an embedded query and limiting the results to 10. It then prints the results and scores obtained from the search. The breakpoint can be used for debugging purposes if needed.",
+        "type": "comment"
+    },
+    "276": {
+        "file_id": 25,
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py",
+        "type": "filepath"
+    },
+    "277": {
+        "file_id": 25,
+        "content": "The code imports necessary libraries, sets up a vector store index and embeddings model, initializes an OpenLM model, and constructs a VectorStoreIndex using either the vector store or docstore. The vector store index is used as a retriever to retrieve \"hello\" and print the answer in a rich format.",
+        "type": "summary"
+    },
+    "278": {
+        "file_id": 25,
         "content": "from llama_index import Document\nfrom llama_index.embeddings import OllamaEmbedding  # OpenAIEmbedding\nfrom llama_index.text_splitter import SentenceSplitter\nfrom llama_index.extractors import TitleExtractor\nfrom llama_index.ingestion import IngestionPipeline\nfrom llama_index.llms import Ollama\nfrom llama_index.storage.docstore import SimpleDocumentStore\nimport os\nos.environ[\"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION\"] = \"python\"\nfrom llama_index import VectorStoreIndex, ServiceContext, LLMPredictor\nfrom llama_index.vector_stores import DocArrayHnswVectorStore\n# from llama_index.vector_stores import SimpleVectorStore\n# from llama_index.ingestion.cache import SimpleCache\nvector_store = DocArrayHnswVectorStore(\"storage\",dim = 4096)\n# create the pipeline with transformations\n# if os.path.exists(\"./storage\"):\n#     vector_store = SimpleVectorStore.from_persist_dir()\n# else:\n#     vector_store = SimpleVectorStore(stores_text=True)\n# vector_store.stores_text=True\nembed = OllamaEmbedding(model_name=\"openhermes2.5-mistral:latest\")",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:1-29"
     },
-    "275": {
-        "file_id": 24,
-        "content": "This code imports necessary libraries and sets up a vector store for storing and retrieving documents using the llama_index package. The code utilizes DocArrayHnswVectorStore for efficient storage and retrieval, and also creates an OpenAIEmbedding model to generate embeddings for documents.",
-        "type": "comment"
-    },
-    "276": {
-        "file_id": 24,
-        "content": "llm = Ollama(model=\"openhermes2.5-mistral:latest\")\npipeline = IngestionPipeline.construct(\n    transformations=[\n        SentenceSplitter(chunk_size=25, chunk_overlap=0),\n        TitleExtractor(llm=llm),\n        embed,\n    ],\n    docstore=SimpleDocumentStore(),  # do it if you want load/persist to work properly.\n    vector_store=vector_store,\n    validate_arguments=False,\n)\nloadpath = \"./pipeline_storage\"\nif os.path.exists(loadpath):\n    pipeline.load(persist_dir=loadpath)\n# run the pipeline\nnodes = pipeline.run(documents=[Document.example()])  # return newly added nodes.\nimport rich\n# rich.print(nodes)\n# rich.print(pipeline.documents)\n# rich.print(pipeline.docstore.docs)\npipeline.persist(persist_dir=loadpath)  # not persisting document.\nserv_cont = ServiceContext.from_defaults(\n    llm_predictor=LLMPredictor(llm),\n    embed_model=embed,\n)\n# vsindex = VectorStoreIndex.from_vector_store(vectore_store)\nvsindex = VectorStoreIndex.from_vector_store(vector_store, service_context=serv_cont)\n# vsindex = VectorStoreIndex.from_documents(pipeline.docstore.docs.values(),service_context=serv_cont)",
-        "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:30-60"
-    },
-    "277": {
-        "file_id": 24,
-        "content": "This code initializes an OpenLM model, creates a pipeline for text processing with transformations like sentence splitting and title extraction, checks if a load path exists and loads the saved pipeline if so. It then runs the pipeline on example documents, prints the resulting nodes, persists the pipeline, creates a service context using the loaded LLM and embed models, and finally constructs a VectorStoreIndex from either the vector store or the documents in the docstore.",
-        "type": "comment"
-    },
-    "278": {
-        "file_id": 24,
-        "content": "# this will do RAG. However do you have qualified prompt?\n# engine = vsindex.as_query_engine()\nengine = vsindex.as_retriever()\nans = engine.retrieve(\"hello\")\n# ans = engine.query(\"something interesting in the document\")\nrich.print(ans)",
-        "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:62-68"
-    },
     "279": {
-        "file_id": 24,
-        "content": "This code initializes the vector store index (vsindex) as a retriever rather than a query engine, retrieves \"hello\" using the retriever, and prints the answer in a rich format. A qualified prompt is missing to enhance the functionality of the query or retrieve function.",
+        "file_id": 25,
+        "content": "This code imports necessary libraries and sets up a vector store for storing and retrieving documents using the llama_index package. The code utilizes DocArrayHnswVectorStore for efficient storage and retrieval, and also creates an OpenAIEmbedding model to generate embeddings for documents.",
         "type": "comment"
     },
     "280": {
         "file_id": 25,
-        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py",
-        "type": "filepath"
+        "content": "llm = Ollama(model=\"openhermes2.5-mistral:latest\")\npipeline = IngestionPipeline.construct(\n    transformations=[\n        SentenceSplitter(chunk_size=25, chunk_overlap=0),\n        TitleExtractor(llm=llm),\n        embed,\n    ],\n    docstore=SimpleDocumentStore(),  # do it if you want load/persist to work properly.\n    vector_store=vector_store,\n    validate_arguments=False,\n)\nloadpath = \"./pipeline_storage\"\nif os.path.exists(loadpath):\n    pipeline.load(persist_dir=loadpath)\n# run the pipeline\nnodes = pipeline.run(documents=[Document.example()])  # return newly added nodes.\nimport rich\n# rich.print(nodes)\n# rich.print(pipeline.documents)\n# rich.print(pipeline.docstore.docs)\npipeline.persist(persist_dir=loadpath)  # not persisting document.\nserv_cont = ServiceContext.from_defaults(\n    llm_predictor=LLMPredictor(llm),\n    embed_model=embed,\n)\n# vsindex = VectorStoreIndex.from_vector_store(vectore_store)\nvsindex = VectorStoreIndex.from_vector_store(vector_store, service_context=serv_cont)\n# vsindex = VectorStoreIndex.from_documents(pipeline.docstore.docs.values(),service_context=serv_cont)",
+        "type": "code",
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:30-60"
     },
     "281": {
         "file_id": 25,
-        "content": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
-        "type": "summary"
+        "content": "This code initializes an OpenLM model, creates a pipeline for text processing with transformations like sentence splitting and title extraction, checks if a load path exists and loads the saved pipeline if so. It then runs the pipeline on example documents, prints the resulting nodes, persists the pipeline, creates a service context using the loaded LLM and embed models, and finally constructs a VectorStoreIndex from either the vector store or the documents in the docstore.",
+        "type": "comment"
     },
     "282": {
         "file_id": 25,
-        "content": "from llama_index import VectorStoreIndex, LLMPredictor\nfrom llama_index import Document\nfrom llama_index.llms import Ollama\nfrom llama_index.embeddings import OllamaEmbedding\nfrom llama_index import ServiceContext\nembed = OllamaEmbedding(model_name=\"openhermes2.5-mistral:latest\")\nllm = Ollama(model=\"openhermes2.5-mistral:latest\")\nserv_cont = ServiceContext.from_defaults(\n    llm_predictor=LLMPredictor(llm),\n    embed_model=embed,\n)\ndocuments = [Document.example()]\n# print(documents)\nindex = VectorStoreIndex.from_documents(documents, service_context=serv_cont)",
+        "content": "# this will do RAG. However do you have qualified prompt?\n# engine = vsindex.as_query_engine()\nengine = vsindex.as_retriever()\nans = engine.retrieve(\"hello\")\n# ans = engine.query(\"something interesting in the document\")\nrich.print(ans)",
         "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py:1-16"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:62-68"
     },
     "283": {
         "file_id": 25,
-        "content": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
+        "content": "This code initializes the vector store index (vsindex) as a retriever rather than a query engine, retrieves \"hello\" using the retriever, and prints the answer in a rich format. A qualified prompt is missing to enhance the functionality of the query or retrieve function.",
         "type": "comment"
     },
     "284": {
         "file_id": 26,
-        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py",
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py",
         "type": "filepath"
     },
     "285": {
         "file_id": 26,
-        "content": "The code imports OllamaEmbeddings from Langchain and initializes an embedding model. The comments indicate that the model is used for querying and document embedding, but LlamaIndex with its cache could be a potential alternative. The code then embeds a query and some documents using the initialized model and prints the types and shapes of the resulting embeddings.",
+        "content": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
         "type": "summary"
     },
     "286": {
         "file_id": 26,
-        "content": "# create embedding with ollama\n# or use llamaindex instead? it has cache.\n# since small local index is enough, we do not need huge vector search database engine.\n# if that is the case, we just swap the adapter.\nimport rich\nfrom langchain.embeddings import OllamaEmbeddings\nollama_emb = OllamaEmbeddings(\n    model=\"openhermes2.5-mistral:latest\",\n    # model=\"llama:7b\",\n)\nquery = \"hello world\"\ndocuments = [\"hello again\", \"bye world\"]\nq_emb = ollama_emb.embed_query(query)\nd_emb = ollama_emb.embed_documents(documents)\nimport numpy as np\nrich.print(type(q_emb), np.array(q_emb).shape)  # list\nrich.print(type(d_emb), np.array(d_emb).shape)\n# <class 'list'>\n# (4096,)\n# <class 'list'>\n# (2, 4096)",
+        "content": "from llama_index import VectorStoreIndex, LLMPredictor\nfrom llama_index import Document\nfrom llama_index.llms import Ollama\nfrom llama_index.embeddings import OllamaEmbedding\nfrom llama_index import ServiceContext\nembed = OllamaEmbedding(model_name=\"openhermes2.5-mistral:latest\")\nllm = Ollama(model=\"openhermes2.5-mistral:latest\")\nserv_cont = ServiceContext.from_defaults(\n    llm_predictor=LLMPredictor(llm),\n    embed_model=embed,\n)\ndocuments = [Document.example()]\n# print(documents)\nindex = VectorStoreIndex.from_documents(documents, service_context=serv_cont)",
         "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py:1-26"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py:1-16"
     },
     "287": {
         "file_id": 26,
-        "content": "The code imports OllamaEmbeddings from Langchain and initializes an embedding model. The comments indicate that the model is used for querying and document embedding, but LlamaIndex with its cache could be a potential alternative. The code then embeds a query and some documents using the initialized model and prints the types and shapes of the resulting embeddings.",
+        "content": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
         "type": "comment"
     },
     "288": {
         "file_id": 27,
-        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py",
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py",
         "type": "filepath"
     },
     "289": {
         "file_id": 27,
-        "content": "The code imports hnswlib, initializes an HNSW index with L2 space and specified dimension, adds random embeddings to the index, saves it as \"hnsw_index.bin\", performs k-nearest neighbor search using two random queries, and prints the shapes of the results.",
+        "content": "The code imports modules, defines classes for queries and prompts, generates data processing prompts, assembles questions and answers, creates a formatted document, and handles chat history. Else block generates chat history summary and condense prompts with new user question and context.",
         "type": "summary"
     },
     "290": {
         "file_id": 27,
-        "content": "import hnswlib\ndim = 128  # Example dimension of the embeddings\nnum_elements = 10000  # Example number of elements\np = hnswlib.Index(space=\"l2\", dim=dim)  # L2 space with the specified dimension\np.init_index(\n    max_elements=num_elements, ef_construction=200, M=16\n)  # Initialize the index\nimport numpy as np\nembeddings = np.random.rand(\n    num_elements, dim\n)  # Example embeddings, replace with your actual embeddings\np.add_items(embeddings)\np.save_index(\"hnsw_index.bin\")\nindices, distances = p.knn_query(np.random.rand(2, dim), k=3)\nimport rich\nrich.print(indices.shape, distances.shape)\n# (2, 3)",
+        "content": "import sys, os\nsys.path.append(os.path.dirname(__file__))\nimport prompts as P\nimport vectorindex as V\nfrom pydantic import BaseModel\nclass ReaderQuestions(BaseModel):\n    questions: list[str]\nclass ContextQueries(BaseModel):\n    queries: list[str]\nprompt = P.generateFileSummaryContextQueriesPrompt(\n    schema, contentType, projectName, filePath, summary\n)\nres = ...\ncontextQueries = ContextQueries.parse_raw(res)\ncontextQAPairs = []\nfor q in contextQueries:\n    context = ...\n    contextQAPairs.append((q, context))\nprompt = P.generateFileSummaryPrompt(\n    contentType, projectName, filePath, summary, contextQAPairs\n)\ndocumentSummary = ...  # file summary\nprompt = P.generateFileQuestionsPrompt(\n    schema, contentType, projectName, filePath, summary\n)\nres = ...\nquestions = ReaderQuestions.parse_raw(res)\nprint(questions)\nQAPairs = []\nfor q in questions:\n    context = ...\n    prompt = P.generateFileAnswerPrompt(\n        contentType,\n        projectNAme,\n        filePath,\n        summary,\n        q,\n        context,\n    )\n    res = ...",
         "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py:1-24"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py:1-52"
     },
     "291": {
         "file_id": 27,
-        "content": "The code imports hnswlib, initializes an HNSW index with L2 space and specified dimension, adds random embeddings to the index, saves it as \"hnsw_index.bin\", performs k-nearest neighbor search using two random queries, and prints the shapes of the results.",
+        "content": "This code imports necessary modules, defines classes for reader questions and context queries, generates prompts for generating file summary context queries, parses raw data into objects, appends context-question pairs to a list, generates prompts for file summary and file questions, and finally prints the reader's questions.",
         "type": "comment"
     },
     "292": {
-        "file_id": 28,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
-        "type": "filepath"
+        "file_id": 27,
+        "content": "    # assemble questions and answers.\n    QAPairs.append(q, res)\n# assemble document\ndocumentQA = [\"## Questions:\\n\"] + [\n    f\"{i+1}. {q}\\n\\n{a}\\n\" for i, (q, a) in enumerate(QAPairs)\n]\ndocumentQA = \"\\n\".join(documentQA)\ndocument = f\"{documentSummary}\\n---\\n{documentQA}\"\n################################\nprompt = P.generateFolderSummaryContextQueriesPrompt(\n    schema,\n    contextType,\n    projectName,\n    folderPath,\n    summary,\n)\nres = ...\nqueries = ContextQueries.parse_raw(res)\ncontextQAPairs = []\nfor q in queries:\n    context = ...\n    contextQAPairs.append((q, context))\nprompt = P.generateFolderSummaryPrompt(\n    contentType, projectName, filePath, summary, contextQAPairs\n)\ndocument = ...\n################################\nlast_chat_history = None\ncontext = ...  # generate from first question\nprompt = P.generateQAPrompt(contentType, projectName, question, context)\nres = ...\nprompt = P.generateRecentChatHistorySummaryPrompts(question, res)\nrecent_chat_history = ...\nif last_chat_history is None:\n    chat_history = recent_chat_history",
+        "type": "code",
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py:53-98"
     },
     "293": {
-        "file_id": 28,
-        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
-        "type": "summary"
+        "file_id": 27,
+        "content": "The code assembles questions and answers into pairs, creates a document with the formatted questions and answers, generates a prompt for a folder summary context queries, and then generates prompts for QA and recent chat history. If there is no last chat history, it assigns the recent chat history to the current one.",
+        "type": "comment"
     },
     "294": {
-        "file_id": 28,
-        "content": "import asyncio\nasync def read_lines(stream:asyncio.StreamReader):\n    while True:\n        line = await stream.readline()\n        # print(\"line\")\n        if not line:\n            break\n        else: \n            yield line\nasync def run_command(command:list[str]):\n    process = await asyncio.create_subprocess_exec(\n        *command,\n        stdout=asyncio.subprocess.PIPE,\n        # stderr=asyncio.subprocess.PIPE\n    )\n    f = [it for it in read_lines(process.stdout)]\n    # stderr_reader = asyncio.StreamReader()\n    # Read lines from stdout and stderr concurrently\n    # await asyncio.gather(\n    #     read_lines(stdout_reader),\n    #     read_lines(stderr_reader)\n    # )\n    # Wait for the process to complete\n    await process.wait()\nasync def main():\n    command = [\"ls\", \"-l\"]\n    # Run the command asynchronously\n    await run_command(command)\nif __name__ == \"__main__\":\n    # Run the event loop\n    asyncio.run(main())",
+        "file_id": 27,
+        "content": "else:\n    prompt = P.generateChatHistorySummaryPrompt(last_chat_history, recent_chat_history)\n    chat_history = ...\nlast_chat_history = chat_history\nquestion = ...  # new question from user\nprompt = P.generateCondensePrompt(chat_history, question)\nstandalone_question = ...\ncontext = ...",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py:1-37"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py:99-108"
     },
     "295": {
-        "file_id": 28,
-        "content": "This code defines three asynchronous functions: `read_lines`, `run_command`, and `main`. The `read_lines` function reads lines from a stream until there are no more lines, yielding each line. The `run_command` function creates a subprocess with the given command and its stdout is connected to an instance of `read_lines`. It then waits for the process to complete. Finally, the `main` function runs the command asynchronously using `run_command`.",
+        "file_id": 27,
+        "content": "Else block generates a chat history summary prompt and updates last_chat_history. It then generates a condense prompt using the updated chat_history and a new user question, while also creating standalone_question and context.",
         "type": "comment"
     },
     "296": {
-        "file_id": 29,
-        "content": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
+        "file_id": 28,
+        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py",
         "type": "filepath"
     },
     "297": {
-        "file_id": 29,
-        "content": "The script uses the \"rich\" library to display tree structures and handles command line arguments, file/directory operations. The function recursively traverses a dictionary, managing directories and updating counts. It labels tree structures with size, line count, estimates time from lines, reads file names, and yields line counts for non-error files. The code iterates through the dictionary, calculating sizes and processing time, and prints total and selected file counts, line counts by suffix, and error count.",
+        "file_id": 28,
+        "content": "This code generates prompts for creating questions and answers about file content using Pydantic schema, JSON format, and markdown. It includes functions to gather context for software project-related questions and returns previously defined prompts.",
         "type": "summary"
     },
     "298": {
-        "file_id": 29,
-        "content": "from rich.text import Text\nfrom rich.console import Console\nimport datetime\n# color from:\nfrom rich.color import ANSI_COLOR_NAMES\nfrom collections import defaultdict\nconsole = Console()\nfrom rich.tree import Tree\nfrom rich import print\nimport json\nimport os\nimport humanize\nerror_map = defaultdict(list)\ncached_verified = []\ndef patch_missing_files(path, basemap, color, processor=lambda x: x):\n    subpath, filename = dirsplit(path)\n    # breakpoint()\n    if basemap.get(path) is None:\n        subtree = patch_missing_files(subpath + \"/\", basemap, color)\n        subsubtree = subtree.add(processor(filename), style=color, guide_style=color)\n        # print(filename)\n        basemap[path] = subsubtree\n        return subsubtree\n    else:\n        return basemap.get(path)\ndef size_to_readable_string(size: int):\n    return humanize.naturalsize(size)\nGREY = \"bright_black\"\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"--full\", help=\"full tree\", type=str, required=True)\nparser.add_argument(\"--selected\", help=\"selected tree\", type=str, required=True)",
+        "file_id": 28,
+        "content": "FILE_RETRIEVER_OBJECTIVE_PROMPT = \"\"\"Write a detailed technical explanation of what this code does.\nFocus on the high-level purpose of the code and how it may be used in the larger project.\n\"\"\"\nFOLDER_RETRIEVER_OBJECTIVE_PROMPT = \"\"\"Write a technical explanation of what the code in this file does and how it might fit into the larger project or work with other parts of the project.\nGive examples of how this code might be used. Include code examples where appropriate.\n\"\"\"\nFILE_PROMPT = (\n    f\"\"\"\n{FILE_RETRIEVER_OBJECTIVE_PROMPT.strip()}\nInclude code examples where appropriate. Keep you response between 100 and 300 words.\nDO NOT RETURN MORE THAN 300 WORDS.\nOutput should be in markdown format.\nDo not just list the methods and classes in this file.\n\"\"\",\n)\nFOLDER_PROMPT = (\n    f\"\"\"\n{FOLDER_RETRIEVER_OBJECTIVE_PROMPT.strip()}\nBe concise. Include any information that may be relevant to a developer who is curious about this code.\nKeep you response under 400 words. Output should be in markdown format.\nDo not just list the files and folders in this folder.",
         "type": "code",
-        "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py:1-44"
+        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py:1-23"
     },
     "299": {
-        "file_id": 29,
-        "content": "This code is a Python script that uses the \"rich\" library for creating and displaying a tree structure. It allows you to patch missing files, convert file sizes to readable strings, and handle command line arguments using \"argparse\". The script takes two input parameters: \"--full\" for the full tree and \"--selected\" for the selected tree.",
+        "file_id": 28,
+        "content": "This code contains prompts for generating technical explanations of the code and its usage in the larger project. The FILE_PROMPT provides a detailed objective prompt with an upper limit of 300 words, while the FOLDER_PROMPT offers concise information under 400 words about how the code fits into the project. The output should be in markdown format and tailored to developers who may be curious about the code.",
         "type": "comment"
     }
 }
