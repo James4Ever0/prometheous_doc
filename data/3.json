@@ -418,7 +418,7 @@
     },
     "377": {
         "file_id": 35,
-        "content": "The code creates a command-line tool for comparing files using the \"tree\" command, asynchronously runs commands, includes visualization for ignored files, features a progress bar and GUI updates, and manages UI elements while processing data or files. The code also contains two functions: one to toggle dark mode and another to exit the application.",
+        "content": "The code imports necessary libraries, defines functions for asynchronous command execution and visualization. It runs 'run_simple.py', captures output, handles errors, updates UI, manages file differences with progress intervals, includes dark mode toggle function, exits application, and serves as the entry point to run VisualIgnoreApp in light or dark mode based on user input.",
         "type": "summary"
     },
     "378": {
@@ -429,7 +429,7 @@
     },
     "379": {
         "file_id": 35,
-        "content": "Code imports necessary modules and defines variables for a command-line tool that generates differences between selected and all files in a directory using the \"tree\" command. It also includes functions to run commands asynchronously and define a script template for generating the diff report.",
+        "content": "The code is importing various libraries and defining a function `run_command` to execute subprocesses asynchronously. It also includes a string template for generating diff tree reports. The purpose seems to be running commands, possibly involving file directories, and comparing the results to generate diffs in JSON format.",
         "type": "comment"
     },
     "380": {
@@ -440,18 +440,18 @@
     },
     "381": {
         "file_id": 35,
-        "content": "This code defines a class `VisualIgnoreApp` that visualizes ignored files. It takes a `diffpath` as input and renders a script template using the `render_script_template` function. The class also has a header, treeview, footer, and a label for displaying progress. A lock `processingLock` is used for synchronization.",
+        "content": "This code defines a VisualIgnoreApp class for visualizing ignored files. It parses command line arguments, uses a script template to render a script, and has bindings for toggling dark mode and exiting the app. A timer is also used in this application.",
         "type": "comment"
     },
     "382": {
         "file_id": 35,
-        "content": "        # self.label.styles.border = ('solid','red')\n        # self.label.styles.height = 3\n        self.label.styles.height = 1\n        # self.label.styles.dock = 'bottom'\n    async def progress(self):\n        locked = processingLock.acquire(blocking=False)\n        if locked: # taking forever. bad.\n            cont, _= await run_command(\n            # diff_content = subprocess.check_output(\n                f'python3 run_simple.py -d \"{self.diffpath}\"'\n                # [\"python3\", \"run_simple.py\", \"-d\", self.diffpath]\n            )\n            # cont = diff_content.decode()\n            has_error = False\n            # TODO: you may outsource this part to external process as well, emit as last line.\n            for it in cont.split(\"\\n\"):\n                if it.startswith(\"{\"):\n                    if \"processing_time\" in it and \"selected_lines\" in it:\n                        self.label.renderable = \"ETA: \"+it + \" \"+ datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n                    if it.endswith(\"}\"):\n                        if \"Error\" in it or \"Empty\" in it or \"Missing\" in it:",
+        "content": "        # self.label.styles.border = ('solid','red')\n        # self.label.styles.height = 3\n        self.label.styles.height = 1\n        # self.label.styles.dock = 'bottom'\n    async def progress(self):\n        locked = processingLock.acquire(blocking=False)\n        if locked: # taking forever. bad.\n            cont, _= await run_command(\n            # diff_content = subprocess.check_output(\n                f'python3.9 run_simple.py -d \"{self.diffpath}\"'\n                # [\"python3.9\", \"run_simple.py\", \"-d\", self.diffpath]\n            )\n            # cont = diff_content.decode()\n            has_error = False\n            # TODO: you may outsource this part to external process as well, emit as last line.\n            for it in cont.split(\"\\n\"):\n                if it.startswith(\"{\"):\n                    if \"processing_time\" in it and \"selected_lines\" in it:\n                        self.label.renderable = \"ETA: \"+it + \" \"+ datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n                    if it.endswith(\"}\"):\n                        if \"Error\" in it or \"Empty\" in it or \"Missing\" in it:",
         "type": "code",
         "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py:75-96"
     },
     "383": {
         "file_id": 35,
-        "content": "Creating a progress bar for the file processing task by running external Python script and updating label with ETA information.",
+        "content": "The code is interacting with a process that runs the 'run_simple.py' script using Python 3.9, capturing its output as it continuously updates a label with processing time and ETA. The code checks for any errors, missing lines, or empty lines in the output while running.",
         "type": "comment"
     },
     "384": {
@@ -462,7 +462,7 @@
     },
     "385": {
         "file_id": 35,
-        "content": "This code appears to be part of a larger application with multiple classes and methods. It defines a class, presumably for a GUI-based user interface, with methods like \"compose,\" \"on_mount,\" and \"action_toggle_dark.\" \n\nThe code block seems to handle an error condition, update the GUI label, clear the treeview and write new content, and potentially execute a script. It also has methods that define child widgets for the app, start an interval timer, and toggle dark mode. \n\nOverall, this code appears to be part of a more complex program with interactive user interface elements and functionality to process data or files.",
+        "content": "This code is a part of a larger program that manages and visualizes file differences. It appears to handle errors, render a label with an error message, clear the treeview widget, write new content to it, and set up intervals for progress updates. The `on_mount` function initializes a timer for periodic updates, and there is also a `action_toggle_dark` function that likely toggles between light and dark modes of the UI.",
         "type": "comment"
     },
     "386": {
@@ -473,7 +473,7 @@
     },
     "387": {
         "file_id": 35,
-        "content": "The code contains two functions: \"action_toggle_darkmode\" and \"action_exit\". The first function toggles the dark mode on or off, while the second one exits the application. The main function is responsible for parsing arguments, creating an instance of the VisualIgnoreApp class, and running the app.",
+        "content": "The code includes two functions: \"action_dark\" to toggle dark mode and \"action_exit\" to exit the application. The main function is responsible for parsing arguments, creating an instance of VisualIgnoreApp with the parsed diffpath, and running the app. This indicates that the script serves as an entry point to run the VisualIgnoreApp in either light or dark mode based on user input.",
         "type": "comment"
     },
     "388": {

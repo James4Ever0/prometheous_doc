@@ -204,7 +204,7 @@
     },
     "437": {
         "file_id": 37,
-        "content": "The code imports libraries, defines a script template for comparing file trees with and without ignore rules, parses command-line arguments, renders the script, writes to a temporary file, and runs the bash script, creating JSON files and calling display_tree_structure.py.",
+        "content": "This code generates a shell script for visualizing ignored files using Jinja2, argparse, and beartype. It creates a temporary directory, generates JSON data on selected and unselected files/directories, then writes the script to a file and runs it. The script uses subprocess to run display_tree_structure.py with appropriate arguments.",
         "type": "summary"
     },
     "438": {
@@ -215,18 +215,18 @@
     },
     "439": {
         "file_id": 37,
-        "content": "This code imports necessary libraries, defines a script template for comparing file trees with and without ignore rules, parses command-line arguments, renders the script template, and writes the resulting script to a temporary file.",
+        "content": "This code utilizes the Jinja2 template engine to generate a shell script for visualizing ignored files. It uses the argparse library to handle command-line arguments, and the tempfile module creates a temporary directory to store the generated script. The beartype library is used for type hinting. The script generates a JSON file containing the tree structure of selected and unselected files and directories, then counts their sizes and renders the JSON. Finally, it creates and writes the shell script to a temporary file within the created directory.",
         "type": "comment"
     },
     "440": {
         "file_id": 37,
-        "content": "        f.write(script_str)\n    subprocess.run([\"bash\", os.path.join(tempdir, RELATIVE_TEMP_DIR_SCRIPT_PATH)])\n    full = f\"{tempdir}/all_tree.json\"\n    selected = f\"{tempdir}/selected_tree.json\"\n    basepath = os.path.abspath(diffpath)\n    subprocess.run(\n        [\n            \"python3\",\n            \"display_tree_structure.py\",\n            \"--full\",\n            full,\n            \"--selected\",\n            selected,\n            \"--basepath\",\n            basepath,\n        ]\n    )",
+        "content": "        f.write(script_str)\n    subprocess.run([\"bash\", os.path.join(tempdir, RELATIVE_TEMP_DIR_SCRIPT_PATH)])\n    full = f\"{tempdir}/all_tree.json\"\n    selected = f\"{tempdir}/selected_tree.json\"\n    basepath = os.path.abspath(diffpath)\n    subprocess.run(\n        [\n            \"python3.9\",\n            \"display_tree_structure.py\",\n            \"--full\",\n            full,\n            \"--selected\",\n            selected,\n            \"--basepath\",\n            basepath,\n        ]\n    )",
         "type": "code",
         "location": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py:40-56"
     },
     "441": {
         "file_id": 37,
-        "content": "Writing script to file, running bash script in tempdir, creating full and selected JSON files, then calling display_tree_structure.py with arguments.",
+        "content": "Writes script to file, runs a bash script in tempdir, then uses subprocess to run display_tree_structure.py with full tree and selected tree paths, and base path as arguments.",
         "type": "comment"
     },
     "442": {
