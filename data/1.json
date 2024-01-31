@@ -1,542 +1,543 @@
 {
     "100": {
         "file_id": 9,
+        "content": "# from langchain.prompts import Prompt\n# from langchain.chains import LLMChain\nfrom contextlib import contextmanager\nfrom langchain.llms import OpenAI\nimport tiktoken\ndef print_center(banner: str):\n    print(banner.center(50, \"=\"))\nclass LLM:\n    \"\"\"\n    A class for running a Language Model Chain.\n    \"\"\"\n    def __init__(self, prompt: str, temperature=0, gpt_4=False):\n        \"\"\"\n        Initializes the LLM class.\n        Args:\n            prompt (PromptTemplate): The prompt template to use.\n            temperature (int): The temperature to use for the model.\n            gpt_4 (bool): Whether to use GPT-4 or Text-Davinci-003.\n        Side Effects:\n            Sets the class attributes.\n        \"\"\"\n        self.prompt = prompt\n        self.prompt_size = self.number_of_tokens(prompt)\n        self.temperature = temperature\n        self.gpt_4 = gpt_4\n        self.model_name = \"gpt-4\" if self.gpt_4 else \"text-davinci-003\"\n        self.max_tokens = 4097 * 2 if self.gpt_4 else 4097\n        self.show_init_config()\n    def show_init_config(self):",
+        "type": "code",
+        "location": "/document_agi_computer_control/llm.py:1-36"
+    },
+    "101": {
+        "file_id": 9,
+        "content": "The code defines a class named \"LLM\" which initializes a Language Model Chain using the OpenAI API. It takes a prompt, temperature, and gpt_4 parameters. The maximum number of tokens is set depending on whether GPT-4 or Text-Davinci-003 is used. The show_init_config method displays the initialization configuration.",
+        "type": "comment"
+    },
+    "102": {
+        "file_id": 9,
         "content": "        print_center(\"init params\")\n        print(f\"Model: {self.model_name}\")\n        print(f\"Max Tokens: {self.max_tokens}\")\n        print(f\"Prompt Size: {self.prompt_size}\")\n        print(f\"Temperature: {self.temperature}\")\n        print_center(\"init config\")\n        print(self.prompt)\n    def run(self, query):\n        \"\"\"\n        Runs the Language Model Chain.\n        Args:\n            code (str): The code to use for the chain.\n            **kwargs (dict): Additional keyword arguments.\n        Returns:\n            str: The generated text.\n        \"\"\"\n        llm = OpenAI(\n            temperature=self.temperature,\n            max_tokens=-1,\n            model_name=self.model_name,\n            disallowed_special=(),  # to suppress error when special tokens within the input text (encode special tokens as normal text)\n        )\n        # chain = LLMChain(llm=llm, prompt=self.prompt)\n        chunk_list = []\n        print_center(\"query\")\n        print(query)\n        print_center(\"response\")\n        _input = \"\\n\".join([self.prompt, query])",
         "type": "code",
         "location": "/document_agi_computer_control/llm.py:37-65"
     },
-    "101": {
+    "103": {
         "file_id": 9,
         "content": "This code initializes an OpenAI language model with given parameters and defines a function `run` to execute the chain. The function takes a query as input, combines it with a prompt, and returns the generated text. The code also prints initialization parameters and the query for debugging purposes.",
         "type": "comment"
     },
-    "102": {
+    "104": {
         "file_id": 9,
         "content": "        for chunk in llm.stream(input=_input):\n            print(chunk, end=\"\", flush=True)\n            chunk_list.append(chunk)\n        print()\n        result = \"\".join(chunk_list)\n        return result\n    def number_of_tokens(self, text):\n        \"\"\"\n        Counts the number of tokens in a given text.\n        Args:\n            text (str): The text to count tokens for.\n        Returns:\n            int: The number of tokens in the text.\n        \"\"\"\n        encoding = tiktoken.encoding_for_model(\"gpt-4\")\n        return len(encoding.encode(text, disallowed_special=()))\n@contextmanager\ndef llm_context(prompt: str, temperature=0, gpt_4=False):\n    model = LLM(prompt, temperature=temperature, gpt_4=gpt_4)\n    try:\n        yield model\n    finally:\n        del model",
         "type": "code",
         "location": "/document_agi_computer_control/llm.py:66-92"
     },
-    "103": {
+    "105": {
         "file_id": 9,
         "content": "The code defines a function `llm` that streams the output of an LLM model while counting tokens, and a `number_of_tokens` method. The `llm_context` context manager sets up an LLM instance with optional temperature and GPT-4 parameters.",
         "type": "comment"
     },
-    "104": {
+    "106": {
         "file_id": 10,
         "content": "/document_agi_computer_control/path_select_utils.py",
         "type": "filepath"
     },
-    "105": {
+    "107": {
         "file_id": 10,
         "content": "This code selects paths under a directory for documentation purposes, works interactively with estimation utilities, caches results, and excludes processed files.",
         "type": "summary"
     },
-    "106": {
+    "108": {
         "file_id": 10,
         "content": "# select paths under a directory, for documentation purposes\n# shall be interactive, and work with estimation utils.\n# shall be cached. shall exclude processed files",
         "type": "code",
         "location": "/document_agi_computer_control/path_select_utils.py:1-3"
     },
-    "107": {
+    "109": {
         "file_id": 10,
         "content": "This code selects paths under a directory for documentation purposes, works interactively with estimation utilities, caches results, and excludes processed files.",
         "type": "comment"
     },
-    "108": {
+    "110": {
         "file_id": 11,
         "content": "/document_agi_computer_control/recursive_document_writer.py",
         "type": "filepath"
     },
-    "109": {
-        "file_id": 11,
-        "content": "The code imports modules, defines functions for structured directory iteration, indexing data, recursive document writing, and data updating using Beartype annotations. It creates a document writer function to store data in JSON files and split it into chunks, generating webpages using subprocesses with additional scripts for tree markdown view, title generator, sitemap generator, etc.",
-        "type": "summary"
-    },
-    "110": {
-        "file_id": 11,
-        "content": "# os.environ[\"OPENAI_API_KEY\"] = \"any\"\n# os.environ[\"OPENAI_API_BASE\"] = \"http://0.0.0.0:8000\"\n# os.environ[\"BETTER_EXCEPTIONS\"] = \"1\"\nimport os\nfrom typing import Literal, Optional, OrderedDict, Union\nimport uuid\nimport json\nfrom slice_utils import split_dict_into_chunks\nimport parse\nimport shutil\nimport custom_doc_writer\nCODE_LOCATION_FORMAT = '\"{code_path}\":{line_start:d}-{line_end:d}'\nDATA_SLICE_LENGTH = 100\nfrom beartype import beartype\nfrom cache_db_context import (\n    CacheContextManager,\n    CacheManager,\n    SourceIteratorAndTargetGeneratorParam,  # type:ignore\n    TargetGeneratorParameter,\n    iterate_source_dir_and_generate_to_target_dir,\n    read_file,\n    write_file,\n)\nfrom custom_doc_writer import (\n    construct_llm_and_write_code_comment,  # type:ignore\n    parse_arguments,\n)\nfrom identify_utils import get_language_id_from_filename\n@beartype\ndef dirpath_and_fpath_walker(dir_path: str):\n    for dirpath, _, filenames in os.walk(dir_path):\n        for filename in filenames:\n            fpath = os.path.join(dirpath, filename)",
-        "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:1-37"
-    },
     "111": {
         "file_id": 11,
-        "content": "This code imports various modules and defines a function, dirpath_and_fpath_walker. It also sets environment variables for the OpenAI API and imports necessary functions from other modules. The purpose of this code is to walk through directories and file paths to perform some action on the files.",
-        "type": "comment"
+        "content": "This code defines a function to iterate through source files, generate target directories and write comments using Jinja2 templates. It also includes classes for adding content to documents, generating web page templates, setting up file loader, providing functions to write content to an output path and retrieve render parameters, updating data related to files and their contents in the database, and includes helper functions. The code processes data, writes summaries as JSON files, renders templates, copies static pages, generates webpage elements using subprocesses, and creates webpages.",
+        "type": "summary"
     },
     "112": {
         "file_id": 11,
-        "content": "            yield dirpath, fpath\n@beartype\ndef get_source_iterator_and_target_generator_param_from_document_dir(\n    document_dir: str,\n    code_relpath: str = \"src\",\n    output_relpath: str = \"doc\",\n    db_relpath: str = \"cache_db.json\",\n):\n    source_dir_path = os.path.join(document_dir, code_relpath)\n    target_dir_path = os.path.join(document_dir, output_relpath)\n    db_path = os.path.join(document_dir, db_relpath)\n    param = SourceIteratorAndTargetGeneratorParam(\n        source_dir_path=source_dir_path,\n        target_dir_path=target_dir_path,\n        db_path=db_path,\n    )\n    return param\n@beartype\ndef generate_comment_path(param: TargetGeneratorParameter):\n    comment_rel_path = str(uuid.uuid4()) + \".json\"\n    comment_path = os.path.join(param.target_dir_path, comment_rel_path)\n    return comment_path\n@beartype\ndef scan_code_dir_and_write_to_comment_dir(document_dir: str):\n    param = get_source_iterator_and_target_generator_param_from_document_dir(\n        document_dir\n    )\n    iterate_source_dir_and_generate_to_target_dir(",
+        "content": "# os.environ[\"OPENAI_API_KEY\"] = \"any\"\n# os.environ[\"OPENAI_API_BASE\"] = \"http://0.0.0.0:8000\"\n# os.environ[\"BETTER_EXCEPTIONS\"] = \"1\"\n# TODO: add shared context while spliting code into chunks\nimport os\nfrom typing import Literal, Optional, Union #, OrderedDict\nimport uuid\nimport json\nfrom slice_utils import split_dict_into_chunks\nimport parse\nimport shutil\nimport custom_doc_writer\nCODE_LOCATION_FORMAT = '\"{code_path}\":{line_start:d}-{line_end:d}'\nDATA_SLICE_LENGTH = 100\nfrom beartype import beartype\nfrom cache_db_context import (\n    CacheContextManager,\n    CacheManager,\n    SourceIteratorAndTargetGeneratorParam,  # type:ignore\n    TargetGeneratorParameter,\n    iterate_source_dir_and_generate_to_target_dir,\n    read_file,\n    write_file,\n)\nfrom custom_doc_writer import (\n    construct_llm_and_write_code_comment,  # type:ignore\n    parse_arguments,\n)\nfrom identify_utils import get_language_id_from_filename\n@beartype\ndef file_empty(fpath: str):\n    assert os.path.exists(fpath), \"File %s does not exist\" % fpath\n    with open(fpath, \"r\") as f:",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:38-72"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:1-39"
     },
     "113": {
         "file_id": 11,
-        "content": "This function defines a generator that recursively yields directories and files within a specified document directory, allowing the user to iterate over the contents of the document directory in a structured manner.",
+        "content": "This code sets environment variables for the OpenAI API, imports necessary modules, and defines constants. It also includes a function to check if a file is empty. The code also utilizes beartype, cache_db_context, identify_utils, and custom_doc_writer modules for various functionalities. It uses split_dict_into_chunks from slice_utils to split dictionaries into chunks. It uses parse for parsing arguments and construct_llm_and_write_code_comment for writing code comments. It also utilizes iterate_source_dir_and_generate_to_target_dir for reading files, and write_file for writing file contents.",
         "type": "comment"
     },
     "114": {
         "file_id": 11,
-        "content": "        param,\n        dirpath_and_fpath_walker,\n        generate_comment_path,\n        construct_llm_and_write_code_comment,\n    )\n    return param\nfrom jinja2 import Environment, FileSystemLoader, Template\n@beartype\nclass SearchIndexData(dict):\n    def __init__(self, **kwargs):\n        super().__init__(**kwargs)\n        self.counter = 0\n        self.file_id: Optional[int] = None\n    def insert_filepath_and_summary(self, file_id: int, filepath: str, summary: str):\n        self.file_id = file_id\n        self.insert(\n            content=filepath,\n            type=\"filepath\",\n        )\n        self.insert(\n            content=summary,\n            type=\"summary\",\n        )\n    def insert_code_and_comment(self, code: str, comment: str, location: str):\n        self.insert(content=code, type=\"code\", location=location)\n        self.insert(\n            content=comment,\n            type=\"comment\",\n        )\n    def insert(\n        self,\n        content: str,\n        type: Literal[\"filepath\", \"summary\", \"comment\", \"code\"],\n        location: Optional[str] = None,",
+        "content": "        content = f.read().strip()\n        if content == \"\":\n            return True\n    return False\n@beartype\ndef dirpath_and_fpath_walker(dir_path: str):\n    for dirpath, _, filenames in os.walk(dir_path):\n        for filename in filenames:\n            fpath = os.path.join(dirpath, filename)\n            if not file_empty(fpath):\n                yield dirpath, fpath\n@beartype\ndef get_source_iterator_and_target_generator_param_from_document_dir(\n    document_dir: str,\n    code_relpath: str = \"src\",\n    output_relpath: str = \"doc\",\n    db_relpath: str = \"cache_db.json\",\n):\n    source_dir_path = os.path.join(document_dir, code_relpath)\n    target_dir_path = os.path.join(document_dir, output_relpath)\n    db_path = os.path.join(document_dir, db_relpath)\n    param = SourceIteratorAndTargetGeneratorParam(\n        source_dir_path=source_dir_path,\n        target_dir_path=target_dir_path,\n        db_path=db_path,\n    )\n    return param\n@beartype\ndef generate_comment_path(param: TargetGeneratorParameter):\n    comment_rel_path = str(uuid.uuid4()) + \".json\"",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:73-113"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:40-76"
     },
     "115": {
         "file_id": 11,
-        "content": "This code defines a class called SearchIndexData, which extends the dict class and adds methods for inserting file paths, summaries, code, and comments. It also initializes a counter and an optional file ID. The class uses Jinja2 templating for rendering and Beartype for type hints.",
+        "content": "The code contains a series of functions. The first function, \"file_empty\", checks if a file is empty and returns True if it is, or False otherwise. Next, the \"dirpath_and_fpath_walker\" function uses os.walk to iterate over all directories and files in the specified directory path, and yields directory and file paths for which the file is not empty. The \"get_source_iterator_and_target_generator_param_from_document_dir\" function constructs the paths to source directory, target directory, and database file from the document directory path and optional relpaths for code, output, and database files. Lastly, the \"generate_comment_path\" function generates a comment file path with a random UUID for each comment.",
         "type": "comment"
     },
     "116": {
         "file_id": 11,
-        "content": "    ):\n        assert isinstance(self.file_id, int)\n        self[self.counter] = dict(\n            file_id=self.file_id,\n            content=content,\n            type=type,\n            **(dict(location=location) if location else {}),\n        )\n        self.counter += 1\n@beartype\ndef render_document_webpage(\n    document_dir_path: str,\n    param: SourceIteratorAndTargetGeneratorParam,\n    repository_url: str,\n    template_dir: str = \".\",\n    template_filename: str = \"website_template.html.j2\",\n    output_filename: str = \"index.html\",\n    url_prefix: str = \"https://github.com/\",\n):\n    @beartype\n    def load_template() -> Template:\n        # Load the template from file\n        file_loader = FileSystemLoader(\n            template_dir\n        )  # Replace 'path_to_templates_directory' with the actual path\n        env = Environment(loader=file_loader)\n        template = env.get_template(\n            template_filename\n        )  # Replace 'sitemap_template.html' with the actual template file name\n        return template\n    @beartype",
+        "content": "    comment_path = os.path.join(param.target_dir_path, comment_rel_path)\n    return comment_path\n@beartype\ndef scan_code_dir_and_write_to_comment_dir(document_dir: str):\n    param = get_source_iterator_and_target_generator_param_from_document_dir(\n        document_dir\n    )\n    iterate_source_dir_and_generate_to_target_dir(\n        param,\n        dirpath_and_fpath_walker,\n        generate_comment_path,\n        construct_llm_and_write_code_comment,\n    )\n    return param\nfrom jinja2 import Environment, FileSystemLoader, Template\n@beartype\nclass SearchIndexData(dict):\n    def __init__(self, **kwargs):\n        super().__init__(**kwargs)\n        self.counter = 0\n        self.file_id: Optional[int] = None\n    def insert_filepath_and_summary(self, file_id: int, filepath: str, summary: str):\n        self.file_id = file_id\n        self.insert(\n            content=filepath,\n            type=\"filepath\",\n        )\n        self.insert(\n            content=summary,\n            type=\"summary\",\n        )\n    def insert_code_and_comment(self, code: str, comment: str, location: str):",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:114-147"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:77-116"
     },
     "117": {
         "file_id": 11,
-        "content": "The code defines a class with methods for writing documents recursively and rendering a webpage using templates. It uses file IDs, content types, and locations to store document information in a dictionary-like object and renders the webpage using Jinja2 templates loaded from a specified directory.",
+        "content": "This code defines a function `scan_code_dir_and_write_to_comment_dir` that takes a document directory as input and iterates through the source files, generating target directories, and writing code comments to corresponding comment directories. It uses Jinja2 templates and a SearchIndexData class for data manipulation. The function returns a parameter object containing source iterator and target generator parameters from the given document directory.",
         "type": "comment"
     },
     "118": {
         "file_id": 11,
-        "content": "    def write_to_output_path(content: str):\n        output_path = os.path.join(document_dir_path, output_filename)\n        write_file(output_path, content)\n    @beartype\n    def get_template_render_params() -> dict[str, Union[dict, str]]:\n        data = SearchIndexData()\n        file_mapping: dict[int, dict[str, Union[str, int]]] = {}\n        @beartype\n        def strip_path_prefix(path: str):\n            return path[len(param.source_dir_path) :]\n        @beartype\n        def strip_location(location: str):\n            result = parse.parse(CODE_LOCATION_FORMAT, location)\n            assert isinstance(result, parse.Result)\n            stripped_path = strip_path_prefix(result[\"code_path\"])\n            return f\"{stripped_path}:{result['line_start']+1}-{result['line_end']+1}\"\n        @beartype\n        def update_data_by_target_data(\n            target_data: dict, file_id: int, source_relative_path: str\n        ):\n            data.insert_filepath_and_summary(\n                file_id=file_id,\n                filepath=source_relative_path,",
+        "content": "        self.insert(content=code, type=\"code\", location=location)\n        self.insert(\n            content=comment,\n            type=\"comment\",\n        )\n    def insert(\n        self,\n        content: str,\n        type: Literal[\"filepath\", \"summary\", \"comment\", \"code\"],\n        location: Optional[str] = None,\n    ):\n        assert isinstance(self.file_id, int)\n        self[self.counter] = dict(\n            file_id=self.file_id,\n            content=content,\n            type=type,\n            **(dict(location=location) if location else {}),\n        )\n        self.counter += 1\n@beartype\ndef render_document_webpage(\n    document_dir_path: str,\n    param: SourceIteratorAndTargetGeneratorParam,\n    repository_url: str,\n    template_dir: str = \".\",\n    template_filename: str = \"website_template.html.j2\",\n    output_filename: str = \"index.html\",\n    url_prefixs: list[str] = [\"https://github.com/\", \"https://gitee.com/\"],\n    # url_prefix: str = \"https://github.com/\",\n):\n    @beartype\n    def load_template() -> Template:\n        # Load the template from file",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:148-174"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:117-152"
     },
     "119": {
         "file_id": 11,
-        "content": "This code defines functions for writing content to an output file, getting template render parameters, stripping paths and locations, and updating data by target data. It uses Beartype type annotations and Parse for parsing code location format.",
+        "content": "This code defines a class with an \"insert\" method that adds content of different types (filepath, summary, comment, code) to a document. It also includes a function, \"render_document_webpage\", which takes parameters like directory paths and URLs to generate a web page template for the document using Jinja2 templating engine.",
         "type": "comment"
     },
     "120": {
         "file_id": 11,
-        "content": "                summary=target_data[\"summary\"],\n            )\n            for detail in target_data[\"details\"]:\n                data.insert_code_and_comment(\n                    code=detail[\"content\"],\n                    comment=detail[\"comment\"],\n                    location=strip_location(detail[\"location\"]),\n                )\n        @beartype\n        def update_data_and_file_mapping(\n            manager: CacheManager, record: dict, file_id: int, source_relative_path: str\n        ):\n            file_mapping[file_id] = dict(\n                filepath=source_relative_path,\n                entry_id=data.counter,\n                language_id=get_language_id_from_filename(source_relative_path),\n            )\n            target_path, _ = manager.get_record_target_path_and_hash(record)\n            target_data = json.loads(read_file(target_path))\n            update_data_by_target_data(target_data, file_id, source_relative_path)\n        def assemble_render_params():\n            partial_repository_url = repository_url.replace(url_prefix, \"\")",
+        "content": "        file_loader = FileSystemLoader(\n            template_dir\n        )  # Replace 'path_to_templates_directory' with the actual path\n        env = Environment(loader=file_loader)\n        template = env.get_template(\n            template_filename\n        )  # Replace 'sitemap_template.html' with the actual template file name\n        return template\n    @beartype\n    def write_to_output_path(content: str):\n        output_path = os.path.join(document_dir_path, output_filename)\n        write_file(output_path, content)\n    @beartype\n    def get_template_render_params() -> dict[str, Union[dict, str]]:\n        data = SearchIndexData()\n        file_mapping: dict[int, dict[str, Union[str, int]]] = {}\n        @beartype\n        def strip_path_prefix(path: str):\n            return path[len(param.source_dir_path) :]\n        @beartype\n        def strip_location(location: str):\n            result = parse.parse(CODE_LOCATION_FORMAT, location)\n            assert isinstance(result, parse.Result)\n            stripped_path = strip_path_prefix(result[\"code_path\"])",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:175-198"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:153-180"
     },
     "121": {
         "file_id": 11,
-        "content": "The code snippet defines a function that updates data and file mapping for a given record, file ID, and source relative path. It retrieves the target data from the specified path, merges it with the existing data, and inserts code and comment into the data structure. The language ID is extracted from the filename using get_language_id_from_filename function. The repository URL is partially modified to extract a specific part without affecting the url_prefix.",
+        "content": "This code sets up a file loader and environment for rendering a template, provides functions to write content to an output path and retrieve render parameters, and includes helper functions for stripping paths.",
         "type": "comment"
     },
     "122": {
         "file_id": 11,
-        "content": "            render_params = dict(\n                datadict=data,\n                repository_url=repository_url,\n                file_mapping=file_mapping,\n                partial_repository_url=partial_repository_url,\n            )\n            return render_params\n        def iterate_source_dir_and_assemble_render_params():\n            # if only have one file, we should return one\n            with CacheContextManager(param.db_path) as manager:\n                source_path_list = [\n                    sp for _, sp in dirpath_and_fpath_walker(param.source_dir_path)\n                ]\n                source_path_list.sort()  # to reduce git folder size\n                for file_id, source_path in enumerate(source_path_list):\n                    source_relative_path = strip_path_prefix(source_path)\n                    record, _ = manager.get_record_by_computing_source_hash(source_path)\n                    if record:\n                        update_data_and_file_mapping(\n                            manager, record, file_id, source_relative_path",
+        "content": "            return f\"{stripped_path}:{result['line_start']+1}-{result['line_end']+1}\"\n        @beartype\n        def update_data_by_target_data(\n            target_data: dict, file_id: int, source_relative_path: str\n        ):\n            data.insert_filepath_and_summary(\n                file_id=file_id,\n                filepath=source_relative_path,\n                summary=target_data[\"summary\"],\n            )\n            for detail in target_data[\"details\"]:\n                data.insert_code_and_comment(\n                    code=detail[\"content\"],\n                    comment=detail[\"comment\"],\n                    location=strip_location(detail[\"location\"]),\n                )\n        @beartype\n        def update_data_and_file_mapping(\n            manager: CacheManager, record: dict, file_id: int, source_relative_path: str\n        ):\n            file_mapping[file_id] = dict(\n                filepath=source_relative_path,\n                entry_id=data.counter,\n                language_id=get_language_id_from_filename(source_relative_path),",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:199-219"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:181-206"
     },
     "123": {
         "file_id": 11,
-        "content": "This code defines a function `iterate_source_dir_and_assemble_render_params` that sorts and iterates over a list of file paths in a source directory, retrieves data from the cache for each file, and returns the render parameters. The `render_params` dictionary contains data, repository URL, file mapping, and partial repository URL.",
+        "content": "The code defines functions for updating data related to files and their contents. The `update_data_by_target_data` function inserts the file path and summary into the database, and then iterates through each detail of the target data (likely containing code and comment) to insert them into the database as well. The `update_data_and_file_mapping` function maps a file ID to its corresponding file path, entry ID, and language ID by updating the `file_mapping` dictionary with this information.",
         "type": "comment"
     },
     "124": {
         "file_id": 11,
-        "content": "                        )\n            return assemble_render_params()\n        return iterate_source_dir_and_assemble_render_params()\n    def strip_quote(s: str):\n        s = s.strip()\n        if s[0] == s[-1]:\n            if s[0] in ['\"', \"'\"]:\n                return s[1:-1].strip()\n        return s.strip()\n    @beartype\n    def write_render_params(render_params: dict):\n        # TODO: mapping source file path to documentation json\n        # TODO: add mode of index to hide search bar and render single file left-right comparison only\n        datadict = render_params[\"datadict\"]\n        metadata = dict()\n        metadata[\"url\"] = dict(\n            full=render_params[\"repository_url\"],\n            partial=render_params[\"partial_repository_url\"],\n        )\n        metadata[\"file_mapping\"] = render_params[\"file_mapping\"]\n        metadata[\"project_name\"] = render_params[\"partial_repository_url\"].split(\"/\")[\n            -1\n        ]\n        split_count = 0\n        # datadict_split = {}\n        datadict = {\n            k: v",
+        "content": "            )\n            target_path, _ = manager.get_record_target_path_and_hash(record)\n            target_data = json.loads(read_file(target_path))\n            update_data_by_target_data(target_data, file_id, source_relative_path)\n        def assemble_render_params():\n            partial_repository_url = repository_url\n            for it in url_prefixs:\n                partial_repository_url = partial_repository_url.replace(it, \"\").strip(\n                    \"/\"\n                )\n            render_params = dict(\n                datadict=data,\n                repository_url=repository_url,\n                file_mapping=file_mapping,\n                partial_repository_url=partial_repository_url,\n            )\n            return render_params\n        def iterate_source_dir_and_assemble_render_params():\n            # if only have one file, we should return one\n            with CacheContextManager(param.db_path) as manager:\n                source_path_list = [\n                    sp for _, sp in dirpath_and_fpath_walker(param.source_dir_path)",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:220-250"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:207-230"
     },
     "125": {
         "file_id": 11,
-        "content": "This code defines a function `write_render_params` that takes a dictionary as input and extracts information from it. It creates a metadata object with the repository URL, file mapping, and project name. The code also includes a TODO for adding a mode of index to hide the search bar and render single file comparisons. It further includes logic to split the data dictionary but is incomplete.",
+        "content": "This code snippet is part of a Python script responsible for assembling render parameters and iterating over source directory files. It retrieves data from a database, constructs render parameters using this data, and handles files within the source directory. The `get_record_target_path_and_hash` function gets the target path and hash for a record, while `read_file` reads the contents of a file. The `assemble_render_params` function creates a dictionary of render parameters, including data, repository URL, file mapping, and partial repository URL. The `iterate_source_dir_and_assemble_render_params` function uses a database manager to access source path list and potentially return one result if there's only one file present.",
         "type": "comment"
     },
     "126": {
         "file_id": 11,
-        "content": "            if (v[\"type\"] not in [\"comment\", \"summary\"])\n            else {\n                \"file_id\": v[\"file_id\"],\n                \"content\": strip_quote(v[\"content\"]),\n                \"type\": v[\"type\"],\n            }\n            for k, v in datadict.items()\n        }\n        data_dir = os.path.join(document_dir_path, \"data\")\n        if not os.path.exists(data_dir):\n            os.mkdir(data_dir)\n        for chunk in split_dict_into_chunks(datadict, DATA_SLICE_LENGTH):\n            write_file(\n                os.path.join(data_dir, f\"{split_count}.json\"),\n                json.dumps(chunk, indent=4, ensure_ascii=False),\n            )\n            split_count += 1\n        metadata[\"split_count\"] = split_count\n        write_file(\n            os.path.join(document_dir_path, \"metadata.json\"),\n            json.dumps(metadata, indent=4, ensure_ascii=False),\n        )\n    @beartype\n    def render_template(template: Template):\n        render_params = get_template_render_params()\n        write_render_params(render_params)",
+        "content": "                ]\n                source_path_list.sort()  # to reduce git folder size\n                for file_id, source_path in enumerate(source_path_list):\n                    source_relative_path = strip_path_prefix(source_path)\n                    record, _ = manager.get_record_by_computing_source_hash(source_path)\n                    if record:\n                        update_data_and_file_mapping(\n                            manager, record, file_id, source_relative_path\n                        )\n            return assemble_render_params()\n        return iterate_source_dir_and_assemble_render_params()\n    def strip_quote(s: str):\n        s = s.strip()\n        if s[0] == s[-1]:\n            if s[0] in ['\"', \"'\"]:\n                return s[1:-1].strip()\n        return s.strip()\n    @beartype\n    def write_render_params(render_params: dict):\n        # TODO: mapping source file path to documentation json\n        # TODO: add mode of index to hide search bar and render single file left-right comparison only",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:251-279"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:231-256"
     },
     "127": {
         "file_id": 11,
-        "content": "This code is creating a document writer function. It checks if the type of data is not comment or summary, then stores file ID, content (after removing quotes), and type in the data dictionary for each item. If the specified directory does not exist, it creates one. The data dictionary is split into chunks and written to separate JSON files. Lastly, the total split count is stored in a metadata JSON file.",
+        "content": "This code is a recursive function that iterates over source files in a directory, sorts their paths to reduce git folder size, and updates the corresponding record with the file's information. It uses a manager object to get records by computing source hash and then calls `update_data_and_file_mapping` function. Finally, it returns the result of `assemble_render_params()`. The code also includes a `strip_quote()` helper function that strips leading and trailing quotes from a string and a TODO note about mapping source file paths to documentation JSON and adding a mode for indexing to hide search bar and render single file left-right comparison only.",
         "type": "comment"
     },
     "128": {
         "file_id": 11,
-        "content": "        # do something else, like writing to files.\n        # ret = template.render(**render_params)\n        # return ret\n    def copy_static_pages():\n        script_base_dir = os.path.split(__file__)[0]\n        static_pages_dir = os.path.join(script_base_dir, \"static_pages\")\n        for fname in [\"index.html\", \"codeview.html\"]:\n            # for fname in os.listdir(static_pages_dir):\n            shutil.copy(os.path.join(static_pages_dir, fname), document_dir_path)\n    def write_gitignore():\n        with open(os.path.join(document_dir_path, \".gitignore\"), \"w+\") as f:\n            f.write(\"!.gitignore\\n!*\\n!*/*\\ncache_db.json\\ncache_tree.json\\nvector_cache\\n\")\n            # f.write(\"!.gitignore\\n!*\\n!*/*\\ncache_db.json\\n\")\n    def render_to_output_path():\n        template = load_template()\n        render_template(template)\n        copy_static_pages()\n        write_gitignore()\n        # content = render_template(template)\n        # write_to_output_path(content)\n    render_to_output_path()\nimport subprocess\ndef run_subprocess(cli: str):",
+        "content": "        datadict = render_params[\"datadict\"]\n        metadata = dict()\n        metadata[\"url\"] = dict(\n            full=render_params[\"repository_url\"],\n            partial=render_params[\"partial_repository_url\"],\n        )\n        metadata[\"file_mapping\"] = render_params[\"file_mapping\"]\n        metadata[\"project_name\"] = render_params[\"partial_repository_url\"].split(\"/\")[\n            -1\n        ]\n        split_count = 0\n        # datadict_split = {}\n        datadict = {\n            k: v\n            if (v[\"type\"] not in [\"comment\", \"summary\"])\n            else {\n                \"file_id\": v[\"file_id\"],\n                \"content\": strip_quote(v[\"content\"]),\n                \"type\": v[\"type\"],\n            }\n            for k, v in datadict.items()\n        }\n        data_dir = os.path.join(document_dir_path, \"data\")\n        if not os.path.exists(data_dir):\n            os.mkdir(data_dir)\n        for chunk in split_dict_into_chunks(datadict, DATA_SLICE_LENGTH):\n            write_file(\n                os.path.join(data_dir, f\"{split_count}.json\"),",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:280-310"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:257-286"
     },
     "129": {
         "file_id": 11,
-        "content": "This code contains functions for copying static pages, writing a gitignore file, and rendering a template to an output path. The \"render_to_output_path\" function is responsible for executing these tasks sequentially. A separate function named \"run_subprocess\" executes command-line commands using the subprocess module.",
+        "content": "The code is filtering out comments and summaries from the 'datadict' dictionary. It then splits the filtered data into chunks and writes each chunk as a separate JSON file in the \"data\" directory within the given document directory. This seems to be part of a larger process that handles splitting, processing, and writing data for documentation purposes.",
         "type": "comment"
     },
     "130": {
         "file_id": 11,
-        "content": "    print(\"running:\", cli)\n    excode = subprocess.check_call(cli, shell=True)\n    if excode != 0:\n        exit(excode)\ndef main():\n    (document_dir_path, repository_url) = parse_arguments()\n    project_name = repository_url.split(\"/\")[-1]\n    custom_doc_writer.CUSTOM_DOC_WRITER_PARAMS[\"location_prefix\"] = document_dir_path\n    custom_doc_writer.CUSTOM_DOC_WRITER_PARAMS[\"project_name\"] = project_name\n    param = scan_code_dir_and_write_to_comment_dir(document_dir_path)\n    # not done yet. we have to create the webpage.\n    render_document_webpage(document_dir_path, param, repository_url)\n    run_subprocess(\n        f\"python3.9 -u tree_markdown_view_folder_hierarchy/main_recursive.py -s '{document_dir_path}'\"\n    )\n    run_subprocess(f\"python3.9 -u title_generator/main.py -s '{document_dir_path}'\")\n    run_subprocess(f\"python3.9 -u sitemap_generator/main.py -s '{document_dir_path}'\")\nif __name__ == \"__main__\":\n    main()",
+        "content": "                json.dumps(chunk, indent=4, ensure_ascii=False),\n            )\n            split_count += 1\n        metadata[\"split_count\"] = split_count\n        write_file(\n            os.path.join(document_dir_path, \"metadata.json\"),\n            json.dumps(metadata, indent=4, ensure_ascii=False),\n        )\n    @beartype\n    def render_template(template: Template):\n        render_params = get_template_render_params()\n        write_render_params(render_params)\n        # do something else, like writing to files.\n        # ret = template.render(**render_params)\n        # return ret\n    def copy_static_pages():\n        script_base_dir = os.path.split(__file__)[0]\n        static_pages_dir = os.path.join(script_base_dir, \"static_pages\")\n        for fname in [\"index.html\", \"codeview.html\"]:\n            # for fname in os.listdir(static_pages_dir):\n            shutil.copy(os.path.join(static_pages_dir, fname), document_dir_path)\n    def write_gitignore():\n        with open(os.path.join(document_dir_path, \".gitignore\"), \"w+\") as f:",
         "type": "code",
-        "location": "/document_agi_computer_control/recursive_document_writer.py:311-333"
+        "location": "/document_agi_computer_control/recursive_document_writer.py:287-312"
     },
     "131": {
         "file_id": 11,
-        "content": "The code runs subprocesses to generate a webpage and performs additional operations using the document directory path. It utilizes different Python scripts for generating a tree markdown view, title generator, and sitemap generator. The main function parses arguments, sets custom writer parameters, calls other functions, and eventually executes subprocesses.",
+        "content": "The code defines a function `render_template` that takes a `Template` object, gets template render parameters using `get_template_render_params()`, writes the render parameters to a file using `write_render_params()`, and then renders the template with the parameters. It also includes functions `copy_static_pages()` for copying static HTML files to the document directory and `write_gitignore()` for writing a git ignore file in the document directory.",
         "type": "comment"
     },
     "132": {
+        "file_id": 11,
+        "content": "            f.write(\n                \"!.gitignore\\n!*\\n!*/*\\ncache_db.json\\ncache_tree.json\\nvector_cache\\n\"\n            )\n            # f.write(\"!.gitignore\\n!*\\n!*/*\\ncache_db.json\\n\")\n    def render_to_output_path():\n        template = load_template()\n        render_template(template)\n        copy_static_pages()\n        write_gitignore()\n        # content = render_template(template)\n        # write_to_output_path(content)\n    render_to_output_path()\nimport subprocess\ndef run_subprocess(cli: str):\n    print(\"running:\", cli)\n    excode = subprocess.check_call(cli, shell=True)\n    if excode != 0:\n        exit(excode)\ndef main():\n    (document_dir_path, repository_url) = parse_arguments()\n    project_name = repository_url.split(\"/\")[-1]\n    custom_doc_writer.CUSTOM_DOC_WRITER_PARAMS[\"location_prefix\"] = document_dir_path\n    custom_doc_writer.CUSTOM_DOC_WRITER_PARAMS[\"project_name\"] = project_name\n    param = scan_code_dir_and_write_to_comment_dir(document_dir_path)\n    # not done yet. we have to create the webpage.",
+        "type": "code",
+        "location": "/document_agi_computer_control/recursive_document_writer.py:313-345"
+    },
+    "133": {
+        "file_id": 11,
+        "content": "This code defines a function `run_subprocess` that executes a command-line interface (CLI) and exits if the exit code is not 0. It also includes a `render_to_output_path()` function that loads a template, renders it, copies static pages, writes .gitignore, and potentially calls another function to write content to an output path. The main function parses arguments, sets custom parameters, scans code directory, and writes results to a comment directory, but the webpage creation is still pending.",
+        "type": "comment"
+    },
+    "134": {
+        "file_id": 11,
+        "content": "    render_document_webpage(document_dir_path, param, repository_url)\n    run_subprocess(\n        f\"python3.9 -u tree_markdown_view_folder_hierarchy/main_recursive.py -s '{document_dir_path}'\"\n    )\n    run_subprocess(f\"python3.9 -u title_generator/main.py -s '{document_dir_path}'\")\n    run_subprocess(f\"python3.9 -u sitemap_generator/main.py -s '{document_dir_path}'\")\nif __name__ == \"__main__\":\n    main()",
+        "type": "code",
+        "location": "/document_agi_computer_control/recursive_document_writer.py:346-355"
+    },
+    "135": {
+        "file_id": 11,
+        "content": "This code is calling multiple Python scripts to generate webpage titles, a site map, and visualize the folder hierarchy of a given document directory. It uses subprocesses to run these scripts in separate processes.",
+        "type": "comment"
+    },
+    "136": {
         "file_id": 12,
         "content": "/document_agi_computer_control/sitemap_generator/main.py",
         "type": "filepath"
     },
-    "133": {
+    "137": {
         "file_id": 12,
         "content": "This code imports libraries for a sitemap generator, sets arguments such as source directory, template paths, and base URL, loads metadata from JSON, and generates sitemap lines using urllib. It also takes items with timestamps and values, renders them into templates, and writes the output to a file.",
         "type": "summary"
     },
-    "134": {
+    "138": {
         "file_id": 12,
         "content": "import os\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"-s\", \"--source_dir\", type=str, required=True)\nargs = parser.parse_args()\n# the only parameter.\nsource_dir = args.source_dir\nassert os.path.exists(source_dir)\nassert os.path.isdir(source_dir)\nassert os.path.isabs(source_dir)\nrepo_name = os.path.split(source_dir)[1]\nif repo_name == \"docs\":\n    repo_name = os.path.split(os.path.dirname(source_dir))[1]\ntemplate_path = os.path.join(os.path.dirname(__file__), \"sitemap.xml.j2\")\n# template_path = \"sitemap_template.html.j2\"\noutput_file_path = os.path.join(source_dir,\"sitemap.xml\")\nbase_url = f\"https://james4ever0.github.io/{repo_name}\"\nfrom jinja2 import Template\ntemplate = Template(open(template_path, \"r\").read())\nimport json\nmetadata = json.loads(open(os.path.join(source_dir, \"metadata.json\"), \"r\").read())\nfile_mapping = metadata[\"file_mapping\"]\n# split_count = metadata[\"split_count\"]\n# project_name = metadata[\"project_name\"]\nimport urllib.parse\nlines = [\n    f\"{base_url}?q={urllib.parse.quote(comp['filepath'])}\" for comp in file_mapping.values()",
         "type": "code",
         "location": "/document_agi_computer_control/sitemap_generator/main.py:1-35"
     },
-    "135": {
+    "139": {
         "file_id": 12,
         "content": "This code imports necessary libraries and sets up arguments for a sitemap generator. It checks the source directory, retrieves template paths, defines output file path, sets base URL, loads metadata from JSON, and generates sitemap lines using urllib.",
         "type": "comment"
     },
-    "136": {
+    "140": {
         "file_id": 12,
         "content": "]\n# Data to be rendered\ndatalist = [(item, \"2023-12-28T09:21:02+00:00\", \"1.00\") for item in lines]\n# Render the template with the data\nrendered_template = template.render(datalist=datalist)\n# Write the rendered output to a file\nwith open(output_file_path, \"w\") as output_file:\n    output_file.write(rendered_template)\nprint(\"Template rendered and written to file successfully.\")",
         "type": "code",
         "location": "/document_agi_computer_control/sitemap_generator/main.py:36-47"
     },
-    "137": {
+    "141": {
         "file_id": 12,
         "content": "This code takes a list of items, along with timestamps and values, renders them into a template, then writes the output to a file.",
         "type": "comment"
     },
-    "138": {
+    "142": {
         "file_id": 13,
         "content": "/document_agi_computer_control/slice_utils.py",
         "type": "filepath"
     },
-    "139": {
+    "143": {
         "file_id": 13,
         "content": "This code defines a function `split_dict_into_chunks` that takes a dictionary and chunk size as input, returning a generator yielding dictionaries containing at most specified chunk size. It uses an OrderedDict, itertools, and a generator to achieve this. The provided test function demonstrates how to use the split_dict_into_chunks function with an example dictionary and chunk size.",
         "type": "summary"
     },
-    "140": {
+    "144": {
         "file_id": 13,
         "content": "from itertools import islice\nfrom typing import OrderedDict\nfrom beartype import beartype\n@beartype\ndef split_dict_into_chunks(dictionary:dict, chunk_size:int):\n    \"\"\"\n    Split a dictionary into chunks of specified size using itertools and a generator function.\n    Args:\n    - dictionary: The input dictionary to be split.\n    - chunk_size: The size of each chunk.\n    Returns:\n    - A generator that yields dictionaries, each containing at most `chunk_size` items.\n    \"\"\"\n    myord = OrderedDict()\n    dictkeys = list(dictionary.keys())\n    dictkeys.sort()\n    for k in dictkeys:\n        myord[k] = dictionary[k]\n    it = iter(myord.items())\n    while True:\n        chunk = dict(islice(it, chunk_size))\n        if not chunk:\n            break\n        yield chunk\ndef test():\n    # Example usage\n    input_dict = {str(i): i for i in range(1000)}  # Example input dictionary\n    chunked_dicts_generator = split_dict_into_chunks(input_dict, 100)  # Use the generator function to split the dictionary\n    # Iterate through the generator to get the chunks",
         "type": "code",
         "location": "/document_agi_computer_control/slice_utils.py:1-32"
     },
-    "141": {
+    "145": {
         "file_id": 13,
         "content": "This code defines a function `split_dict_into_chunks` that takes a dictionary and chunk size as input and returns a generator that yields dictionaries containing at most the specified chunk size. It uses an OrderedDict, itertools, and a generator to achieve this. The provided test function demonstrates how to use the split_dict_into_chunks function with an example dictionary and chunk size.",
         "type": "comment"
     },
-    "142": {
+    "146": {
         "file_id": 13,
         "content": "    for chunk in chunked_dicts_generator:\n        print(str(chunk)[:10]+\"...}\")\nif __name__ == \"__main__\":\n    test()",
         "type": "code",
         "location": "/document_agi_computer_control/slice_utils.py:33-37"
     },
-    "143": {
+    "147": {
         "file_id": 13,
         "content": "The code uses a generator to iterate through chunked dictionaries and prints the first 10 characters of each dictionary, followed by \"...}\" until all chunks are processed. This function is executed only when the script is run directly, not imported as a module.",
         "type": "comment"
     },
-    "144": {
+    "148": {
         "file_id": 14,
         "content": "/document_agi_computer_control/stdout_redirect_progress/main.py",
         "type": "filepath"
     },
-    "145": {
+    "149": {
         "file_id": 14,
         "content": "This code redirects stdout to a progress bar, handles async tasks, and updates progress based on separate process data. It manages subprocess execution, captures output, handles errors, and raises exceptions in the main function.",
         "type": "summary"
     },
-    "146": {
+    "150": {
         "file_id": 14,
         "content": "# redirect stdout to some buffered output window, and show a progress bar below.\n# differentiate between \"cached\" file and \"processed\" file\n# you may retrieve \"cached\" file processing time from somewhere else.\n# if failed to retrieve stored processing time, use average one instead.\n# TODO: add this to recursive document generator.\n# TODO: before that, just use a simple timer for producing total processing time and count files, in size, count and lines.\nimport asyncio\nimport parse\nfrom textual.app import App, ComposeResult\nfrom textual.widgets import Log, ProgressBar\n# import textual\nfrom threading import Lock\nlock = Lock()\nINTERVAL = 0.1\nclass VisualIgnoreApp(App):\n    \"\"\"A Textual app to visualize\"\"\"\n    def __init__(self, error_container: list, *args, **kwargs):\n        super().__init__(*args, **kwargs)\n        self.mylog = Log()\n        self.prog = ProgressBar()\n        self.error_container = error_container\n        # self.prog.styles.width=\"100%\"\n        self.prog.styles.align_horizontal = \"center\"\n        self.prog.update(total=100, progress=0)",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main.py:1-33"
     },
-    "147": {
+    "151": {
         "file_id": 14,
         "content": "This code redirects stdout to a buffered output window and displays a progress bar. It distinguishes between cached and processed files, retrieving processing time from storage if available or using an average otherwise. The code imports necessary libraries like asyncio, parse, and textual. It uses a Lock for thread synchronization, defines the VisualIgnoreApp class that extends App and initializes Log and ProgressBar widgets. The progress bar is set to display 100 as total and starts at 0 progress.",
         "type": "comment"
     },
-    "148": {
+    "152": {
         "file_id": 14,
         "content": "    async def progress(self):\n        locked = lock.acquire(blocking=False)\n        if locked:\n            self.mylog.clear()\n            await main(self.mylog, self.prog, self.error_container)\n            await asyncio.sleep(2)\n            lock.release()\n    def compose(self) -> ComposeResult:\n        \"\"\"Create child widgets for the app.\"\"\"\n        return [self.mylog, self.prog]\n    def on_mount(self) -> None:\n        self.timer = self.set_interval(INTERVAL, self.progress)\n# mylog = textual.widgets.Log(max_lines = ...)\n# mybar = textual.widgets.ProgressBar(total=100, show_eta=...)\n# mylog.write()\n# TODO: run the document processor in a separate process.\n# TODO: parse the data received from the separate process, line by line.\n# TODO: if the data starts with something special, we would read and parse the whole line and update progress\n# this is sick.\n# cmd = [\"python3.9\", \"test.py\"]\n# cmd = [\"stdbuf\", \"-o0\", \"-e0\", \"bash\", \"-c\", \"python3.9 test.py 2>&1\"]\ncmd = [\"stdbuf\", \"-o0\", \"-e0\", \"python3.9\", \"test.py\"]",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main.py:35-61"
     },
-    "149": {
+    "153": {
         "file_id": 14,
         "content": "This code defines a function `progress` that acquires and releases a lock, clears the log, executes some async tasks, waits for 2 seconds, then releases the lock. It also has a `compose` method that returns a list of child widgets, including a log (`mylog`) and progress bar (`mybar`). The code sets up an interval timer to call the `progress` function. The code plans to run the document processor in a separate process, parse data line by line from that process, and update progress based on the received data. It defines a command (`cmd`) for running the Python script with stdout/stderr redirected using `stdbuf`.",
         "type": "comment"
     },
-    "150": {
+    "154": {
         "file_id": 14,
         "content": "# cmd = [\"bash\", \"-c\", \"python3.9 test.py 2>&1\"]\nline_format = \"PROCESSING PROGRESS: {progress:d}%\"\ndef parse_line(line: str):\n    parsed = parse.parse(line_format, line)\n    if parsed:\n        return parsed[\"progress\"]\n    return None\nasync def read_stderr(proc, error_container):\n    while True:\n        mbyte = await proc.stderr.readline()  # type:ignore\n        # mbyte = await proc.stderr.read(1)  # type:ignore\n        error_container.append(mbyte.decode())\n        if mbyte == b\"\":\n            break\nasync def read_stdout(proc, mylog, prog):\n    # line_position = 0\n    # line_content = \"\"\n    # mtime = []\n    while True:\n        mbyte = await proc.stdout.readline()  # type:ignore\n        # mbyte = await proc.stdout.read(20)  # type:ignore\n        # mbyte = await proc.stdout.read(1)  # type:ignore\n        if mbyte == b\"\":\n            break\n        else:\n            line_content = mbyte.decode(\"utf-8\").rstrip()\n            # print(content)\n            mylog.write_line(line_content)\n            # mylog.refresh()\n            # continue",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main.py:62-98"
     },
-    "151": {
+    "155": {
         "file_id": 14,
         "content": "The code defines a function `parse_line()` for parsing a line in the specified format to extract progress percentage. It also includes two asynchronous functions: `read_stderr()` and `read_stdout()`. The former reads from process error stream, while the latter reads from process stdout, appends the decoded data into the provided log file (`mylog`) and handles line-based processing.",
         "type": "comment"
     },
-    "152": {
+    "156": {
         "file_id": 14,
         "content": "            # if mbyte == b\"\\n\":\n            #     line_position = 0\n            #     # try to parse line content.\n            #     mylog.write(\"\\n\")\n            # mylog.write_line(line_content)\n            if line_content.startswith(\">>>> \"):\n                #     mtime.append(datetime.datetime.now())\n                mline = line_content[5:]\n                ret = parse_line(mline)\n                if ret is not None:\n                    steps = ret - prog.progress\n                    if steps > 0:\n                        prog.advance(steps)\n                mylog.write_line(\"parsed progress? \" + str(ret))\nasync def main(mylog, prog, error_container):\n    proc = await asyncio.create_subprocess_shell(\n        # proc = await asyncio.create_subprocess_exec(\n        # *cmd, stdout=asyncio.subprocess.PIPE\n        # UNBUFFERED FLAG: -u\n        \"bash -c 'python3.9 -u test_no_patch.py 2>&1'\",\n        stdout=asyncio.subprocess.PIPE,\n        stderr=asyncio.subprocess.PIPE\n        # \"python3.9 -u test_no_patch.py\", stdout=asyncio.subprocess.PIPE",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main.py:99-123"
     },
-    "153": {
+    "157": {
         "file_id": 14,
         "content": "The code executes a shell command (bash with Python script) asynchronously and redirects the output to the `mylog` object. If the line content starts with \">>>\" (progress indicator), it parses the progress, updates the `prog` progress tracker, and logs the parsed progress to `mylog`. The code uses asyncio for handling subprocesses and concurrent operations.",
         "type": "comment"
     },
-    "154": {
+    "158": {
         "file_id": 14,
         "content": "        # \"python3.9 test.py\", stdout=asyncio.subprocess.PIPE\n    )  # how to handle the stderr now? we may merge the altogether.\n    t1 = asyncio.create_task(read_stdout(proc, mylog, prog))\n    t2 = asyncio.create_task(read_stderr(proc, error_container))\n    # task1 = asyncio.create_task(read_stdout(proc, mylog))\n    # task2 = asyncio.create_task(read_stderr(proc))\n    await asyncio.gather(t1, t2)\n    # await asyncio.gather(task1, task2)\n    retcode = await proc.wait()\n    error_container.insert(0, retcode)\n    if retcode != 0:\n        print(f\"Error: subprocess returned {retcode}\")\n    else:\n        print(f\"Success: subprocess returned {retcode}\")\nif __name__ == \"__main__\":\n    error_container = []\n    app = VisualIgnoreApp(error_container)\n    app.run()\n    # breakpoint()\n    retcode = error_container[0]\n    if retcode != 0:\n        raise Exception(\n            \"\\n\".join(\n                [\"Error: subprocess returned\", str(retcode)] + error_container[1:]\n            )\n        )",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main.py:124-152"
     },
-    "155": {
+    "159": {
         "file_id": 14,
         "content": "This code is managing the execution of a subprocess and its stdout/stderr output using asyncio tasks. It captures the process's output, handles errors if the return code is non-zero, and raises an exception with the error details in the main function.",
         "type": "comment"
     },
-    "156": {
+    "160": {
         "file_id": 15,
         "content": "/document_agi_computer_control/stdout_redirect_progress/main_once.py",
         "type": "filepath"
     },
-    "157": {
+    "161": {
         "file_id": 15,
         "content": "This code creates a progress bar, redirects output, differentiates between cached and processed files, and handles progress tracking with stdbuf. It runs Python scripts, records errors, adds progress updates, and prints total execution time in natural language format.",
         "type": "summary"
     },
-    "158": {
+    "162": {
         "file_id": 15,
         "content": "# redirect stdout to some buffered output window, and show a progress bar below.\n# differentiate between \"cached\" file and \"processed\" file\n# you may retrieve \"cached\" file processing time from somewhere else.\n# if failed to retrieve stored processing time, use average one instead.\n# TODO: add this to recursive document generator.\n# TODO: before that, just use a simple timer for producing total processing time and count files, in size, count and lines.\nimport asyncio\nimport parse\nfrom textual.app import App, ComposeResult\nfrom textual.widgets import Log, ProgressBar\n# import textual\nfrom threading import Lock\nlock = Lock()\nINTERVAL = 0.1\nimport shutil\nimport textwrap\ndef wrap_text(text):\n    # Get the terminal width\n    terminal_width, _ = shutil.get_terminal_size()\n    tw = terminal_width - 8\n    if tw < 8:\n        tw = terminal_width\n    wrapped_text = textwrap.fill(text, width=tw)\n    return wrapped_text.rstrip()\nclass VisualIgnoreApp(App):\n    \"\"\"A Textual app to visualize\"\"\"\n    def __init__(self, error_container: list, program_args: list[str], *args, **kwargs):",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once.py:1-41"
     },
-    "159": {
+    "163": {
         "file_id": 15,
         "content": "This code is for creating a progress bar and redirecting stdout to a buffered output window. It differentiates between cached and processed files, retrieves processing time (if available), and uses average time if not. The code also imports necessary libraries like asyncio, parse, Textual, and threading. There are two TODOs mentioning additions for recursive document generation and using a simple timer to produce total processing time and file counts. The class VisualIgnoreApp is inherited from App, with custom initialization parameters error_container and program_args.",
         "type": "comment"
     },
-    "160": {
+    "164": {
         "file_id": 15,
         "content": "        super().__init__(*args, **kwargs)\n        self.mylog = Log(max_lines=10000)\n        self.prog = ProgressBar()\n        self.program_args = program_args\n        self.error_container = error_container\n        # self.prog.styles.width=\"100%\"\n        self.prog.styles.align_horizontal = \"center\"\n        # self.prog.update(total=100, progress=0)\n    async def progress(self):\n        locked = lock.acquire(blocking=False)\n        if locked:\n            self.mylog.clear()\n            await main(self.mylog, self.prog, self.error_container, self.program_args)\n            self.exit()\n            # lock.release()\n    def compose(self) -> ComposeResult:\n        \"\"\"Create child widgets for the app.\"\"\"\n        return [self.mylog, self.prog]\n    def on_mount(self) -> None:\n        # await self.progress()\n        # self.exit()\n        self.timer = self.set_interval(INTERVAL, self.progress)\n# mylog = textual.widgets.Log(max_lines = ...)\n# mybar = textual.widgets.ProgressBar(total=100, show_eta=...)\n# mylog.write()\n# TODO: run the document processor in a separate process.",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once.py:42-73"
     },
-    "161": {
+    "165": {
         "file_id": 15,
         "content": "The code initializes the main class with necessary attributes, defines a progress function to update logs and exit the program, composes child widgets for the application, and sets an interval for running the progress function. It also includes a TODO note to run the document processor in a separate process.",
         "type": "comment"
     },
-    "162": {
+    "166": {
         "file_id": 15,
         "content": "# TODO: parse the data received from the separate process, line by line.\n# TODO: if the data starts with something special, we would read and parse the whole line and update progress\n# this is sick.\n# cmd = [\"python3.9\", \"test.py\"]\n# cmd = [\"stdbuf\", \"-o0\", \"-e0\", \"bash\", \"-c\", \"python3.9 test.py 2>&1\"]\ncmd = [\"stdbuf\", \"-o0\", \"-e0\", \"python3.9\", \"test.py\"]\n# cmd = [\"bash\", \"-c\", \"python3.9 test.py 2>&1\"]\nline_format = \"PROCESSING PROGRESS: {progress:d}/{total:d}\"\ndef parse_line(line: str):\n    parsed = parse.parse(line_format, line)\n    if parsed:\n        return parsed[\"progress\"], parsed[\"total\"]\n    return None\nasync def read_stderr(proc, error_container):\n    while True:\n        mbyte = await proc.stderr.readline()  # type:ignore\n        # mbyte = await proc.stderr.read(1)  # type:ignore\n        error_container.append(mbyte.decode())\n        if mbyte == b\"\":\n            break\nasync def read_stdout(proc, mylog, prog):\n    # line_position = 0\n    # line_content = \"\"\n    # mtime = []\n    mtotal_count  =-1\n    while True:",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once.py:74-106"
     },
-    "163": {
+    "167": {
         "file_id": 15,
         "content": "This code snippet is responsible for parsing data received from a separate process, line by line. It uses the stdbuf command to redirect both output and error streams of a Python script execution. The parse_line function extracts progress and total values from each line following a specific format. read_stderr function reads lines from the error stream until it encounters an empty byte, indicating EOF. read_stdout function parses lines from the standard output stream, keeping track of the total count of lines processed so far, likely for progress tracking purposes.",
         "type": "comment"
     },
-    "164": {
+    "168": {
         "file_id": 15,
         "content": "        mbyte = await proc.stdout.readline()  # type:ignore\n        # mbyte = await proc.stdout.read(20)  # type:ignore\n        # mbyte = await proc.stdout.read(1)  # type:ignore\n        if mbyte == b\"\":\n            break\n        else:\n            line_content = mbyte.decode(\"utf-8\").rstrip()\n            # print(content)\n            mylog.write_line(wrap_text(line_content))\n            # mylog.refresh()\n            # continue\n            # if mbyte == b\"\\n\":\n            #     line_position = 0\n            #     # try to parse line content.\n            #     mylog.write(\"\\n\")\n            # mylog.write_line(line_content)\n            if line_content.startswith(\">>>> \"):\n                #     mtime.append(datetime.datetime.now())\n                mline = line_content[5:]\n                ret = parse_line(mline)\n                if ret is not None:\n                    ret_total, ret_prog = ret[1], ret[0]\n                    if ret_total != mtotal_count:\n                        mtotal_count = ret_total\n                        prog.update(total=ret_total, progress=ret_prog)",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once.py:107-131"
     },
-    "165": {
+    "169": {
         "file_id": 15,
         "content": "The code reads a line from the process's stdout, checks if it is empty, and if not, decodes and trims the content. It then writes the trimmed content to a log file after wrapping the text. If the content starts with \">>>> \", it parses the line and updates the progress based on the parsed values.",
         "type": "comment"
     },
-    "166": {
+    "170": {
         "file_id": 15,
         "content": "                        continue\n                    steps = ret_prog - prog.progress\n                    if steps > 0:\n                        prog.advance(steps)\n                    else:\n                        prog.update(total=ret_total, progress=ret_prog)\n                mylog.write_line(\"parsed progress? \" + str(ret))\nasync def main(mylog, prog, error_container, program_args):\n    # proc = await asyncio.create_subprocess_shell(\n    proc = await asyncio.create_subprocess_exec(\n        *program_args,  # stdout=asyncio.subprocess.PIPE\n        # UNBUFFERED FLAG: -u\n        # \"bash -c 'python3.9 -u test_no_patch.py 2>&1'\",\n        stdout=asyncio.subprocess.PIPE,\n        stderr=asyncio.subprocess.PIPE\n        # \"python3.9 -u test_no_patch.py\", stdout=asyncio.subprocess.PIPE\n        # \"python3.9 test.py\", stdout=asyncio.subprocess.PIPE\n    )  # how to handle the stderr now? we may merge the altogether.\n    t1 = asyncio.create_task(read_stdout(proc, mylog, prog))\n    t2 = asyncio.create_task(read_stderr(proc, error_container))",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once.py:132-153"
     },
-    "167": {
+    "171": {
         "file_id": 15,
         "content": "This code is creating a subprocess to execute a Python script and redirecting both stdout and stderr to separate tasks for reading. It also advances the progress bar based on parsed progress.",
         "type": "comment"
     },
-    "168": {
+    "172": {
         "file_id": 15,
         "content": "    # task1 = asyncio.create_task(read_stdout(proc, mylog))\n    # task2 = asyncio.create_task(read_stderr(proc))\n    await asyncio.gather(t1, t2)\n    # await asyncio.gather(task1, task2)\n    retcode = await proc.wait()\n    error_container.insert(0, retcode)\n    if retcode != 0:\n        print(f\"Error: subprocess returned {retcode}\")\n    else:\n        print(f\"Success: subprocess returned {retcode}\")\nimport sys\nimport time\nimport humanize\nif __name__ == \"__main__\":\n    split_ind = sys.argv.index(\"--\")\n    args = sys.argv[split_ind + 1 :]\n    if \"python\" in args or \"python3.9\" in args:\n        assert \"-u\" in args, \"Python script must be run with -u flag (unbuffered)\"\n    error_container = []\n    app = VisualIgnoreApp(error_container, args)\n    start_time = time.time()\n    app.run()\n    end_time = time.time()\n    total_time = end_time - start_time\n    # breakpoint()\n    retcode = error_container[0]\n    if retcode != 0:\n        raise Exception(\n            \"\\n\".join(\n                [\"Error: subprocess returned\", str(retcode)]",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once.py:154-187"
     },
-    "169": {
+    "173": {
         "file_id": 15,
         "content": "Code snippet is part of an asynchronous Python program that runs a subprocess and handles its stdout and stderr output. It checks the return code of the subprocess and prints success or error message accordingly. The script also ensures the Python script is run with unbuffered mode (-u flag). It records the execution time and stores the return code in a container, which can be used for further processing or exceptions.",
         "type": "comment"
     },
-    "170": {
+    "174": {
         "file_id": 15,
         "content": "                + error_container[1:]\n                + [\"total time:\", humanize.naturaltime(total_time).split(\" ago\")[0]]\n            )\n        )\n    else:\n        print(\"exit successfully\")\n        print(\"total time:\", humanize.naturaltime(total_time).split(\" ago\")[0])",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once.py:188-194"
     },
-    "171": {
+    "175": {
         "file_id": 15,
         "content": "This code is adding a progress update to the error container if there was an error, and then printing the total time taken if the execution exited successfully. It uses the humanize module to format the time output in a natural language-like manner.",
         "type": "comment"
     },
-    "172": {
+    "176": {
         "file_id": 16,
         "content": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py",
         "type": "filepath"
     },
-    "173": {
+    "177": {
         "file_id": 16,
         "content": "This code defines a class for redirecting stdout to a progress bar, differentiates between cached and processed files, and suggests improvements. It uses asyncio to manage subprocesses, capture output, calculate runtime, and display success/error messages.",
         "type": "summary"
     },
-    "174": {
+    "178": {
         "file_id": 16,
         "content": "# redirect stdout to some buffered output window, and show a progress bar below.\n# differentiate between \"cached\" file and \"processed\" file\n# you may retrieve \"cached\" file processing time from somewhere else.\n# if failed to retrieve stored processing time, use average one instead.\n# TODO: add this to recursive document generator.\n# TODO: before that, just use a simple timer for producing total processing time and count files, in size, count and lines.\nimport asyncio\nimport parse\nfrom textual.app import App, ComposeResult\nfrom textual.widgets import Log, ProgressBar\n# import textual\nfrom threading import Lock\nlock = Lock()\nINTERVAL = 0.1\nimport shutil\nimport textwrap\ndef wrap_text(text):\n    # Get the terminal width\n    terminal_width, _ = shutil.get_terminal_size()\n    tw = terminal_width - 8\n    if tw < 8:\n        tw = terminal_width\n    wrapped_text = textwrap.fill(text, width=tw)\n    return wrapped_text.rstrip()\nclass VisualIgnoreApp(App):\n    \"\"\"A Textual app to visualize\"\"\"\n    def __init__(self, error_container: list, program_args: list[str], *args, **kwargs):",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py:1-41"
     },
-    "175": {
+    "179": {
         "file_id": 16,
         "content": "The code defines a class called VisualIgnoreApp, which extends the Textual app. It imports necessary modules and functions such as asyncio, parse, Log, ProgressBar, Lock, terminal_size from shutil, textwrap, and others. The purpose of this code is to redirect stdout (standard output) to a buffered output window, show a progress bar below, differentiate between \"cached\" file and \"processed\" file, retrieve stored processing time if possible or use an average one instead. It also mentions adding it to a recursive document generator as a future task, along with using a simple timer for producing total processing time and counting files in size, count, and lines. The code includes a wrap_text function that gets the terminal width and fills the text according to the available width, returning a wrapped text.",
         "type": "comment"
     },
-    "176": {
+    "180": {
         "file_id": 16,
         "content": "        super().__init__(*args, **kwargs)\n        self.mylog = Log(max_lines=10000)\n        self.prog = ProgressBar()\n        self.program_args = program_args\n        self.error_container = error_container\n        # self.prog.styles.width=\"100%\"\n        self.prog.styles.align_horizontal = \"center\"\n        # self.prog.update(total=100, progress=0)\n    async def progress(self):\n        locked = lock.acquire(blocking=False)\n        if locked:\n            self.mylog.clear()\n            await main(self.mylog, self.prog, self.error_container, self.program_args)\n            self.exit()\n            # lock.release()\n    def compose(self) -> ComposeResult:\n        \"\"\"Create child widgets for the app.\"\"\"\n        return [self.mylog, self.prog]\n    def on_mount(self) -> None:\n        # await self.progress()\n        # self.exit()\n        self.timer = self.set_interval(INTERVAL, self.progress)\n# mylog = textual.widgets.Log(max_lines = ...)\n# mybar = textual.widgets.ProgressBar(total=100, show_eta=...)\n# mylog.write()\n# TODO: run the document processor in a separate process.",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py:42-73"
     },
-    "177": {
+    "181": {
         "file_id": 16,
         "content": "This code sets up a class with an asynchronous `progress` method and a `compose` method. The `__init__` initializes instance variables, and the `on_mount` sets an interval for the progress method to run periodically. It also includes comments suggesting to run the document processor in a separate process.",
         "type": "comment"
     },
-    "178": {
+    "182": {
         "file_id": 16,
         "content": "# TODO: parse the data received from the separate process, line by line.\n# TODO: if the data starts with something special, we would read and parse the whole line and update progress\n# this is sick.\n# cmd = [\"python3.9\", \"test.py\"]\n# cmd = [\"stdbuf\", \"-o0\", \"-e0\", \"bash\", \"-c\", \"python3.9 test.py 2>&1\"]\ncmd = [\"stdbuf\", \"-o0\", \"-e0\", \"python3.9\", \"test.py\"]\n# cmd = [\"bash\", \"-c\", \"python3.9 test.py 2>&1\"]\nline_format = \"PROCESSING PROGRESS: {progress:d}/{total:d}\"\ndef parse_line(line: str):\n    parsed = parse.parse(line_format, line)\n    if parsed:\n        return parsed[\"progress\"], parsed[\"total\"]\n    return None\nasync def read_stderr(proc, error_container):\n    while True:\n        # mbyte = await proc.stderr.readline()  # type:ignore\n        mbyte = await proc.stderr.read(100)  # type:ignore\n        error_container.append(mbyte)\n        if mbyte == b\"\":\n            break\nasync def read_stdout(proc, mylog, prog):\n    line_position = 0\n    line_content = \"\"\n    # mtime = []\n    init = False\n    while True:\n        # mbyte = await proc.stdout.readline()  # type:ignore",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py:74-107"
     },
-    "179": {
+    "183": {
         "file_id": 16,
         "content": "This code is for reading data from a separate process, parsing it line by line, and updating progress accordingly. It uses Python's `asyncio` library to handle asynchronous I/O operations. The `read_stderr` function reads the process's stderr output, while the `read_stdout` function reads the process's stdout output and updates a progress tracker. The code also includes a `parse_line` function for parsing specific line formats.",
         "type": "comment"
     },
-    "180": {
+    "184": {
         "file_id": 16,
         "content": "        # mbyte = await proc.stdout.read(20)  # type:ignore\n        mbyte = await proc.stdout.read(1)  # type:ignore\n        if mbyte == b\"\":\n            break\n        else:\n            # line_content = mbyte.decode(\"utf-8\").rstrip()\n            # # print(content)\n            # mylog.write_line(wrap_text(line_content))\n            # mylog.refresh()\n            # continue\n            if mbyte == b\"\\n\":\n                line_position = 0\n                mylog.write(\"\\n\")\n                # try to parse line content.\n                if line_content.startswith(\">>>> \"):\n                    #     mtime.append(datetime.datetime.now())\n                    mline = line_content[5:]\n                    ret = parse_line(mline)\n                    if ret is not None:\n                        if not init:\n                            prog.update(total=ret[1], progress=0)\n                            init = True\n                        steps = ret[0] - prog.progress\n                        if steps > 0:\n                            prog.advance(steps)",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py:108-132"
     },
-    "181": {
+    "185": {
         "file_id": 16,
         "content": "This code reads a line of output from a process's stdout, checks if it is empty or contains a newline character, and updates progress based on the parsed content. If the content starts with \">>>> \", it calls parse_line to get the total and current progress values, and then updates the progress bar accordingly.",
         "type": "comment"
     },
-    "182": {
+    "186": {
         "file_id": 16,
         "content": "                    mylog.write(\"parsed progress? \" + str(ret)+\"\\n\")\n                line_content = \"\"\n            else:\n                line_position +=1\n                line_content += mbyte.decode(\"utf-8\")\n                mylog.write( mbyte.decode(\"utf-8\"))\n            # mylog.write_line(line_content)\nasync def main(mylog, prog, error_container, program_args):\n    # proc = await asyncio.create_subprocess_shell(\n    proc = await asyncio.create_subprocess_exec(\n        *program_args,  # stdout=asyncio.subprocess.PIPE\n        # UNBUFFERED FLAG: -u\n        # \"bash -c 'python3.9 -u test_no_patch.py 2>&1'\",\n        stdout=asyncio.subprocess.PIPE,\n        stderr=asyncio.subprocess.PIPE\n        # \"python3.9 -u test_no_patch.py\", stdout=asyncio.subprocess.PIPE\n        # \"python3.9 test.py\", stdout=asyncio.subprocess.PIPE\n    )  # how to handle the stderr now? we may merge the altogether.\n    t1 = asyncio.create_task(read_stdout(proc, mylog, prog))\n    t2 = asyncio.create_task(read_stderr(proc, error_container))",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py:133-154"
     },
-    "183": {
+    "187": {
         "file_id": 16,
         "content": "This code is creating a subprocess to execute a Python script and captures its output. It uses asyncio for handling the concurrent reading of standard output (stdout) and standard error (stderr). The stdout is being processed line by line, where the code checks for progress updates and writes them to a log file. The stderr is being handled in a separate task.",
         "type": "comment"
     },
-    "184": {
+    "188": {
         "file_id": 16,
         "content": "    # task1 = asyncio.create_task(read_stdout(proc, mylog))\n    # task2 = asyncio.create_task(read_stderr(proc))\n    await asyncio.gather(t1, t2)\n    # await asyncio.gather(task1, task2)\n    retcode = await proc.wait()\n    error_container.insert(0, retcode)\n    if retcode != 0:\n        print(f\"Error: subprocess returned {retcode}\")\n    else:\n        print(f\"Success: subprocess returned {retcode}\")\nimport sys\nimport time\nimport humanize\nif __name__ == \"__main__\":\n    split_ind = sys.argv.index(\"--\")\n    args = sys.argv[split_ind + 1 :]\n    if \"python\" in args or \"python3.9\" in args:\n        assert \"-u\" in args, \"Python script must be run with -u flag (unbuffered)\"\n    error_container = []\n    app = VisualIgnoreApp(error_container, args)\n    start_time = time.time()\n    app.run()\n    end_time = time.time()\n    total_time = end_time - start_time\n    # breakpoint()\n    retcode = error_container[0]\n    if retcode != 0:\n        error_info = b\"\\n\".join(error_container[1:])\n        sys.stderr.buffer.write(error_info)\n        raise Exception(",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py:155-188"
     },
-    "185": {
+    "189": {
         "file_id": 16,
         "content": "The code creates two tasks for reading stdout and stderr from a subprocess. It then awaits the completion of both tasks and retrieves the subprocess' exit code. If the return code is not zero, an error message is printed; otherwise, a success message is printed. The code checks if the Python script was run with the \"-u\" flag to ensure unbuffered output. Finally, it calculates the total runtime of the program and retrieves the first element from the error_container list.",
         "type": "comment"
     },
-    "186": {
+    "190": {
         "file_id": 16,
         "content": "            \"\\n\".join(\n                [\"Error: subprocess returned\", str(retcode)]\n                + [\"total time:\", humanize.naturaltime(total_time).split(\" ago\")[0]]\n            )\n        )\n    else:\n        print(\"exit successfully\")\n        print(\"total time:\", humanize.naturaltime(total_time).split(\" ago\")[0])",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py:189-196"
     },
-    "187": {
+    "191": {
         "file_id": 16,
         "content": "This code checks the return code of a subprocess and based on the value, either prints an error message or successful exit. It also displays the total time taken in a human-readable format using naturaltime function from humanize library.",
         "type": "comment"
     },
-    "188": {
+    "192": {
         "file_id": 17,
         "content": "/document_agi_computer_control/stdout_redirect_progress/test.py",
         "type": "filepath"
     },
-    "189": {
+    "193": {
         "file_id": 17,
         "content": "This code is overriding the built-in print function to default flush=True. It demonstrates progress bar printing and sleep functionality with a custom print function.",
         "type": "summary"
     },
-    "190": {
+    "194": {
         "file_id": 17,
         "content": "import builtins\nimport copy\nmyprint = copy.copy(builtins.print)\ndef custom_print(*args, **kwargs):\n    if \"flush\" not in kwargs:\n        kwargs[\"flush\"] = True\n    myprint(*args, **kwargs)\n# Override the built-in print function with the custom function\nbuiltins.print = custom_print\n# Now, when you use print, it will default to flush=True\nimport time\n# for _ in range(200):\n#     print(\">>>> PROCESSING PROGRESS: 30%\")\nprint(\"Hello, world\")\nSLEEP = 0.2\n# time.sleep(SLEEP)\nfor i in range(10000):\n    print(\n        f\">>>> PROCESSING PROGRESS: {i}%\"\n    )  # problem is here. how to set flush=True this as default?\n    print(\"hello world\")\n    time.sleep(SLEEP)",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/test.py:1-32"
     },
-    "191": {
+    "195": {
         "file_id": 17,
         "content": "This code is overriding the built-in print function to default flush=True. It demonstrates progress bar printing and sleep functionality with a custom print function.",
         "type": "comment"
     },
-    "192": {
+    "196": {
         "file_id": 18,
         "content": "/document_agi_computer_control/stdout_redirect_progress/test_no_patch.py",
         "type": "filepath"
     },
-    "193": {
+    "197": {
         "file_id": 18,
         "content": "This code simulates a progress bar with intermittent \"hello world\" printing, adjustable sleep time using SLEEP variable. The issue is setting flush=True as the default in print statements.",
         "type": "summary"
     },
-    "194": {
+    "198": {
         "file_id": 18,
         "content": "import time\n# for _ in range(200):\n#     print(\">>>> PROCESSING PROGRESS: 30%\")\nprint(\"Hello, world\")\nSLEEP = 0.1\n# SLEEP = 0.01\n# SLEEP = 1\n# time.sleep(SLEEP)\ntotal = 100\nfor i in range(total):\n    print(\n        f\">>>> PROCESSING PROGRESS: {i+1}/{total}\"\n    )  # problem is here. how to set flush=True this as default?\n    print(\"hello world\")\n    time.sleep(SLEEP)",
         "type": "code",
         "location": "/document_agi_computer_control/stdout_redirect_progress/test_no_patch.py:1-18"
     },
-    "195": {
+    "199": {
         "file_id": 18,
         "content": "This code simulates a progress bar with intermittent \"hello world\" printing, adjustable sleep time using SLEEP variable. The issue is setting flush=True as the default in print statements.",
-        "type": "comment"
-    },
-    "196": {
-        "file_id": 19,
-        "content": "/document_agi_computer_control/title_generator/main.py",
-        "type": "filepath"
-    },
-    "197": {
-        "file_id": 19,
-        "content": "The code generates file titles using metadata, stores cache data in TinyDB, verifies input parameters, hashes the summary with MD5, processes and stores file summaries in JSON files split into chunks of 300, and tracks total split count in a metadata file.",
-        "type": "summary"
-    },
-    "198": {
-        "file_id": 19,
-        "content": "# generate title\n# create /cache_title.json, /metadata_title.json, /data/titles/<number>.json\n# hash by comment, cache by path identifier and comment hash\n# identify those identical comments (file that only has one segment), only give title to file not segment\n# only display title if exists\nimport os\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"-s\", \"--source_dir\", type=str, required=True)\nargs = parser.parse_args()\n# the only parameter.\nsource_dir = args.source_dir\nassert os.path.exists(source_dir)\nassert os.path.isdir(source_dir)\nassert os.path.isabs(source_dir)\nimport json\nimport sys\nsys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), \"../\"))\nfrom llm import llm_context\nfrom slice_utils import split_dict_into_chunks\nmetadata = json.loads(open(os.path.join(source_dir, \"metadata.json\"), \"r\").read())\nfile_mapping = metadata[\"file_mapping\"]\nsplit_count = metadata[\"split_count\"]\nproject_name = metadata[\"project_name\"]\ndata = {}\nfor i in range(split_count):\n    new_data = json.loads(open(os.path.join(source_dir, f\"data/{i}.json\"), \"r\").read())",
-        "type": "code",
-        "location": "/document_agi_computer_control/title_generator/main.py:1-41"
-    },
-    "199": {
-        "file_id": 19,
-        "content": "This code generates a title for a given source directory. It checks the metadata of the files and assigns titles to them based on their contents. The code imports necessary libraries, verifies input parameters, reads data from files and assigns titles to them if they don't already have one. This is useful in organizing and identifying files with similar content.",
         "type": "comment"
     }
 }

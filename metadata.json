@@ -31,182 +31,182 @@
         },
         "5": {
             "filepath": "/document_agi_computer_control/ensure_fdignore_with_doc.py",
-            "entry_id": 80,
+            "entry_id": 82,
             "language_id": "python"
         },
         "6": {
             "filepath": "/document_agi_computer_control/estimate_utils.py",
-            "entry_id": 84,
+            "entry_id": 86,
             "language_id": "python"
         },
         "7": {
             "filepath": "/document_agi_computer_control/example.py",
-            "entry_id": 88,
+            "entry_id": 90,
             "language_id": "python"
         },
         "8": {
             "filepath": "/document_agi_computer_control/identify_utils.py",
-            "entry_id": 92,
+            "entry_id": 94,
             "language_id": "python"
         },
         "9": {
             "filepath": "/document_agi_computer_control/llm.py",
-            "entry_id": 96,
+            "entry_id": 98,
             "language_id": "python"
         },
         "10": {
             "filepath": "/document_agi_computer_control/path_select_utils.py",
-            "entry_id": 104,
+            "entry_id": 106,
             "language_id": "python"
         },
         "11": {
             "filepath": "/document_agi_computer_control/recursive_document_writer.py",
-            "entry_id": 108,
+            "entry_id": 110,
             "language_id": "python"
         },
         "12": {
             "filepath": "/document_agi_computer_control/sitemap_generator/main.py",
-            "entry_id": 132,
+            "entry_id": 136,
             "language_id": "python"
         },
         "13": {
             "filepath": "/document_agi_computer_control/slice_utils.py",
-            "entry_id": 138,
+            "entry_id": 142,
             "language_id": "python"
         },
         "14": {
             "filepath": "/document_agi_computer_control/stdout_redirect_progress/main.py",
-            "entry_id": 144,
+            "entry_id": 148,
             "language_id": "python"
         },
         "15": {
             "filepath": "/document_agi_computer_control/stdout_redirect_progress/main_once.py",
-            "entry_id": 156,
+            "entry_id": 160,
             "language_id": "python"
         },
         "16": {
             "filepath": "/document_agi_computer_control/stdout_redirect_progress/main_once_char_by_char.py",
-            "entry_id": 172,
+            "entry_id": 176,
             "language_id": "python"
         },
         "17": {
             "filepath": "/document_agi_computer_control/stdout_redirect_progress/test.py",
-            "entry_id": 188,
+            "entry_id": 192,
             "language_id": "python"
         },
         "18": {
             "filepath": "/document_agi_computer_control/stdout_redirect_progress/test_no_patch.py",
-            "entry_id": 192,
+            "entry_id": 196,
             "language_id": "python"
         },
         "19": {
             "filepath": "/document_agi_computer_control/title_generator/main.py",
-            "entry_id": 196,
+            "entry_id": 200,
             "language_id": "python"
         },
         "20": {
             "filepath": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/high_level.py",
-            "entry_id": 208,
+            "entry_id": 214,
             "language_id": "python"
         },
         "21": {
             "filepath": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py",
-            "entry_id": 214,
+            "entry_id": 220,
             "language_id": "python"
         },
         "22": {
             "filepath": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py",
-            "entry_id": 238,
+            "entry_id": 244,
             "language_id": "python"
         },
         "23": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/chat.py",
-            "entry_id": 266,
+            "entry_id": 272,
             "language_id": "python"
         },
         "24": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py",
-            "entry_id": 270,
+            "entry_id": 276,
             "language_id": "python"
         },
         "25": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py",
-            "entry_id": 278,
+            "entry_id": 284,
             "language_id": "python"
         },
         "26": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py",
-            "entry_id": 286,
+            "entry_id": 292,
             "language_id": "python"
         },
         "27": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py",
-            "entry_id": 290,
+            "entry_id": 296,
             "language_id": "python"
         },
         "28": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py",
-            "entry_id": 298,
+            "entry_id": 304,
             "language_id": "python"
         },
         "29": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test.py",
-            "entry_id": 318,
+            "entry_id": 324,
             "language_id": "python"
         },
         "30": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/test_hnswlib.py",
-            "entry_id": 322,
+            "entry_id": 328,
             "language_id": "python"
         },
         "31": {
             "filepath": "/document_agi_computer_control/vectorstore_embedding_chat_rag/vectorindex.py",
-            "entry_id": 326,
+            "entry_id": 332,
             "language_id": "python"
         },
         "32": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/async_utils.py",
-            "entry_id": 344,
+            "entry_id": 350,
             "language_id": "python"
         },
         "33": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/display_tree_structure.py",
-            "entry_id": 348,
+            "entry_id": 354,
             "language_id": "python"
         },
         "34": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/file_copy_by_fd.py",
-            "entry_id": 370,
+            "entry_id": 376,
             "language_id": "python"
         },
         "35": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main.py",
-            "entry_id": 376,
+            "entry_id": 382,
             "language_id": "python"
         },
         "36": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/main_pyjom.py",
-            "entry_id": 388,
+            "entry_id": 394,
             "language_id": "python"
         },
         "37": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/run_simple.py",
-            "entry_id": 436,
+            "entry_id": 442,
             "language_id": "python"
         },
         "38": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/test_tree_visual.py",
-            "entry_id": 442,
+            "entry_id": 448,
             "language_id": "python"
         },
         "39": {
             "filepath": "/document_agi_computer_control/visual_file_selector_by_ignore_rules/tree_utils.py",
-            "entry_id": 452,
+            "entry_id": 458,
             "language_id": "python"
         },
         "40": {
             "filepath": "/search_filepath_by_name/search_filepath.sh",
-            "entry_id": 474,
+            "entry_id": 480,
             "language_id": "shell"
         }
     },

@@ -1,543 +1,543 @@
 {
     "200": {
         "file_id": 19,
+        "content": "/document_agi_computer_control/title_generator/main.py",
+        "type": "filepath"
+    },
+    "201": {
+        "file_id": 19,
+        "content": "This code utilizes an external package's module to generate file titles based on metadata and content using LLM. It updates cache if necessary, stores generated titles in `result_dict`, and processes data to generate titles for file summaries before splitting them into separate JSON files.",
+        "type": "summary"
+    },
+    "202": {
+        "file_id": 19,
+        "content": "# generate title\n# create /cache_title.json, /metadata_title.json, /data/titles/<number>.json\n# hash by comment, cache by path identifier and comment hash\n# identify those identical comments (file that only has one segment), only give title to file not segment\n# only display title if exists\nimport os\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"-s\", \"--source_dir\", type=str, required=True)\nargs = parser.parse_args()\n# the only parameter.\nsource_dir = args.source_dir\nassert os.path.exists(source_dir)\nassert os.path.isdir(source_dir)\nassert os.path.isabs(source_dir)\nimport json\nimport sys\nsys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), \"../\"))\nfrom llm import llm_context\nfrom slice_utils import split_dict_into_chunks\nmetadata = json.loads(open(os.path.join(source_dir, \"metadata.json\"), \"r\").read())\nfile_mapping = metadata[\"file_mapping\"]\nsplit_count = metadata[\"split_count\"]\nproject_name = metadata[\"project_name\"]\ndata = {}\nfor i in range(split_count):\n    new_data = json.loads(open(os.path.join(source_dir, f\"data/{i}.json\"), \"r\").read())",
+        "type": "code",
+        "location": "/document_agi_computer_control/title_generator/main.py:1-41"
+    },
+    "203": {
+        "file_id": 19,
+        "content": "This code generates a title for files in a given source directory based on metadata and file content. It uses the llm_context module from an external package and split_utils to process the data. The code reads metadata from \"metadata.json\" and data files named by their index, then generates titles if needed and only displays them if they exist.",
+        "type": "comment"
+    },
+    "204": {
+        "file_id": 19,
         "content": "    data.update(new_data)\ndef strip_quote(s: str):\n    if s[0] == s[-1]:\n        if s[0] in ['\"', \"'\"]:\n            return s[1:-1].strip()\n    return s.strip().strip(\".\")\nfrom tinydb import TinyDB, Query\ncache_title = TinyDB(os.path.join(source_dir, \"cache_title.json\"))\ntitle_split_dir = os.path.join(source_dir, \"data/titles\")\nmetadata_title_path = os.path.join(source_dir, \"metadata_title.json\")\nimport shutil\nif not os.path.exists(title_split_dir):\n    os.makedirs(title_split_dir)\nelse:\n    shutil.rmtree(title_split_dir)\n    os.makedirs(title_split_dir)\nif not os.path.isdir(title_split_dir):\n    raise Exception(\n        f\"'{title_split_dir}' (where splited titles stored) must be a directory\"\n    )\n# structure:\n# [filepath] [summary] [code] [comment] ...\ntitle_data = {}\nfile_mapping_detail = {}\ndata_count = len(data.keys())\nimport hashlib\ndef hash_key(summary: str):\n    enc = summary.strip()\n    if enc:\n        # Generate a hash for the given summary\n        hash_object = hashlib.md5(enc.encode())\n        return hash_object.hexdigest()",
         "type": "code",
         "location": "/document_agi_computer_control/title_generator/main.py:42-87"
     },
-    "201": {
+    "205": {
         "file_id": 19,
-        "content": "The code initializes a TinyDB for storing cache data, checks and creates the title_split directory if it does not exist, defines a function to strip quotes, and then hashes a given summary using MD5.",
+        "content": "This code sets up the directory for storing split titles, initializes an empty dictionary for title data, and defines a function to generate a hash key from a summary string. The code also includes error handling for the title split directory not existing or not being a directory.",
         "type": "comment"
     },
-    "202": {
+    "206": {
         "file_id": 19,
         "content": "def ask_llm_for_title(path: str, comment: str):\n    init_prompt = \"\"\"You are a professional title writer. You can write a concise, conclusive and meaningful title within 3 to 7 words. You will be given a piece of content, a path that refers to the content and produce a single title.\n\"\"\"\n    with llm_context(init_prompt) as model:\n        prompt = f\"\"\"Content:\n{comment}\nPath of the content: {path}\nTitle within 3 to 7 words (do not quote the title, just write it out):\n\"\"\"\n        ret = model.run(prompt).strip()\n        ret = strip_quote(ret)\n    return ret\ndef generate_title_and_update_to_result(\n    path: str, comment: str, result_dict: dict[str, str]\n):\n    comment_hash = hash_key(comment)\n    doc = cache_title.get((Query().hash == comment_hash) and (Query().path == path))\n    if doc:\n        mtitle = doc[\"title\"]\n    else:\n        mtitle = ask_llm_for_title(path, comment)\n        cache_title.upsert(\n            dict(path=path, hash=comment_hash, title=mtitle), cond=Query().path == path\n        )\n    result_dict[path] = mtitle",
         "type": "code",
         "location": "/document_agi_computer_control/title_generator/main.py:90-118"
     },
-    "203": {
-        "file_id": 19,
-        "content": "The code defines a function `ask_llm_for_title` that utilizes LLM (Language Model) to generate titles for given content and its path. It also includes the `generate_title_and_update_to_result` function, which retrieves an existing title from the cache or generates a new one using `ask_llm_for_title`, and updates it in the result dictionary.",
-        "type": "comment"
-    },
-    "204": {
-        "file_id": 19,
-        "content": "for k, v in file_mapping.items():\n    # end_id is exclusive.\n    if str(int(k) + 1) in file_mapping.keys():\n        end_id = int(file_mapping[str(int(k) + 1)][\"entry_id\"])\n    else:\n        end_id = data_count\n    file_mapping_detail[k] = {\n        \"filepath\": v[\"filepath\"],\n        \"span\": {\"start\": int(v[\"entry_id\"]), \"end\": end_id},\n    }\nfile_count = len(file_mapping.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{file_count}\")\nfor i in range(file_count):\n    try:\n        it = file_mapping_detail[str(i)]\n        start, end = it[\"span\"][\"start\"], it[\"span\"][\"end\"]\n        split_count = (end - start - 2) / 2\n        split_count = int(split_count)\n        # generate for file summary title first.\n        generate_title_and_update_to_result(\n            data[str(start)][\"content\"], data[str(start + 1)][\"content\"], title_data\n        )\n        if split_count == 1:  # only generate for file summary\n            continue\n        else:\n            # generate for splits\n            for j in range(split_count):\n                generate_title_and_update_to_result(",
-        "type": "code",
-        "location": "/document_agi_computer_control/title_generator/main.py:121-149"
-    },
-    "205": {
-        "file_id": 19,
-        "content": "The code iterates through a file_mapping dictionary, creates a file_mapping_detail dictionary with start and end IDs for each file, calculates the number of splits needed based on end - start - 2, generates a title for the first entry and updates the result, and if there is only one split, it continues to the next iteration. Otherwise, it generates titles for all splits.",
-        "type": "comment"
-    },
-    "206": {
-        "file_id": 19,
-        "content": "                    data[str(start + 2 + j * 2)][\"location\"],\n                    data[str(start + 3 + j * 2)][\"content\"],\n                    title_data,\n                )\n    finally:\n        print(f\"\\n>>>> PROCESSING PROGRESS: {i+1}/{file_count}\")\n# split and store file summaries.\nprint(\"Spliting and storing titles...\")\ntitle_split_count = 0\nimport json\nfor i, chunk in enumerate(split_dict_into_chunks(title_data, 300)):\n    title_split_count += 1\n    with open(os.path.join(title_split_dir, f\"{i}.json\"), \"w+\") as f:\n        f.write(json.dumps(chunk, indent=4, ensure_ascii=False))\nprint(\"Storing title metadata...\")\nwith open(metadata_title_path, \"w+\") as f:\n    f.write(json.dumps(dict(split_count=title_split_count)))\nprint(\"Finished title generation.\")",
-        "type": "code",
-        "location": "/document_agi_computer_control/title_generator/main.py:150-170"
-    },
     "207": {
         "file_id": 19,
-        "content": "This code processes and stores file summaries, splits them into chunks of 300, and writes each chunk to a separate JSON file. It also keeps track of the total split count in a metadata file. The progress is printed at regular intervals.",
+        "content": "This code defines a function `ask_llm_for_title` that utilizes a Language Model (LLM) to generate a title for a given content and path. The function `generate_title_and_update_to_result` uses this LLM function to generate titles, checks if the title already exists in cache, and updates it if necessary. It also stores the generated titles in the `result_dict`.",
         "type": "comment"
     },
     "208": {
+        "file_id": 19,
+        "content": "for k, v in file_mapping.items():\n    # end_id is exclusive.\n    if str(int(k) + 1) in file_mapping.keys():\n        end_id = int(file_mapping[str(int(k) + 1)][\"entry_id\"])\n    elif (int(k) + 1) == len(file_mapping.items()):\n        end_id = data_count\n    else:\n        raise Exception(\n            f\"Missing next item for index {k}, file count {len(file_mapping.items())}\"\n        )\n    file_mapping_detail[k] = {\n        \"filepath\": v[\"filepath\"],\n        \"span\": {\"start\": int(v[\"entry_id\"]), \"end\": end_id},\n    }\nfile_count = len(file_mapping.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{file_count}\")\n# print(file_mapping_detail)\n# with open(\"/tmp/file_mapping.txt\", \"w+\") as f:\n#     f.write(str(file_mapping_detail))\n# raise Exception(file_mapping_detail)\n# breakpoint()\nfor i in range(file_count):\n    try:\n        it = file_mapping_detail[str(i)]\n        start, end = it[\"span\"][\"start\"], it[\"span\"][\"end\"]\n        split_count = (end - start - 2) / 2\n        split_count = int(split_count)\n        # generate for file summary title first.",
+        "type": "code",
+        "location": "/document_agi_computer_control/title_generator/main.py:121-148"
+    },
+    "209": {
+        "file_id": 19,
+        "content": "This code iterates over a file mapping and checks for the next item. It calculates the start and end positions for each file, determining how many splits to make based on the difference between the end and start positions. This information is stored in a dictionary called file_mapping_detail. The file count is determined and printed as processing progress. Finally, it generates splits for the file summary title.",
+        "type": "comment"
+    },
+    "210": {
+        "file_id": 19,
+        "content": "        generate_title_and_update_to_result(\n            data[str(start)][\"content\"], data[str(start + 1)][\"content\"], title_data\n        )\n        # raise Exception(start,end,split_count)\n        if split_count == 1:  # only generate for file summary\n            continue\n        else:\n            # generate for splits\n            for j in range(split_count):\n                generate_title_and_update_to_result(\n                    data[str(start + 2 + j * 2)][\"location\"],\n                    data[str(start + 3 + j * 2)][\"content\"],\n                    title_data,\n                )\n    finally:\n        print(f\"\\n>>>> PROCESSING PROGRESS: {i+1}/{file_count}\")\n# split and store file summaries.\nprint(\"Spliting and storing titles...\")\ntitle_split_count = 0\nimport json\nfor i, chunk in enumerate(split_dict_into_chunks(title_data, 300)):\n    title_split_count += 1\n    with open(os.path.join(title_split_dir, f\"{i}.json\"), \"w+\") as f:\n        f.write(json.dumps(chunk, indent=4, ensure_ascii=False))\nprint(\"Storing title metadata...\")",
+        "type": "code",
+        "location": "/document_agi_computer_control/title_generator/main.py:149-176"
+    },
+    "211": {
+        "file_id": 19,
+        "content": "The code processes a chunk of data, generates titles for file summaries and splits, and then stores them in separate JSON files. If the split count is 1, it continues to the next iteration without generating additional titles. The progress is printed at each step, indicating the current processing status.",
+        "type": "comment"
+    },
+    "212": {
+        "file_id": 19,
+        "content": "with open(metadata_title_path, \"w+\") as f:\n    f.write(json.dumps(dict(split_count=title_split_count)))\nprint(\"Finished title generation.\")",
+        "type": "code",
+        "location": "/document_agi_computer_control/title_generator/main.py:177-179"
+    },
+    "213": {
+        "file_id": 19,
+        "content": "This code writes the title split count to a file and then prints \"Finished title generation.\"",
+        "type": "comment"
+    },
+    "214": {
         "file_id": 20,
         "content": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/high_level.py",
         "type": "filepath"
     },
-    "209": {
+    "215": {
         "file_id": 20,
         "content": "The code initializes a TinyDB, creates functions for brief generation based on summaries, generates hashes for summaries, and updates file and directory briefs using the generated hashes. It then iterates through file summaries and directories, updating their briefs if necessary.",
         "type": "summary"
     },
-    "210": {
+    "216": {
         "file_id": 20,
         "content": "import os\nimport hashlib\nfrom tinydb import TinyDB, Query\n# Initialize TinyDB\ndb = TinyDB('briefs_db.json')\ndef generate_file_summary_brief(filepath, summary):\n    # Generate a brief for the file based on its summary\n    # ...\ndef generate_directory_summary_brief(directory_path, children_briefs):\n    # Generate a brief for the directory based on its direct children's briefs\n    # ...\ndef hash_summary(summary):\n    # Generate a hash for the given summary\n    hash_object = hashlib.md5(summary.encode())\n    return hash_object.hexdigest()\ndef update_file_briefing(filepath, summary):\n    # Check if a matching briefing exists for the hash of the summary\n    # If not, update the briefing for the file\n    # ...\ndef update_directory_briefing(directory_path, children_briefs):\n    # Concatenate and sort the briefs of direct children before hashing\n    # Check if a matching briefing exists for the hash of the concatenated children briefs\n    # If not, update the briefing for the directory\n    # ...\n# Iterate through file summaries and update briefs",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/high_level.py:1-32"
     },
-    "211": {
+    "217": {
         "file_id": 20,
         "content": "This code initializes a TinyDB, defines functions to generate briefs for files and directories based on their summaries, generates hashes for summaries, updates file and directory briefings using the generated hashes. It then iterates through file summaries, updating briefs if necessary.",
         "type": "comment"
     },
-    "212": {
+    "218": {
         "file_id": 20,
         "content": "for filepath, summary in file_summaries.items():\n    update_file_briefing(filepath, summary)\n# Iterate through directories and their direct children to update briefs\nfor directory_path, children_briefs in directory_children_briefs.items():\n    update_directory_briefing(directory_path, children_briefs)",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/high_level.py:33-38"
     },
-    "213": {
+    "219": {
         "file_id": 20,
         "content": "Iterates through file summaries and updates briefs, followed by directories and their direct children's briefs.",
         "type": "comment"
     },
-    "214": {
+    "220": {
         "file_id": 21,
         "content": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py",
         "type": "filepath"
     },
-    "215": {
+    "221": {
         "file_id": 21,
         "content": "This Python script generates a filesystem hierarchy in markdown format from JSON data, using AI-generated summaries for directories and file_mapping for files. It also offers optional enhancements to generate tree.json and tree.html, with Jinja2 templates for rendering an organized visualization of project structure in HTML.",
         "type": "summary"
     },
-    "216": {
+    "222": {
         "file_id": 21,
         "content": "# demo logic to generate filesystem hierarchy in markdown\n# TODO: diff and line markers shifts based reprocessing: just process the changed part instead of the whole file again\n# TODO: calculate code duplication percent across directories, prefer files by timestamp or size\n# TODO: show the total stage progress like [Stage 1/4], [Stage 2/4]\n# TODO: generate sitemap\n# TODO: modify all titles in all pages to contain full project name and project description (more informative titles)\n# TODO: print progress info during directory brief generation process\n# TODO: provide a brief view to file chunks.\n# TODO: provide an AST view (language specific) to file chunks.\n# TODO: make our prompt into json to formalize the input structure, and parse the output as json\n# language specific shall be built on language agnostic\nimport os\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"-s\", \"--source_dir\", type=str, required=True)\nargs = parser.parse_args()\n# the only parameter.\nsource_dir = args.source_dir",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:1-25"
     },
-    "217": {
+    "223": {
         "file_id": 21,
         "content": "This code defines a Python script that generates a filesystem hierarchy in markdown format. It accepts the source directory as an argument and includes several TODOs for future enhancements such as diff handling, code duplication calculation, progress display, file chunks view, AST view, and language-specific features.",
         "type": "comment"
     },
-    "218": {
+    "224": {
         "file_id": 21,
         "content": "assert os.path.exists(source_dir)\nassert os.path.isdir(source_dir)\nassert os.path.isabs(source_dir)\nfrom collections import defaultdict\nimport json\nimport urllib.parse\nimport sys\nsys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), \"../\"))\nfrom llm import llm_context\nmetadata = json.loads(open(os.path.join(source_dir, \"metadata.json\"), \"r\").read())\nfile_mapping = metadata[\"file_mapping\"]\nsplit_count = metadata[\"split_count\"]\nproject_name = metadata[\"project_name\"]\ndata = {}\nfor i in range(split_count):\n    new_data = json.loads(open(os.path.join(source_dir, f\"data/{i}.json\"), \"r\").read())\n    data.update(new_data)\ndef strip_quote(s: str):\n    if s[0] == s[-1]:\n        if s[0] in ['\"', \"'\"]:\n            return s[1:-1].strip()\n    return s.strip().strip('.')\n# read metadata.json & data/*.json\n# create and read some cache_tree.json, which you may want to include in .gitignore\n# produce tree.json\n# copy tree.html\nimport html.entities\nhtml5_escapes = html.entities.html5\nhtml_escape_mapping = {}\nfor k,v in html5_escapes.items():",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:27-67"
     },
-    "219": {
+    "225": {
         "file_id": 21,
         "content": "The code reads metadata and data from JSON files, creates a cache_tree.json file, produces tree.json, and copies the content of tree.html. It also includes functions for stripping quotes and mapping HTML5 escapes.",
         "type": "comment"
     },
-    "220": {
+    "226": {
         "file_id": 21,
         "content": "    if k.endswith(\";\"):  html_escape_mapping[v] = \"&\"+k\ndef html_escape(s: str):\n    ret = \"\"\n    for elem in s:\n        if elem in html_escape_mapping.keys():\n            ret += html_escape_mapping[elem]\n        else:\n            ret += elem\n    return ret\nimport hashlib\ndef hash_key(summary: str):\n    enc = summary.strip()\n    if enc:\n        # Generate a hash for the given summary\n        hash_object = hashlib.md5(enc.encode())\n        return hash_object.hexdigest()\nimport tinydb\ncache_tree = tinydb.TinyDB(os.path.join(source_dir, \"cache_tree.json\"))\ndef generate_file_summary_brief(filepath, summary):\n    # Generate a brief for the file based on its summary\n    stripped_summary = summary.strip()\n    if stripped_summary:\n        prompt = f\"\"\"\nFilepath: {filepath}\nSummary:\n{stripped_summary}\nBrief in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        mhash = hash_key(prompt)\n        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == filepath)\n        )\n        if rec:",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:68-112"
     },
-    "221": {
+    "227": {
         "file_id": 21,
         "content": "This code snippet generates a brief for a file based on its summary. It checks if the summary is not empty and creates a hash of the prompt using the filepath and stripped summary. The code then retrieves a record from the cache tree using the generated hash and file path, updating it with a new brief if it exists.",
         "type": "comment"
     },
-    "222": {
+    "228": {
         "file_id": 21,
         "content": "            return rec[\"brief\"]\n        else:\n            init_prompt = \"\"\"You are a professional brief writer. You can turn long summaries into a single short, concise, conclusive and meaningful brief within 7 words. You will be given a filepath, a summary of the file and produce a concise brief that best describes the file.\"\"\"\n            with llm_context(init_prompt) as model:\n                mbrief = strip_quote(model.run(prompt).strip())\n            mdoc = dict(path=filepath, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == filepath)\n            return mbrief\n    return \"\"\ndef generate_tree_repesentation(\n    directory_path: str,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs: dict[str, str],\n    indent=0,\n    briefs=[],\n):\n    childrens = list(childrens_mapping[directory_path])\n    childrens.sort()\n    if directory_path == \"/\":\n        name = project_name\n    else:\n        name = directory_path.strip(\"/\").split(\"/\")[-1]",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:113-137"
     },
-    "223": {
+    "229": {
         "file_id": 21,
         "content": "This code snippet generates a tree representation of a file or directory structure. It first checks if a brief is available for the file, and if not, it uses an AI model to generate one. Then, it builds the tree representation using the provided parameters and returns the generated briefs.",
         "type": "comment"
     },
-    "224": {
+    "230": {
         "file_id": 21,
         "content": "    mbrief, show = directory_briefs[directory_path]\n    mbrief = strip_quote(mbrief)\n    briefs.append(\n        \" \" * indent * 4\n        + f'- <span hierarchy=\"{indent}\" class=\"expanded\" onclick=\"toggleVisibility(this)\" ><strong class=\"directory\" id=\"{directory_path}\"><code>{html_escape(name)}</code></strong>'\n        + (\"\" if not show else f\" <em>{mbrief}</em>\")\n        + \"</span>\"\n        # \" \" * indent * 4 + f\"- **`{name}`**\" + (\"\" if not show else f\" <em>{mbrief}</em>\")\n    )\n    for child in childrens:\n        child_name = child.strip(\"/\").split(\"/\")[-1]\n        if child.endswith(\"/\"):\n            # mbrief, show= directory_briefs[child]\n            # briefs.append(\n            #     \" \" * (indent + 1) * 4\n            #     + f\"- **`{child_name}`**\"+(\"\" if not show else f\" *{mbrief}*\")\n            # )\n            generate_tree_repesentation(\n                child,\n                childrens_mapping,\n                file_briefs,\n                directory_briefs,\n                indent + 1,\n                briefs,",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:138-162"
     },
-    "225": {
+    "231": {
         "file_id": 21,
         "content": "This function generates a hierarchical representation of file and directory structure. It uses recursion to handle nested directories, appends the names and brief descriptions to a 'briefs' list, and handles HTML formatting for display.",
         "type": "comment"
     },
-    "226": {
+    "232": {
         "file_id": 21,
         "content": "            )\n        else:\n            child_link = f\"index.html?q={urllib.parse.quote(child)}\"\n            briefs.append(\n                \" \" * (indent + 1) * 4\n                + f'- <a href=\"{child_link}\" id=\"{child}\"><code>{html_escape(child_name)}</code></a> <em>{strip_quote(file_briefs[child])}</em>'\n            )\n    return briefs\ndef generate_directory_summary_brief(\n    directory_path,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs={},\n):\n    # Generate a brief for the directory based on its direct children's briefs\n    childrens = list(childrens_mapping[directory_path])\n    if len(childrens) == 0:\n        raise Exception(f\"Directory '{directory_path}' has no children\")\n    if len(childrens) == 1:\n        if childrens[0].endswith(\"/\"):\n            generate_directory_summary_brief(\n                childrens[0], childrens_mapping, file_briefs, directory_briefs\n            )\n            mbrief = directory_briefs[childrens[0]][0]\n        else:\n            mbrief = file_briefs[childrens[0]]",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:163-191"
     },
-    "227": {
+    "233": {
         "file_id": 21,
         "content": "This function generates a brief for a directory based on its direct children's briefs. If the directory has no children, it raises an exception. If it has only one child, it recursively calls itself to generate a brief for the child directory or file.",
         "type": "comment"
     },
-    "228": {
+    "234": {
         "file_id": 21,
         "content": "        directory_briefs[directory_path] = (mbrief, False)\n    else:\n        subprompt_parts = []\n        children_briefs = {}\n        for child in childrens:\n            if child.endswith(\"/\"):\n                generate_directory_summary_brief(\n                    child, childrens_mapping, file_briefs, directory_briefs\n                )\n                cbrief = directory_briefs[child][0]\n            else:\n                cbrief = file_briefs[child]\n            children_briefs[child] = cbrief\n        candidates = list(children_briefs.items())\n        candidates.sort(key=lambda x: x[0])\n        for k, v in candidates:\n            if not k.endswith(\"/\"):\n                mark = \"file\"\n            else:\n                mark = \"directory\"\n            relpath = os.path.relpath(k, directory_path)\n            it = f\"Brief for {mark} '{relpath}': {v}\"\n            subprompt_parts.append(it)\n        subprompt = \"\\n\".join(subprompt_parts)\n        prompt = f\"\"\"\n{subprompt}\nBrief for directory '{directory_path}' in 7 words (do not quote your brief, just write it out):",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:192-219"
     },
-    "229": {
+    "235": {
         "file_id": 21,
         "content": "This code is generating a summary brief for each directory and file in the given folder hierarchy. It checks if the item is a directory or a file, and then sorts them based on their names. The brief includes the type of item (directory or file) and its relative path, and prompts the user to provide a 7-word brief description for the directory.",
         "type": "comment"
     },
-    "230": {
+    "236": {
         "file_id": 21,
         "content": "\"\"\"\n        mhash = hash_key(prompt)\n        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == directory_path)\n        )\n        if rec:\n            mbrief = rec[\"brief\"]\n        else:\n            init_prompt = \"\"\"You are a professional brief writer. You can turn a list of briefs into a single short, concise, conclusive and meaningful brief within 7 words. You will be given a list of briefs and relative paths of the directory children and produce a concise brief that best describes the directory.\"\"\"\n            with llm_context(init_prompt) as model:\n                mbrief = strip_quote(model.run(prompt).strip())\n            mdoc = dict(path=directory_path, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == directory_path)\n        directory_briefs[directory_path] = (mbrief, True)\n    return directory_briefs\nfile_summaries = {\n    v[\"filepath\"]: data[str(v[\"entry_id\"] + 1)][\"content\"]\n    for v in file_mapping.values()\n}\n# print(file_summaries)",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:220-242"
     },
-    "231": {
+    "237": {
         "file_id": 21,
         "content": "This code retrieves a brief description for a directory based on its path and hash value using an LLM (Language Model) context. If the record already exists in the cache_tree, it fetches the brief from there; otherwise, it prompts the LLM to generate a brief and stores it in the cache_tree before adding it to the directory_briefs dictionary. It also generates file summaries for the files in the given file_mapping.",
         "type": "comment"
     },
-    "232": {
+    "238": {
         "file_id": 21,
         "content": "# file_briefs = {k: generate_file_summary_brief(k, v) for k, v in file_summaries.items()}\nfile_briefs = {}\nitems_count = len(file_summaries.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{items_count}\")\ncounter = 0\nfor k, v in file_summaries.items():\n    file_briefs[k] = generate_file_summary_brief(k, v)\n    counter += 1\n    print(f\"\\n>>>> PROCESSING PROGRESS: {counter}/{items_count}\")\nchildrens_mapping = defaultdict(set)\nfor k in file_summaries.keys():\n    print(k)\n    split_k = k.split(\"/\")\n    print(split_k)  # [dir1, dir2, ... filename]\n    # add \"/\" to the right and left of dir.\n    for i in range(len(split_k) - 1):\n        parent = \"/\".join(split_k[: i + 1]) + \"/\"\n        child = parent + split_k[i + 1]\n        if i != len(split_k) - 2:  # is directory:\n            child += \"/\"\n        print({\"i\": i, \"parent\": parent, \"child\": child, \"k\": k})\n        childrens_mapping[parent].add(child)\n# breakpoint()\ndirectory_briefs = generate_directory_summary_brief(\"/\", childrens_mapping, file_briefs)\n# now, let's generate the representation.",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:244-273"
     },
-    "233": {
+    "239": {
         "file_id": 21,
         "content": "The code generates a directory hierarchy brief by iterating through file summaries, creating a mapping of child directories and files, and generating directory and file briefs using the mapping. It then uses these briefs to generate the final representation of the folder hierarchy.",
         "type": "comment"
     },
-    "234": {
+    "240": {
         "file_id": 21,
         "content": "briefs = generate_tree_repesentation(\n    \"/\", childrens_mapping, file_briefs, directory_briefs\n)\n# briefs.insert(0,\"# Project Structure:\")\nbriefs.insert(\n    0,\n    f'## Project Structure<span hierarchy=\"0\" class=\"partial-repository-url\"> of: {metadata[\"url\"][\"partial\"]}</span><div style=\"float: right;\"><a href=\"tree.html?full=true\"><i class=\"bi bi-arrow-down-right-circle\"></i></a><a href=\"index.html\"><i class=\"bi bi-search\"></i></a></div>',\n)\nprint(\"=\" * 40)\nprint(\"\\n\".join(briefs))\n### building\n# render README.md into index.html\nimport markdown\nfrom jinja2 import Template\n# Markdown content\nmarkdown_content = \"\\n\".join(briefs)\n# Convert Markdown to HTML\nhtml_content = markdown.markdown(markdown_content)\ntemplate_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), \"tree.html.j2\")\ncss_path = os.path.join(\n    os.path.abspath(os.path.dirname(__file__)), \"github-markdown.css\"\n)\ntemplate = Template(open(template_path, \"r\").read())\n# Render the template with the data\nrendered_template = template.render(content=html_content)",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:274-303"
     },
-    "235": {
+    "241": {
         "file_id": 21,
         "content": "This code generates a tree representation of a project structure and then converts it into Markdown format. The generated Markdown content is used to create HTML using Jinja2 templates, and the final result is written to \"tree.html\" file. It helps display the project hierarchy in an organized manner for better understanding.",
         "type": "comment"
     },
-    "236": {
+    "242": {
         "file_id": 21,
         "content": "print(\"Template rendered.\")\ntree_fname = \"tree.html\"\n# Write the template content to a file\nwith open(os.path.join(source_dir, tree_fname), \"w+\", encoding=\"utf-8\") as file:\n    file.write(rendered_template)\nimport shutil\nshutil.copy(css_path, source_dir)\nprint(\n    f\"Markdown converted to HTML and written to {os.path.join(source_dir, tree_fname)}\"\n)",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main.py:305-318"
     },
-    "237": {
+    "243": {
         "file_id": 21,
         "content": "This code renders a template, writes it to a file along with copied CSS, and converts Markdown to HTML.",
         "type": "comment"
     },
-    "238": {
+    "244": {
         "file_id": 22,
         "content": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py",
         "type": "filepath"
     },
-    "239": {
+    "245": {
         "file_id": 22,
         "content": "This JavaScript code generates a recursive HTML directory hierarchy with expandable lists, efficient caching, and sorting, handling file briefs/hyperlinks and combining comments for summary briefs using an LLM model. However, the provided code snippet is incomplete or malformed.",
         "type": "summary"
     },
-    "240": {
+    "246": {
         "file_id": 22,
         "content": "# demo logic to generate filesystem hierarchy in markdown\n# TODO: diff and line markers shifts based reprocessing: just process the changed part instead of the whole file again\n# TODO: calculate code duplication percent across directories, prefer files by timestamp or size\n# TODO: show the total stage progress like [Stage 1/4], [Stage 2/4]\n# TODO: generate sitemap\n# TODO: modify all titles in all pages to contain full project name and project description (more informative titles)\n# TODO: print progress info during directory brief generation process\n# TODO: provide a brief view to file chunks.\n# TODO: provide an AST view (language specific) to file chunks.\n# TODO: make our prompt into json to formalize the input structure, and parse the output as json\n# language specific shall be built on language agnostic\nimport os\nimport argparse\nparser = argparse.ArgumentParser()\nparser.add_argument(\"-s\", \"--source_dir\", type=str, required=True)\nargs = parser.parse_args()\n# the only parameter.\nsource_dir = args.source_dir",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:1-25"
     },
-    "241": {
+    "247": {
         "file_id": 22,
         "content": "This code snippet demonstrates a function that generates filesystem hierarchy in markdown format. It imports necessary modules, parses command-line arguments, and sets the source directory as a required parameter. The code also includes several TODO items for potential future enhancements.",
         "type": "comment"
     },
-    "242": {
+    "248": {
         "file_id": 22,
         "content": "assert os.path.exists(source_dir)\nassert os.path.isdir(source_dir)\nassert os.path.isabs(source_dir)\nfrom collections import defaultdict\nimport json\nimport urllib.parse\nimport sys\nsys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), \"../\"))\nfrom llm import llm_context\nmetadata = json.loads(open(os.path.join(source_dir, \"metadata.json\"), \"r\").read())\nfile_mapping = metadata[\"file_mapping\"]\nsplit_count = metadata[\"split_count\"]\nproject_name = metadata[\"project_name\"]\ndata = {}\nfor i in range(split_count):\n    new_data = json.loads(open(os.path.join(source_dir, f\"data/{i}.json\"), \"r\").read())\n    data.update(new_data)\ndef strip_quote(s: str):\n    if s[0] == s[-1]:\n        if s[0] in ['\"', \"'\"]:\n            return s[1:-1].strip()\n    return s.strip()\ndef strip_quote_and_get_first_line(s:str):\n    s = strip_quote(s)\n    first_line = s.split(\"\\n\")[0]\n    return strip_quote(first_line)\n# read metadata.json & data/*.json\n# create and read some cache_tree.json, which you may want to include in .gitignore",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:27-64"
     },
-    "243": {
+    "249": {
         "file_id": 22,
         "content": "This code reads metadata.json and data/*.json, asserts source_dir existence, directory type, and absolute path. It uses llm_context from an unspecified location, loads file mappings and split count, updates a dictionary with new data, and provides functions to strip quotes and get the first line of a string. Finally, it suggests creating and reading cache_tree.json which should be ignored by git.",
         "type": "comment"
     },
-    "244": {
+    "250": {
         "file_id": 22,
         "content": "# produce tree.json\n# copy tree.html\nimport html.entities\nhtml5_escapes = html.entities.html5\nhtml_escape_mapping = {}\nfor k,v in html5_escapes.items():\n    if k.endswith(\";\"):  html_escape_mapping[v] = \"&\"+k\ndef html_escape(s: str):\n    ret = \"\"\n    for elem in s:\n        if elem in html_escape_mapping.keys():\n            ret += html_escape_mapping[elem]\n        else:\n            ret += elem\n    return ret\nimport hashlib\ndef hash_key(summary: str):\n    enc = summary.strip()\n    if enc:\n        # Generate a hash for the given summary\n        hash_object = hashlib.md5(enc.encode())\n        return hash_object.hexdigest()\nimport tinydb\ncache_tree = tinydb.TinyDB(os.path.join(source_dir, \"cache_tree.json\"))\ndef generate_file_summary_brief(filepath, summary):\n    # Generate a brief for the file based on its summary\n    stripped_summary = summary.strip()\n    if stripped_summary:\n        prompt = f\"\"\"\nFilepath: {filepath}\nSummary:\n{stripped_summary}\nBrief in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        mhash = hash_key(prompt)",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:65-112"
     },
-    "245": {
+    "251": {
         "file_id": 22,
         "content": "The code imports modules for HTML escaping, hashing, and a TinyDB database. It defines functions to escape HTML entities, generate file summaries, and hash keys. The main function generates a JSON tree using recursion, copies an HTML file, and handles file summaries with briefs in 7 words.",
         "type": "comment"
     },
-    "246": {
+    "252": {
         "file_id": 22,
         "content": "        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == filepath)\n        )\n        if rec:\n            return rec[\"brief\"]\n        else:\n            init_prompt = \"\"\"You are a professional brief writer. You can turn long summaries into a single short brief within 7 words. You will be given a filepath, a summary of the file and produce a concise brief that best describes the file.\n\"\"\"\n            with llm_context(init_prompt) as model:\n                mbrief = strip_quote(model.run(prompt).strip())\n            mdoc = dict(path=filepath, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == filepath)\n            return mbrief\n    return \"\"\ndef generate_tree_repesentation(\n    directory_path: str,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs: dict[str, str],\n    indent=0,\n    briefs=[],\n):\n    childrens = list(childrens_mapping[directory_path])\n    childrens.sort(key=lambda x: x.lower())",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:113-138"
     },
-    "247": {
+    "253": {
         "file_id": 22,
         "content": "This code is responsible for generating a tree representation of a directory structure. It uses caching, a language model, and brief generation to provide an efficient and concise view of the file hierarchy. The function takes in a directory path, children mappings, file briefs, and directory briefs, along with optional indentation parameters. It sorts the child directories and generates the tree representation by recursively calling itself on each child directory, updating the briefs as needed.",
         "type": "comment"
     },
-    "248": {
+    "254": {
         "file_id": 22,
         "content": "    if directory_path == \"/\":\n        name = project_name\n    else:\n        name = directory_path.strip(\"/\").split(\"/\")[-1]\n    mbrief, show = directory_briefs[directory_path]\n    mbrief = strip_quote_and_get_first_line(mbrief)\n    briefs.append(\n        \" \" * indent * 4\n        + f'- <span hierarchy=\"{indent}\" class=\"expanded\" onclick=\"toggleVisibility(this)\" ><strong class=\"directory\" id=\"{directory_path}\"><code>{html_escape(name)}</code></strong>'\n        + (\"\" if not show else f\" <em>{mbrief}</em>\")\n        + \"</span>\"\n        # \" \" * indent * 4 + f\"- **`{name}`**\" + (\"\" if not show else f\" <em>{mbrief}</em>\")\n    )\n    for child in childrens:\n        child_name = child.strip(\"/\").split(\"/\")[-1]\n        if child.endswith(\"/\"):\n            # mbrief, show= directory_briefs[child]\n            # briefs.append(\n            #     \" \" * (indent + 1) * 4\n            #     + f\"- **`{child_name}`**\"+(\"\" if not show else f\" *{mbrief}*\")\n            # )\n            generate_tree_repesentation(\n                child,",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:139-162"
     },
-    "249": {
+    "255": {
         "file_id": 22,
         "content": "This code generates a formatted representation of a directory hierarchy, using HTML and JavaScript functions. It retrieves the name and brief description of each folder or file, and dynamically creates an expandable list with clickable folders and optional descriptions. If a directory path is \"/\", it uses the project_name. The code also includes comments for alternative formatting options.",
         "type": "comment"
     },
-    "250": {
+    "256": {
         "file_id": 22,
         "content": "                childrens_mapping,\n                file_briefs,\n                directory_briefs,\n                indent + 1,\n                briefs,\n            )\n        else:\n            child_link = f\"index.html?q={urllib.parse.quote(child)}\"\n            briefs.append(\n                \" \" * (indent + 1) * 4\n                + f'- <a class=\"file_link\" href=\"{child_link}\" id=\"{child}\"><code>{html_escape(child_name)}</code></a> <em>{strip_quote_and_get_first_line(file_briefs[child])}</em>'\n            )\n    return briefs\ndef comment_summarizer(summary_model, comments: list[str],directory_path:str) -> str:\n    def combine_comments(comment1: str, comment2: str):\n        summary_query = f\"\"\"\n{comment1}\n{comment2}\nBrief for directory '{directory_path}' in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        ret = summary_model.run(summary_query)\n        return ret\n    def recursive_combine(comments_list: list[str]):\n        if len(comments_list) == 0:\n            raise Exception(\"No comments to combine\")",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:163-195"
     },
-    "251": {
+    "257": {
         "file_id": 22,
         "content": "This code generates a list of briefs for a folder hierarchy by recursively iterating through the folders and files. If a file/folder doesn't have a brief, it adds a hyperlink to its name. The `comment_summarizer` function uses a summary model to generate a 7-word brief for a directory based on combined comments from the list of comments and the provided directory path.",
         "type": "comment"
     },
-    "252": {
+    "258": {
         "file_id": 22,
         "content": "        elif len(comments_list) == 1:\n            return comments_list[0]\n        elif len(comments_list) % 2 == 0:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])\n                for i in range(0, len(comments_list), 2)\n            ]\n        else:\n            combined = [\n                combine_comments(comments_list[i], comments_list[i + 1])\n                for i in range(0, len(comments_list) - 1, 2)\n            ]\n            combined += [comments_list[-1]]\n        return recursive_combine(combined)\n    summary = recursive_combine(comments)\n    del summary_model\n    return summary\ndef generate_directory_summary_brief(\n    directory_path,\n    childrens_mapping: dict[str, set[str]],\n    file_briefs: dict[str, str],\n    directory_briefs={},\n):\n    # Generate a brief for the directory based on its direct children's briefs\n    childrens = list(childrens_mapping[directory_path])\n    if len(childrens) == 0:\n        raise Exception(f\"Directory '{directory_path}' has no children\")",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:196-225"
     },
-    "253": {
+    "259": {
         "file_id": 22,
         "content": "This code handles the recursive combination of comments for a folder hierarchy. If there is only one comment, it returns that comment. If there are an even number of comments, it combines them in pairs. If there is an odd number of comments, it combines all but the last comment with their corresponding pair and adds the last comment separately. The generated summary brief for a directory is created based on its direct children's briefs.",
         "type": "comment"
     },
-    "254": {
+    "260": {
         "file_id": 22,
         "content": "    if len(childrens) == 1:\n        if childrens[0].endswith(\"/\"):\n            generate_directory_summary_brief(\n                childrens[0], childrens_mapping, file_briefs, directory_briefs\n            )\n            mbrief = directory_briefs[childrens[0]][0]\n        else:\n            mbrief = file_briefs[childrens[0]]\n        directory_briefs[directory_path] = (mbrief, False)\n    else:\n        subprompt_parts = []\n        children_briefs = {}\n        for child in childrens:\n            if child.endswith(\"/\"):\n                generate_directory_summary_brief(\n                    child, childrens_mapping, file_briefs, directory_briefs\n                )\n                cbrief = directory_briefs[child][0]\n            else:\n                cbrief = file_briefs[child]\n            children_briefs[child] = cbrief\n        candidates = list(children_briefs.items())\n        candidates.sort(key=lambda x: x[0].lower())\n        for k, v in candidates:\n            if not k.endswith(\"/\"):\n                mark = \"file\"\n            else:",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:226-252"
     },
-    "255": {
+    "261": {
         "file_id": 22,
         "content": "The code checks if there is only one child in the current directory. If so, it determines whether the child is a directory or file and generates its brief accordingly. If there are multiple children, it sorts them alphabetically and generates briefs for each, distinguishing between directories and files.",
         "type": "comment"
     },
-    "256": {
+    "262": {
         "file_id": 22,
         "content": "                mark = \"directory\"\n            relpath = os.path.relpath(k, directory_path)\n            it = f\"Brief for {mark} '{relpath}': {v}\"\n            subprompt_parts.append(it)\n        subprompt = \"\\n\".join(subprompt_parts)\n        prompt = f\"\"\"\n{subprompt}\nBrief for directory '{directory_path}' in 7 words (do not quote your brief, just write it out):\n\"\"\"\n        mhash = hash_key(prompt)\n        rec = cache_tree.get(\n            (tinydb.Query().hash == mhash) and (tinydb.Query().path == directory_path)\n        )\n        if rec:\n            mbrief = rec[\"brief\"]\n        else:\n            # TODO: use recursive summarization.\n            init_prompt = \"\"\"You are a professional brief summarizer. You can produce a single short brief within 7 words. You will be given a pair of briefs and produce a concise brief that best describes the directory.\n\"\"\"\n            with llm_context(init_prompt) as model:\n                ret = comment_summarizer(model, subprompt_parts,directory_path)\n                mbrief = strip_quote(ret.strip())",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:253-276"
     },
-    "257": {
+    "263": {
         "file_id": 22,
         "content": "This code generates a brief for a directory by recursively traversing a folder hierarchy. It calculates the relative path, collects subprompts and creates a main prompt. If the prompt already exists in cache, it retrieves the existing brief; otherwise, it utilizes an LLM model to generate a concise brief within 7 words.",
         "type": "comment"
     },
-    "258": {
+    "264": {
         "file_id": 22,
         "content": "                # mbrief = strip_quote(model.run(prompt).strip())\n            mdoc = dict(path=directory_path, hash=mhash, brief=mbrief)\n            cache_tree.upsert(mdoc, cond=tinydb.Query().path == directory_path)\n        directory_briefs[directory_path] = (mbrief, True)\n    return directory_briefs\nfile_summaries = {\n    v[\"filepath\"]: data[str(v[\"entry_id\"] + 1)][\"content\"]\n    for v in file_mapping.values()\n}\n# print(file_summaries)\n# file_briefs = {k: generate_file_summary_brief(k, v) for k, v in file_summaries.items()}\nfile_briefs = {}\nitems_count = len(file_summaries.keys())\nprint(f\"\\n>>>> PROCESSING PROGRESS: 0/{items_count}\")\ncounter = 0\nfor k, v in file_summaries.items():\n    file_briefs[k] = generate_file_summary_brief(k, v)\n    counter += 1\n    print(f\"\\n>>>> PROCESSING PROGRESS: {counter}/{items_count}\")\nchildrens_mapping = defaultdict(set)\nfor k in file_summaries.keys():\n    print(k)\n    split_k = k.split(\"/\")\n    print(split_k)  # [dir1, dir2, ... filename]\n    # add \"/\" to the right and left of dir.",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:277-306"
     },
-    "259": {
+    "265": {
         "file_id": 22,
         "content": "Function to generate briefs for directories and files recursively, using TinyDB to cache tree briefs and generate file summaries. It prints progress during processing.",
         "type": "comment"
     },
-    "260": {
+    "266": {
         "file_id": 22,
         "content": "    for i in range(len(split_k) - 1):\n        parent = \"/\".join(split_k[: i + 1]) + \"/\"\n        child = parent + split_k[i + 1]\n        if i != len(split_k) - 2:  # is directory:\n            child += \"/\"\n        print({\"i\": i, \"parent\": parent, \"child\": child, \"k\": k})\n        childrens_mapping[parent].add(child)\n# breakpoint()\ndirectory_briefs = generate_directory_summary_brief(\"/\", childrens_mapping, file_briefs)\n# now, let's generate the representation.\nbriefs = generate_tree_repesentation(\n    \"/\", childrens_mapping, file_briefs, directory_briefs\n)\n# briefs.insert(0,\"# Project Structure:\")\nbriefs.insert(\n    0,\n    f'## Project structure<span hierarchy=\"0\" class=\"partial-repository-url\"> of: {metadata[\"url\"][\"partial\"]}</span><div style=\"float: right;\"><a title=\"Document index\" style=\"margin:3.5px;\" href=\"index.html\"><i class=\"bi bi-search\"></i></a><a title=\"Feeling lucky\" style=\"margin:3.5px;\" id=\"feeling-lucky\" href=\"#\"><i class=\"bi bi-dice-3\"></i></a><a title=\"Expand tree\" style=\"margin:3.5px;\" href=\"tree.html?full=true\" id=\"expand-tree\"><i class=\"bi bi-caret-down-square\"></i></a></div>',",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:307-326"
     },
-    "261": {
+    "267": {
         "file_id": 22,
         "content": "This code recursively generates a hierarchical representation of a project's directory structure. It creates a dictionary to keep track of parent-child relationships and then uses this information to create the final list of briefs for each level in the hierarchy. The resulting briefs are inserted into a list with a header indicating the project name and structure.",
         "type": "comment"
     },
-    "262": {
+    "268": {
         "file_id": 22,
         "content": ")\nprint(\"=\" * 40)\nprint(\"\\n\".join(briefs))\n### building\n# render README.md into index.html\nimport markdown\nfrom jinja2 import Template\n# Markdown content\nmarkdown_content = \"\\n\".join(briefs)\n# Convert Markdown to HTML\nhtml_content = markdown.markdown(markdown_content)\n# print(markdown_content)\n# breakpoint()\ntemplate_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), \"tree.html.j2\")\ncss_path = os.path.join(\n    os.path.abspath(os.path.dirname(__file__)), \"github-markdown.css\"\n)\ntemplate = Template(open(template_path, \"r\").read())\n# Render the template with the data\nrendered_template = template.render(content=html_content, project_name=metadata[\"url\"][\"partial\"])\nprint(\"Template rendered.\")\ntree_fname = \"tree.html\"\n# Write the template content to a file\nwith open(os.path.join(source_dir, tree_fname), \"w+\", encoding=\"utf-8\") as file:\n    file.write(rendered_template)\nimport shutil\nshutil.copy(css_path, source_dir)\nprint(\n    f\"Markdown converted to HTML and written to {os.path.join(source_dir, tree_fname)}\"",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:327-365"
     },
-    "263": {
+    "269": {
         "file_id": 22,
         "content": "This code reads briefs, converts Markdown to HTML using markdown and Jinja2, renders the template with data, writes the resulting HTML to a file, and copies a CSS file.",
         "type": "comment"
     },
-    "264": {
+    "270": {
         "file_id": 22,
         "content": ")",
         "type": "code",
         "location": "/document_agi_computer_control/tree_markdown_view_folder_hierarchy/main_recursive.py:366-366"
     },
-    "265": {
+    "271": {
         "file_id": 22,
         "content": "The code snippet seems to be incomplete or malformed. The given code segment is an empty line with a closing parenthesis at the end. There's no meaningful operation or function being defined here, and it doesn't appear to have any effect on the execution of the program. It may be a mistake or a typo.",
         "type": "comment"
     },
-    "266": {
+    "272": {
         "file_id": 23,
         "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/chat.py",
         "type": "filepath"
     },
-    "267": {
+    "273": {
         "file_id": 23,
         "content": "This code imports necessary modules and appends the directory of the current file to the system path, allowing it to access and interact with the \"main\" module for document-based chat functionality.",
         "type": "summary"
     },
-    "268": {
+    "274": {
         "file_id": 23,
         "content": "# chat with the document.\nimport sys, os\nsys.path.append(os.path.dirname(__file__))\nimport main",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/chat.py:1-5"
     },
-    "269": {
+    "275": {
         "file_id": 23,
         "content": "This code imports necessary modules and appends the directory of the current file to the system path, allowing it to access and interact with the \"main\" module for document-based chat functionality.",
         "type": "comment"
     },
-    "270": {
+    "276": {
         "file_id": 24,
         "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py",
         "type": "filepath"
     },
-    "271": {
+    "277": {
         "file_id": 24,
         "content": "This code initializes a document index and performs text search for similar documents using HnswLibrary. It also includes functions for text hashing and creating TextDoc objects to represent document structure, searches for nearest neighbors with 10 result limit, and prints results/scores.",
         "type": "summary"
     },
-    "272": {
+    "278": {
         "file_id": 24,
         "content": "import os\nimport hashlib\nos.environ[\"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION\"] = \"python\"\nfrom langchain.embeddings import OllamaEmbeddings\nollama_emb = OllamaEmbeddings(\n    model=\"openhermes2.5-mistral:latest\",\n    # model=\"llama:7b\",\n)\ndef hash_doc(enc: str):\n    hash_object = hashlib.md5(enc.encode())\n    return hash_object.hexdigest()\ncache_path = \"./docarray_cache\"\nfrom docarray import BaseDoc\nfrom docarray.index import HnswDocumentIndex\nimport numpy as np\nfrom docarray.typing import NdArray\nclass TextDoc(BaseDoc):\n    text: str\n    text_hash: str\n    embedding: NdArray[4096]\nimport rich\n# create a Document Index\nindex = HnswDocumentIndex[TextDoc](work_dir=cache_path)\n# index your data\ndocs = [\"hello again\", \"bye world\"]\nquery = \"hello world\"\n# find similar Documents\nfor it in docs:\n    docHash = hash_doc(it)\n    index._sqlite_cursor.execute(\n        \"SELECT text FROM docs WHERE text_hash = ?\", (docHash,)\n    )\n    rows = index._sqlite_cursor.fetchall()\n    if len(rows) > 0:\n        cached = False\n        for row in rows:",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:1-51"
     },
-    "273": {
+    "279": {
         "file_id": 24,
         "content": "This code imports necessary libraries and initializes a document index using an HnswDocumentIndex from the docarray library. It then indexes data, in this case, a list of strings, and allows for finding similar documents based on a query. The code also includes functions for hashing text and creating a TextDoc class representing the structure of each document.",
         "type": "comment"
     },
-    "274": {
+    "280": {
         "file_id": 24,
         "content": "            if row[0] == it:\n                cached = True\n                break\n        if cached:\n            print(\"document cached:\", it)\n            continue\n    # result = index.text_search(docHash, search_field=\"text_hash\", limit=1)\n    # if result.count == 1:\n    #     if result.documents[0].text_hash == docHash:\n    #         print(\"document cached:\", it)\n    #         continue\n    embed = np.array(ollama_emb.embed_query(it))\n    docObject = TextDoc(text=it, text_hash=docHash, embedding=embed)\n    index.index(docObject)\n# breakpoint()\nindex._sqlite_cursor.execute(\"SELECT doc_id FROM docs WHERE text LIKE 'hello%'\")\n# index._sqlite_cursor.execute(\"SELECT doc_id FROM docs\")\n# [(423764937781332251,), (955323081996155123,)]\n# index._sqlite_cursor.execute(\"SELECT * FROM docs\") # field: doc_id\nrows = index._sqlite_cursor.fetchall()\n# print(rows)\nhashed_ids = set(it[0] for it in rows)\n# hashed_ids = set(str(it[0]) for it in rows)\n# print(hashed_ids)\nans = index._search_and_filter(\n    np.array(ollama_emb.embed_query(query)).reshape(1, -1),",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:52-81"
     },
-    "275": {
+    "281": {
         "file_id": 24,
         "content": "The code is performing text search and indexing operations on a document store. It first checks if the document is cached, and if so, it continues without further processing. If not, it embeds the query and creates a TextDoc object with the embedded representation of the document's text. The document is then indexed in the document store using the provided index object. Next, the code executes SQLite queries to fetch doc_ids from the database. It converts these doc_ids into a set and then performs a search and filter operation on the index using an embedded representation of the query.",
         "type": "comment"
     },
-    "276": {
+    "282": {
         "file_id": 24,
         "content": "    limit=10,\n    search_field=\"embedding\",\n    hashed_ids=hashed_ids,\n)\nrich.print(\"ans:\", ans)\n# breakpoint()\n# hnswlib ids: [955323081996155123, 423764937781332251]\nresults, scores = index.find(\n    ollama_emb.embed_query(query), limit=10, search_field=\"embedding\"\n)\nrich.print(results, scores)",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/docarray_test.py:82-94"
     },
-    "277": {
+    "283": {
         "file_id": 24,
         "content": "This code is searching for the nearest neighbors using HnswLibrary in the index, passing an embedded query and limiting the results to 10. It then prints the results and scores obtained from the search. The breakpoint can be used for debugging purposes if needed.",
         "type": "comment"
     },
-    "278": {
+    "284": {
         "file_id": 25,
         "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py",
         "type": "filepath"
     },
-    "279": {
+    "285": {
         "file_id": 25,
         "content": "The code imports necessary libraries, sets up a vector store index and embeddings model, initializes an OpenLM model, and constructs a VectorStoreIndex using either the vector store or docstore. The vector store index is used as a retriever to retrieve \"hello\" and print the answer in a rich format.",
         "type": "summary"
     },
-    "280": {
+    "286": {
         "file_id": 25,
         "content": "from llama_index import Document\nfrom llama_index.embeddings import OllamaEmbedding  # OpenAIEmbedding\nfrom llama_index.text_splitter import SentenceSplitter\nfrom llama_index.extractors import TitleExtractor\nfrom llama_index.ingestion import IngestionPipeline\nfrom llama_index.llms import Ollama\nfrom llama_index.storage.docstore import SimpleDocumentStore\nimport os\nos.environ[\"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION\"] = \"python\"\nfrom llama_index import VectorStoreIndex, ServiceContext, LLMPredictor\nfrom llama_index.vector_stores import DocArrayHnswVectorStore\n# from llama_index.vector_stores import SimpleVectorStore\n# from llama_index.ingestion.cache import SimpleCache\nvector_store = DocArrayHnswVectorStore(\"storage\",dim = 4096)\n# create the pipeline with transformations\n# if os.path.exists(\"./storage\"):\n#     vector_store = SimpleVectorStore.from_persist_dir()\n# else:\n#     vector_store = SimpleVectorStore(stores_text=True)\n# vector_store.stores_text=True\nembed = OllamaEmbedding(model_name=\"openhermes2.5-mistral:latest\")",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:1-29"
     },
-    "281": {
+    "287": {
         "file_id": 25,
         "content": "This code imports necessary libraries and sets up a vector store for storing and retrieving documents using the llama_index package. The code utilizes DocArrayHnswVectorStore for efficient storage and retrieval, and also creates an OpenAIEmbedding model to generate embeddings for documents.",
         "type": "comment"
     },
-    "282": {
+    "288": {
         "file_id": 25,
         "content": "llm = Ollama(model=\"openhermes2.5-mistral:latest\")\npipeline = IngestionPipeline.construct(\n    transformations=[\n        SentenceSplitter(chunk_size=25, chunk_overlap=0),\n        TitleExtractor(llm=llm),\n        embed,\n    ],\n    docstore=SimpleDocumentStore(),  # do it if you want load/persist to work properly.\n    vector_store=vector_store,\n    validate_arguments=False,\n)\nloadpath = \"./pipeline_storage\"\nif os.path.exists(loadpath):\n    pipeline.load(persist_dir=loadpath)\n# run the pipeline\nnodes = pipeline.run(documents=[Document.example()])  # return newly added nodes.\nimport rich\n# rich.print(nodes)\n# rich.print(pipeline.documents)\n# rich.print(pipeline.docstore.docs)\npipeline.persist(persist_dir=loadpath)  # not persisting document.\nserv_cont = ServiceContext.from_defaults(\n    llm_predictor=LLMPredictor(llm),\n    embed_model=embed,\n)\n# vsindex = VectorStoreIndex.from_vector_store(vectore_store)\nvsindex = VectorStoreIndex.from_vector_store(vector_store, service_context=serv_cont)\n# vsindex = VectorStoreIndex.from_documents(pipeline.docstore.docs.values(),service_context=serv_cont)",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:30-60"
     },
-    "283": {
+    "289": {
         "file_id": 25,
         "content": "This code initializes an OpenLM model, creates a pipeline for text processing with transformations like sentence splitting and title extraction, checks if a load path exists and loads the saved pipeline if so. It then runs the pipeline on example documents, prints the resulting nodes, persists the pipeline, creates a service context using the loaded LLM and embed models, and finally constructs a VectorStoreIndex from either the vector store or the documents in the docstore.",
         "type": "comment"
     },
-    "284": {
+    "290": {
         "file_id": 25,
         "content": "# this will do RAG. However do you have qualified prompt?\n# engine = vsindex.as_query_engine()\nengine = vsindex.as_retriever()\nans = engine.retrieve(\"hello\")\n# ans = engine.query(\"something interesting in the document\")\nrich.print(ans)",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_test.py:62-68"
     },
-    "285": {
+    "291": {
         "file_id": 25,
         "content": "This code initializes the vector store index (vsindex) as a retriever rather than a query engine, retrieves \"hello\" using the retriever, and prints the answer in a rich format. A qualified prompt is missing to enhance the functionality of the query or retrieve function.",
         "type": "comment"
     },
-    "286": {
+    "292": {
         "file_id": 26,
         "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py",
         "type": "filepath"
     },
-    "287": {
+    "293": {
         "file_id": 26,
         "content": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
         "type": "summary"
     },
-    "288": {
+    "294": {
         "file_id": 26,
         "content": "from llama_index import VectorStoreIndex, LLMPredictor\nfrom llama_index import Document\nfrom llama_index.llms import Ollama\nfrom llama_index.embeddings import OllamaEmbedding\nfrom llama_index import ServiceContext\nembed = OllamaEmbedding(model_name=\"openhermes2.5-mistral:latest\")\nllm = Ollama(model=\"openhermes2.5-mistral:latest\")\nserv_cont = ServiceContext.from_defaults(\n    llm_predictor=LLMPredictor(llm),\n    embed_model=embed,\n)\ndocuments = [Document.example()]\n# print(documents)\nindex = VectorStoreIndex.from_documents(documents, service_context=serv_cont)",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/llamaindex_vector.py:1-16"
     },
-    "289": {
+    "295": {
         "file_id": 26,
         "content": "The code imports necessary modules and defines the embedding and language model. It then creates a service context with the defined LLM predictor and embed model. Documents are created and assigned to the variable 'documents'. A VectorStoreIndex is constructed from the documents using the previously defined service context, storing the index in the variable 'index'.",
         "type": "comment"
     },
-    "290": {
+    "296": {
         "file_id": 27,
         "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py",
         "type": "filepath"
     },
-    "291": {
+    "297": {
         "file_id": 27,
         "content": "The code imports modules, defines classes for queries and prompts, generates data processing prompts, assembles questions and answers, creates a formatted document, and handles chat history. Else block generates chat history summary and condense prompts with new user question and context.",
         "type": "summary"
     },
-    "292": {
+    "298": {
         "file_id": 27,
         "content": "import sys, os\nsys.path.append(os.path.dirname(__file__))\nimport prompts as P\nimport vectorindex as V\nfrom pydantic import BaseModel\nclass ReaderQuestions(BaseModel):\n    questions: list[str]\nclass ContextQueries(BaseModel):\n    queries: list[str]\nprompt = P.generateFileSummaryContextQueriesPrompt(\n    schema, contentType, projectName, filePath, summary\n)\nres = ...\ncontextQueries = ContextQueries.parse_raw(res)\ncontextQAPairs = []\nfor q in contextQueries:\n    context = ...\n    contextQAPairs.append((q, context))\nprompt = P.generateFileSummaryPrompt(\n    contentType, projectName, filePath, summary, contextQAPairs\n)\ndocumentSummary = ...  # file summary\nprompt = P.generateFileQuestionsPrompt(\n    schema, contentType, projectName, filePath, summary\n)\nres = ...\nquestions = ReaderQuestions.parse_raw(res)\nprint(questions)\nQAPairs = []\nfor q in questions:\n    context = ...\n    prompt = P.generateFileAnswerPrompt(\n        contentType,\n        projectNAme,\n        filePath,\n        summary,\n        q,\n        context,\n    )\n    res = ...",
         "type": "code",
         "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py:1-52"
     },
-    "293": {
+    "299": {
         "file_id": 27,
         "content": "This code imports necessary modules, defines classes for reader questions and context queries, generates prompts for generating file summary context queries, parses raw data into objects, appends context-question pairs to a list, generates prompts for file summary and file questions, and finally prints the reader's questions.",
         "type": "comment"
-    },
-    "294": {
-        "file_id": 27,
-        "content": "    # assemble questions and answers.\n    QAPairs.append(q, res)\n# assemble document\ndocumentQA = [\"## Questions:\\n\"] + [\n    f\"{i+1}. {q}\\n\\n{a}\\n\" for i, (q, a) in enumerate(QAPairs)\n]\ndocumentQA = \"\\n\".join(documentQA)\ndocument = f\"{documentSummary}\\n---\\n{documentQA}\"\n################################\nprompt = P.generateFolderSummaryContextQueriesPrompt(\n    schema,\n    contextType,\n    projectName,\n    folderPath,\n    summary,\n)\nres = ...\nqueries = ContextQueries.parse_raw(res)\ncontextQAPairs = []\nfor q in queries:\n    context = ...\n    contextQAPairs.append((q, context))\nprompt = P.generateFolderSummaryPrompt(\n    contentType, projectName, filePath, summary, contextQAPairs\n)\ndocument = ...\n################################\nlast_chat_history = None\ncontext = ...  # generate from first question\nprompt = P.generateQAPrompt(contentType, projectName, question, context)\nres = ...\nprompt = P.generateRecentChatHistorySummaryPrompts(question, res)\nrecent_chat_history = ...\nif last_chat_history is None:\n    chat_history = recent_chat_history",
-        "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py:53-98"
-    },
-    "295": {
-        "file_id": 27,
-        "content": "The code assembles questions and answers into pairs, creates a document with the formatted questions and answers, generates a prompt for a folder summary context queries, and then generates prompts for QA and recent chat history. If there is no last chat history, it assigns the recent chat history to the current one.",
-        "type": "comment"
-    },
-    "296": {
-        "file_id": 27,
-        "content": "else:\n    prompt = P.generateChatHistorySummaryPrompt(last_chat_history, recent_chat_history)\n    chat_history = ...\nlast_chat_history = chat_history\nquestion = ...  # new question from user\nprompt = P.generateCondensePrompt(chat_history, question)\nstandalone_question = ...\ncontext = ...",
-        "type": "code",
-        "location": "/document_agi_computer_control/vectorstore_embedding_chat_rag/main.py:99-108"
-    },
-    "297": {
-        "file_id": 27,
-        "content": "Else block generates a chat history summary prompt and updates last_chat_history. It then generates a condense prompt using the updated chat_history and a new user question, while also creating standalone_question and context.",
-        "type": "comment"
-    },
-    "298": {
-        "file_id": 28,
-        "content": "/document_agi_computer_control/vectorstore_embedding_chat_rag/prompts.py",
-        "type": "filepath"
-    },
-    "299": {
-        "file_id": 28,
-        "content": "This code generates prompts for creating questions and answers about file content using Pydantic schema, JSON format, and markdown. It includes functions to gather context for software project-related questions and returns previously defined prompts.",
-        "type": "summary"
     }
 }
