@@ -63,7 +63,7 @@
     "/document_agi_computer_control/recursive_document_writer.py:77-116": "Function to Scan, Generate Comments and Write Code",
     "/document_agi_computer_control/sitemap_generator/main.py": "Sitemap Generator Python Script",
     "/document_agi_computer_control/sitemap_generator/main.py:1-35": "Sitemap Generator Setup",
-    "/document_agi_computer_control/sitemap_generator/main.py:36-47": "Template-based Sitemap Generator",
+    "/document_agi_computer_control/sitemap_generator/main.py:36-48": "Tree HTML Appending and Rendering",
     "/document_agi_computer_control/slice_utils.py": "Chunked Dictionary Generator",
     "/document_agi_computer_control/slice_utils.py:1-32": "Dividing Dict into Chunks with Generator",
     "/document_agi_computer_control/slice_utils.py:33-37": "Chunked Dictionary Processing with Generator",

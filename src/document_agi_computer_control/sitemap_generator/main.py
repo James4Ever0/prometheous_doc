@@ -34,6 +34,7 @@ import urllib.parse
 lines = [
     f"{base_url}?q={urllib.parse.quote(comp['filepath'])}" for comp in file_mapping.values()
 ]
+lines.append(f"{base_url}/tree.html?full=true")
 # Data to be rendered
 datalist = [(item, "2023-12-28T09:21:02+00:00", "1.00") for item in lines]
 
